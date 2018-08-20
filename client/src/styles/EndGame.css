@@ -1,0 +1,18 @@
+.endgame {
+    min-width: 200px;
+    padding: 30px;
+    text-align: center;
+    background-color: white;
+    z-index: 100;
+}
+
+button {
+    margin: 10px;
+}
+
+.center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+}
