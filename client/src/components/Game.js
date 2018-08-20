@@ -84,6 +84,40 @@ class Game extends Component {
              }
 
         });
+
+        // temp
+        this.setState({
+            squares:
+                [
+                    [
+                        {type: "empty", unit: { Unit: { playerId : 0 }}},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty", unit: { Unit: { playerId : 1 }}},
+                    ],
+                ],
+            width: this.state.width,
+            height: this.state.height,
+            cursor: this.state.cursor,
+        });
     }
 
     componentWillUnmount() {
