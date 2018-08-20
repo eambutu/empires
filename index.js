@@ -8,8 +8,8 @@ var wss = expressWs.getWss('/');
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
-gameStarted = false;
-sockets = {};
+game = null;
+sockets = {1: null, 2: null};
 names = {1: 'player_1', 2: 'player_2'};
 moves = [];
 
@@ -38,7 +38,7 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    if (!gameStarted) {
+    if (game !== 'null') {
         if (wss.clients.size === 1) {
             ws.send(JSON.stringify(
                 {
@@ -104,7 +104,7 @@ function runGame() {
     gameStarted = true;
     initState();
     broadcastInit();
-    setInterval(
+    game = setInterval(
         performOneTurn,
         ts
     );
@@ -112,13 +112,26 @@ function runGame() {
 
 
 function performOneTurn() {
+    maybeEndGame();
     requestActions();
-
     setTimeout(function() {
         updateState();
         broadcastState();
     }, (ts / 2));
 
+}
+
+function maybeEndGame() {
+    allDead = true;
+    Object.keys(sockets).forEach(function(key) {
+        if (sockets[key].isAlive) {
+            allDead = false;
+        }
+    });
+    if (allDead){
+        console.log('RESTART GAME');
+        clearInterval(game);
+    }
 }
 
 function requestActions() {
