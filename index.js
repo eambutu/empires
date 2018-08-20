@@ -8,8 +8,12 @@ var wss = expressWs.getWss('/');
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
+gameStarted = false;
 sockets = {};
+names = {1: 'player_1', 2: 'player_2'};
 moves = [];
+
+
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -18,9 +22,9 @@ app.get('/', function (req, res) {
 });
 
 app.ws('/', function (ws, req) {
+    ws.isAlive = true;
     ws.on('message', function (msg) {
-        console.log(msg);
-
+        ws.isAlive = true;
         data = JSON.parse(msg);
         if (data.id === id1) {
             cache.put('playerOneMove', data.action);
@@ -34,38 +38,41 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    if (wss.clients.size === 1) {
-        ws.send(JSON.stringify(
-            {
-                'event': 'connected',
-                'player': 1,
-                'id': id1
-            }
-        ));
-        ws.id = 1;
-        sockets[ws.id] = ws;
-        console.log('Player 1 connected')
-    }
-    else if (wss.clients.size === 2) {
-        ws.send(JSON.stringify(
-            {
-                'event': 'connected',
-                'player': 2,
-                'id': id2
-            }
-        ));
-        ws.id = 2;
-        sockets[ws.id] = ws;
-        console.log('Player 2 connected')
-        runGame();
+    if (!gameStarted) {
+        if (wss.clients.size === 1) {
+            ws.send(JSON.stringify(
+                {
+                    'event': 'connected',
+                    'player': 1,
+                    'id': id1
+                }
+            ));
+            sockets[1] = ws;
+            console.log('Player 1 connected')
+        }
+        else if (wss.clients.size === 2) {
+            ws.send(JSON.stringify(
+                {
+                    'event': 'connected',
+                    'player': 2,
+                    'id': id2
+                }
+            ));
+            sockets[2] = ws;
+            console.log('Player 2 connected')
+            runGame();
+        }
     }
     else {
-        ws.send(`Lobby is full`)
+        ws.send(JSON.stringify({
+            'event': 'full'
+        }));
         ws.close();
     }
 
     ws.on('close', function () {
         console.log('Client disconnected')
+        ws.isAlive = false;
     });
 });
 
@@ -94,8 +101,8 @@ class Unit {
 }
 
 function runGame() {
+    gameStarted = true;
     initState();
-    broadcastState();
     broadcastInit();
     setInterval(
         performOneTurn,
@@ -116,7 +123,10 @@ function performOneTurn() {
 
 function requestActions() {
     Object.keys(sockets).forEach(function(key) {
-        sockets[key].send(JSON.stringify({'event': 'request_action'}));
+        if (sockets[key].isAlive) {
+            sockets[key].send(JSON.stringify({'event': 'request_action'}));
+        }
+        sockets[key].isAlive = false;
     });
 }
 
@@ -124,13 +134,19 @@ function broadcastInit() {
     // Things that get broadcast in the beginning of the game
     let playerBases = cache.get('playerBases');
     Object.keys(sockets).forEach(function (key) {
-        sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
-    })
+        console.log(playerBases)
+        if (sockets[key].isAlive) {
+            sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
+        }
+    });
+    console.log('Sent init');
 }
 
 function broadcastState() {
     Object.keys(sockets).forEach(function (key) {
-        sockets[key].send(JSON.stringify({'event': 'update', 'state': getState()}));
+        if (sockets[key].isAlive){
+            sockets[key].send(JSON.stringify({'event': 'update', 'state': getState()}));
+        }
     });
     console.log("Sent state");
 }
@@ -147,10 +163,10 @@ function initState () {
         squareStates[i] = [];
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(0));
+                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
+                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(2));
             }
             else {
                 squareStates[i][j] = new SquareState(i, j, 0, SquareTypeEnum.REGULAR, null);
@@ -168,19 +184,30 @@ function initState () {
 function getState() {
     //TODO: logic to decide what to sends over
     const squares = cache.get('squareStates');
+    const playerStatus = {};
+    Object.entries(sockets).forEach(([id, ws]) => {
+        if (ws.isAlive) {
+            playerStatus[names[id]] = 'playing';
+        }
+        else {
+            playerStatus[names[id]] = 'disconnected';
+        }
+    });
     // const flattenedSquares = squares.reduce(function (prev, cur) {
     //     return prev.concat(cur);
     // });
 
-    return squares;
+    state = {'squares': squares, 'playerStatus': playerStatus};
+    // console.log(state);
+    return state
 }
 
 function updateState () {
     let squareStates = cache.get('squareStates');
     let playerOneMove = cache.get('playerOneMove') || {};
     let playerTwoMove = cache.get('playerTwoMove') || {};
-    console.log("Current P1 move", playerOneMove);
-    console.log("Current P2 move", playerTwoMove);
+    // console.log("Current P1 move", playerOneMove);
+    // console.log("Current P2 move", playerTwoMove);
 
     if (playerOneMove.target !== playerTwoMove.target) {
         if (playerOneMove.action && playerOneMove.source && playerOneMove.target) {
@@ -192,7 +219,7 @@ function updateState () {
             playerOnePrevSquare.unit = null;
         }
         if (playerTwoMove.action && playerTwoMove.source && playerTwoMove.target) {
-            console.log(playerTwoMove.source);
+            // console.log(playerTwoMove.source);
             var playerTwoPrevSquare = squareStates[playerTwoMove.source[0]][playerTwoMove.source[1]];
             var playerTwoCount = playerTwoPrevSquare.count;
             var playerTwoUnit = playerTwoPrevSquare.unit;

@@ -3,6 +3,7 @@ import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
 import update from 'immutability-helper';
+import EndGame from "./EndGame";
 
 const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
@@ -23,9 +24,10 @@ class Game extends Component {
         super(props);
         this.state = {
             squares: null,
+            playerStatus: null,
             width: 0,
             height: 0,
-            cursor: null
+            cursor: null,
         };
         this.actionQueue = [];
         this.isPlayer = null;
@@ -77,17 +79,22 @@ class Game extends Component {
                 id = json.id;
             }
             else if (json.event === 'init') {
+                console.log("initializing")
                 this.setState({
                     cursor: json.base,
                     width: json.width,
                     height: json.height,
                 })
+                console.log(json)
             }
             else if (json.event === 'request_action') {
                 this.onUpdateRequest()
             }
             else if (json.event === 'update') {
                 this.updateGame(json.state);
+            }
+            else if (json.event === 'full') {
+                console.log('Lobby is full');
             }
             else {
                 console.log("dafuck");
@@ -113,9 +120,21 @@ class Game extends Component {
     render() {
         console.log(this.state)
         if (this.state.squares && this.state.cursor) {
+            if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
+                return (
+                    <div id="game-page">
+                        <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+
+                        <EndGame status={this.state.playerStatus}/>
+                    </div>
+
+                );
+            }
             return (
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                    {JSON.stringify(this.state.playerStatus)}
+                    {player}
                 </div>
             );
         }
@@ -126,10 +145,9 @@ class Game extends Component {
         }
     }
 
-    // take a list of new squares for us to update
-    updateGame(newSquares) {
+    updateGame(newState) {
         // check for valid queue
-        let isPlayer = newSquares.map(row => {
+        let isPlayer = newState.squares.map(row => {
             return row.map(cell => {
                 return cell.unit && cell.unit.playerId === player;
             });
@@ -149,7 +167,7 @@ class Game extends Component {
         });
         this.isPlayer = isPlayer;
 
-        this.setState({squares: newSquares});
+        this.setState({squares: newState.squares, playerStatus: newState.playerStatus});
     }
 
     onUpdateRequest() {
