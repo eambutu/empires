@@ -6,6 +6,7 @@ var wss = expressWs.getWss('/');
 
 id1 = null;
 id2 = null;
+ts = 1000 / 2
 
 app.get('/', function (req, res) {
     res.send('Hello World!');
@@ -71,15 +72,19 @@ function runGame() {
     initState();
     setInterval(
         performOneTurn,
-        1000 / 60
+        ts
     );
 }
 
 
 function performOneTurn() {
     requestActions();
-    updateState();
-    broadcastState();
+
+    setTimeout(function() {
+        updateState();
+        broadcastState();
+    }, (ts / 2));
+
 }
 
 function requestActions() {
