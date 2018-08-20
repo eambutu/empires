@@ -14,7 +14,7 @@ const keyMap = {
 let actionQueue = [];
 
 let player = 0;
-
+let id = 0;
 
 class Game extends Component {
 
@@ -66,18 +66,21 @@ class Game extends Component {
 
         this.ws = new WebSocket('ws://localhost:5000');
 
-
         this.ws.addEventListener('message',  event => {
-             if (event.data === 'give me action') {
-                this.onUpdateRequest()
-             }
-             else if (event.data.includes('Player')) {
-                 player = event.data.charAt(7);
+            var json = JSON.parse(event.data);
+             if (json.event === 'init') {
+                 player = json.player;
+                 id = json.id;
+                 this.updateGame(json.init_state);
             }
-            else {
-                var parsed = JSON.parse(event.data);
-                // console.log(parsed);
-                this.updateGame(parsed);
+            else if (json.event === 'request_action') {
+                 this.onUpdateRequest()
+             }
+            else if (json.event === 'update') {
+                this.updateGame(json.state);
+             }
+             else {
+                 console.log("dafuck");
              }
 
         });
@@ -162,12 +165,12 @@ class Game extends Component {
 
     onUpdateRequest() {
         if (actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'player':player, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify({'player':player, 'id': id, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = actionQueue[0];
             actionQueue.shift();
-            this.ws.send(JSON.stringify({'player': player, 'action': returnedAction}));
+            this.ws.send(JSON.stringify({'player': player, 'id': id, 'action': returnedAction}));
         }
     }
 }
