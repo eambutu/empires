@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
+import update from 'immutability-helper';
 
 const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
@@ -48,32 +49,37 @@ class Game extends Component {
         document.addEventListener("keydown", this.keyDownBound);
 
         // temp
-        this.setState({ squares: [
+        this.setState({
+            squares:
                 [
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                    ],
                 ],
-                [
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                ],
-                [
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                ],
-                [
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                    {type: "empty"},
-                ],
-        ]
+            width: this.state.width,
+            height: this.state.height,
+            cursor: this.state.cursor,
         });
     }
 
@@ -105,6 +111,19 @@ class Game extends Component {
                 <div>error, didn't get game state</div>
             )
         }
+    }
+
+    // take a list of new squares for us to update
+    updateGame(newSquares) {
+        let newData;
+        for(let s in newSquares) {
+            let [x, y] = s.loc;
+            newData = update(this.state, {
+                squares: {[x] : {[y] : {$set: s}}}
+            });
+        }
+
+        this.setState(newData);
     }
 }
 
