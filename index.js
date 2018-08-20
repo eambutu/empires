@@ -5,10 +5,10 @@ var expressWs = require('express-ws')(app);
 var path = require('path');
 var wss = expressWs.getWss('/');
 
-id1 = 1729;
-id2 = 1618;
 ts = 1000 / 2;
-game = null;
+started = false;
+gameInterval = null;
+secrets = {1: 1729, 2: 1618};
 sockets = {1: null, 2: null};
 names = {1: 'player_1', 2: 'player_2'};
 moves = [];
@@ -26,25 +26,26 @@ app.ws('/', function (ws, req) {
     ws.on('message', function (msg) {
         ws.isAlive = true;
         data = JSON.parse(msg);
-        if (data.id === id1) {
+        if (data.secret === secrets[1]) {
             cache.put('playerOneMove', data.action);
             data.player = 1;
             moves.push(data);
         }
-        else if (data.id === id2) {
+        else if (data.secret === secrets[2]) {
             cache.put('playerTwoMove', data.action);
             data.player = 2;
             moves.push(data);
         }
     });
 
-    if (game !== 'null') {
+    if (!started) {
+        console.log(wss.clients.size);
         if (wss.clients.size === 1) {
             ws.send(JSON.stringify(
                 {
                     'event': 'connected',
                     'player': 1,
-                    'id': id1
+                    'secret': secrets[1]
                 }
             ));
             sockets[1] = ws;
@@ -55,7 +56,7 @@ app.ws('/', function (ws, req) {
                 {
                     'event': 'connected',
                     'player': 2,
-                    'id': id2
+                    'secret': secrets[2]
                 }
             ));
             sockets[2] = ws;
@@ -101,7 +102,7 @@ class Unit {
 }
 
 function runGame() {
-    gameStarted = true;
+    started = true;
     initState();
     broadcastInit();
     game = setInterval(
@@ -130,6 +131,7 @@ function maybeEndGame() {
     });
     if (allDead){
         console.log('RESTART GAME');
+        started = false;
         clearInterval(game);
     }
 }

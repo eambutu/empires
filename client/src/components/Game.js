@@ -13,7 +13,7 @@ const keyMap = {
 };
 
 let player = 0;
-let id = 0;
+let secret = 0;
 
 class Game extends Component {
     isInBound(y, x) {
@@ -76,7 +76,7 @@ class Game extends Component {
             var json = JSON.parse(event.data);
             if (json.event === 'connected') {
                 player = json.player;
-                id = json.id;
+                secret = json.secret;
             }
             else if (json.event === 'init') {
                 console.log("initializing")
@@ -172,12 +172,12 @@ class Game extends Component {
 
     onUpdateRequest() {
         if (this.actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'id': id, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify({'secret': secret, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = this.actionQueue[0];
             this.actionQueue.shift();
-            this.ws.send(JSON.stringify({'id': id, 'action': returnedAction}));
+            this.ws.send(JSON.stringify({'secret': secret, 'action': returnedAction}));
         }
     }
 }
