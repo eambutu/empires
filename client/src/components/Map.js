@@ -3,6 +3,12 @@ import logo from '../logo.svg';
 import '../styles/Map.css';
 import attacker from "../attacker.svg";
 
+// Cooresponds with the SquareTypeEnum in server-side code
+const typeMap = {
+    1: 'REGULAR',
+    2: 'BASE',
+};
+
 export default function Map(props) {
     const {squares, cursor, handleClick} = props;
 

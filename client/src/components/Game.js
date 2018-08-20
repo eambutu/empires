@@ -31,7 +31,6 @@ class Game extends Component {
             console.log(e.key);
             const dPos = keyMap[e.key];
             if (dPos) {
-                // console.log(Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx)))
                 let newCursor = [
                     Math.min(this.state.height - 1, Math.max(0, this.state.cursor[0] + dPos.dy)),
                     Math.min(this.state.width - 1, Math.max(0, this.state.cursor[1] + dPos.dx))
