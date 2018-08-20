@@ -13,6 +13,8 @@ const keyMap = {
 
 let actionQueue = [];
 
+let player = 0;
+
 
 class Game extends Component {
 
@@ -22,18 +24,18 @@ class Game extends Component {
             squares: null,
             width: 4,
             height: 4,
-            cursor: (0,0),
+            cursor: [0,0],
         }
 
         this.keyDownBound = e => {
             console.log(e.key);
             const dPos = keyMap[e.key];
             if (dPos) {
-                let newCursor = (this.state.cursor[0] + dPos.dx, this.state.cursor[1] + dPos.dy)
+                let newCursor = [this.state.cursor[0] + dPos.dx, this.state.cursor[1] + dPos.dy]
                 actionQueue.push({
                     "action" : "move",
                     "source": this.state.cursor,
-                    "target": (this.state.cursor[0] + dPos.dx, this.state.cursor[1] + dPos.dy)
+                    "target": [this.state.cursor[0] + dPos.dx, this.state.cursor[1] + dPos.dy]
                 })
                 this.setState({cursor: newCursor})
             }
@@ -46,7 +48,26 @@ class Game extends Component {
         //     .then(res => this.setState({ squares: res.squares }))
         //     .catch(err => console.log(err));
 
+        console.log('component did mount');
         document.addEventListener("keydown", this.keyDownBound);
+
+        this.ws = new WebSocket('ws://localhost:5000');
+
+
+        this.ws.addEventListener('message',  event => {
+             if (event.data === 'give me action') {
+                this.onUpdateRequest()
+             }
+             else if (event.data.includes('Player')) {
+                 player = event.data.charAt(7);
+            }
+            else {
+                var parsed = JSON.parse(event.data);
+                console.log(parsed);
+                this.updateGame(parsed);
+             }
+
+        });
 
         // temp
         this.setState({
@@ -115,25 +136,25 @@ class Game extends Component {
 
     // take a list of new squares for us to update
     updateGame(newSquares) {
-        let newData;
-        for(let s in newSquares) {
-            let [x, y] = s.loc;
-            newData = update(this.state, {
-                squares: {[x] : {[y] : {$set: s}}}
-            });
-        }
+        let newData = {};
+        // newSquares.forEach( s => {
+        //     let [x, y] = s.pos;
+        //     newData = update(this.state, {
+        //         squares: {[x] : {[y] : {$set: s}}}
+        //     });
+        // });
 
-        this.setState(newData);
+        this.setState({squares: newSquares});
     }
 
     onUpdateRequest() {
         if (actionQueue.length < 1){
-            return {};
+            this.ws.send(JSON.stringify({'player':player, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = actionQueue[0];
             actionQueue.shift();
-            return returnedAction;
+            this.ws.send(JSON.stringify({'player': player, 'action': returnedAction}));
         }
     }
 }
