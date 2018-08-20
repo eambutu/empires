@@ -23,6 +23,7 @@ class Game extends Component {
         super(props);
         this.state = {
             squares: null,
+            playerStatus: null,
             width: 0,
             height: 0,
             cursor: null
@@ -86,6 +87,9 @@ class Game extends Component {
             else if (json.event === 'update') {
                 this.updateGame(json.state);
             }
+            else if (json.event === 'full') {
+                console.log('Lobby is full');
+            }
             else {
                 console.log("dafuck");
             }
@@ -124,8 +128,11 @@ class Game extends Component {
     }
 
     // take a list of new squares for us to update
-    updateGame(newSquares) {
-        this.setState({squares: newSquares});
+    updateGame(state) {
+        this.setState({
+            squares: state.squares,
+            playerStatus: state.playerStatus
+        });
     }
 
     onUpdateRequest() {

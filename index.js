@@ -8,8 +8,11 @@ var wss = expressWs.getWss('/');
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
+gameStarted = false;
 sockets = {};
 moves = [];
+
+
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -18,9 +21,9 @@ app.get('/', function (req, res) {
 });
 
 app.ws('/', function (ws, req) {
+    ws.isAlive = true;
     ws.on('message', function (msg) {
-        console.log(msg);
-
+        ws.isAlive = true;
         data = JSON.parse(msg);
         if (data.id === id1) {
             cache.put('playerOneMove', data.action);
@@ -34,38 +37,41 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    if (wss.clients.size === 1) {
-        ws.send(JSON.stringify(
-            {
-                'event': 'connected',
-                'player': 1,
-                'id': id1
-            }
-        ));
-        ws.id = 1;
-        sockets[ws.id] = ws;
-        console.log('Player 1 connected')
-    }
-    else if (wss.clients.size === 2) {
-        ws.send(JSON.stringify(
-            {
-                'event': 'connected',
-                'player': 2,
-                'id': id2
-            }
-        ));
-        ws.id = 2;
-        sockets[ws.id] = ws;
-        console.log('Player 2 connected')
-        runGame();
+    if (!gameStarted) {
+        if (wss.clients.size === 1) {
+            ws.send(JSON.stringify(
+                {
+                    'event': 'connected',
+                    'player': 1,
+                    'id': id1
+                }
+            ));
+            sockets[1] = ws;
+            console.log('Player 1 connected')
+        }
+        else if (wss.clients.size === 2) {
+            ws.send(JSON.stringify(
+                {
+                    'event': 'connected',
+                    'player': 2,
+                    'id': id2
+                }
+            ));
+            sockets[2] = ws;
+            console.log('Player 2 connected')
+            runGame();
+        }
     }
     else {
-        ws.send(`Lobby is full`)
+        ws.send(JSON.stringify({
+            'event': 'full'
+        }));
         ws.close();
     }
 
     ws.on('close', function () {
         console.log('Client disconnected')
+        ws.isAlive = false;
     });
 });
 
@@ -94,8 +100,8 @@ class Unit {
 }
 
 function runGame() {
+    gameStarted = true;
     initState();
-    broadcastState();
     broadcastInit();
     setInterval(
         performOneTurn,
@@ -116,7 +122,10 @@ function performOneTurn() {
 
 function requestActions() {
     Object.keys(sockets).forEach(function(key) {
-        sockets[key].send(JSON.stringify({'event': 'request_action'}));
+        if (sockets[key].isAlive) {
+            sockets[key].send(JSON.stringify({'event': 'request_action'}));
+        }
+        sockets[key].isAlive = false;
     });
 }
 
@@ -124,13 +133,18 @@ function broadcastInit() {
     // Things that get broadcast in the beginning of the game
     let playerBases = cache.get('playerBases');
     Object.keys(sockets).forEach(function (key) {
-        sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
-    })
+        if (sockets[key].isAlive) {
+            sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
+        }
+    });
+    console.log('Sent init');
 }
 
 function broadcastState() {
     Object.keys(sockets).forEach(function (key) {
-        sockets[key].send(JSON.stringify({'event': 'update', 'state': getState()}));
+        if (sockets[key].isAlive){
+            sockets[key].send(JSON.stringify({'event': 'update', 'state': getState()}));
+        }
     });
     console.log("Sent state");
 }
@@ -168,11 +182,22 @@ function initState () {
 function getState() {
     //TODO: logic to decide what to sends over
     const squares = cache.get('squareStates');
+    const playerStatus = {};
+    Object.entries(sockets).forEach(([id, ws]) => {
+        if (ws.isAlive) {
+            playerStatus[id] = 'playing';
+        }
+        else {
+            playerStatus[id] = 'disconnected';
+        }
+    });
     // const flattenedSquares = squares.reduce(function (prev, cur) {
     //     return prev.concat(cur);
     // });
 
-    return squares;
+    state = {'squares': squares, 'playerStatus': playerStatus};
+    console.log(state);
+    return state
 }
 
 function updateState () {
