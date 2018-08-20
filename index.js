@@ -1,14 +1,17 @@
 var express = require('express');
-var cache = require('memory_cache');
+var cache = require('memory-cache');
 
 var app = express();
 var expressWs = require('express-ws')(app);
 
+var wss = expressWs.getWss('/');
+
+var id1 = null;
+var id2 = null;
+
 app.get('/', function (req, res) {
     res.send('Hello World!');
 });
-
-var wss = expressWs.getWss('/');
 
 app.ws('/', function (ws, req) {
     ws.on('message', function (msg) {
@@ -16,13 +19,21 @@ app.ws('/', function (ws, req) {
         ws.send(`Hello, you sent -> ${msg}`);
     });
 
-    if (wss.clients.size <= 2) {
-        ws.send(`You are Player ${wss.clients.size}`);
-        console.log('size is', wss.clients.size);
+    if (wss.clients.size == 1) {
+        ws.send(`You are Player 1`);
+        id1 = ws.id;
+    }
+    else if (wss.clients.size == 2) {
+        ws.send(`You are Player 2`);
+        id2 = ws.id;
+        initState();
     }
     else {
         ws.send(`Lobby is full`)
+        ws.close();
     }
+    console.log('Lobby size is', wss.clients.size);
+
 });
 
 app.listen(5000, function () {
@@ -49,7 +60,17 @@ class Unit {
     }
 }
 
-function initState () {
+function runGame() {
+    initState();
+    setInterval(
+        () => wss.clients.forEach(function (client) {
+            client.send(JSON.stringify(getState()));
+        }),
+        1000
+    );
+}
+
+function initState() {
     var squareStates = [];
     for (var i = 0; i < 8; i++) {
         squareStates[i] = [];
@@ -70,15 +91,14 @@ function initState () {
     cache.put('playerTwoMove', null);
 }
 
-function sendState () {
+function getState() {
     //TODO: logic to decide what to sends over
     const squares = cache.get('squareStates');
-    const flattenedSquares = squares.reduce(function(prev, cur) {
+    const flattenedSquares = squares.reduce(function (prev, cur) {
         return prev.concat(cur);
     });
-    res.send(JSON.stringify(flattenedSquares));
 }
 
-function updateState () {
+function updateState() {
 
 }
