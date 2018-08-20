@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
-import update from 'immutability-helper';
 import EndGame from "./EndGame";
 
 const keyMap = {
@@ -30,6 +29,7 @@ class Game extends Component {
             cursor: null,
         };
         this.actionQueue = [];
+        this.isPlayer = null;
 
         this.keyDownBound = e => {
             console.log(e.key);
@@ -52,8 +52,10 @@ class Game extends Component {
 
         this.onClickBound = e => {
             let target = e.currentTarget;
-            if (target.getAttribute("unit") === player) {
-                this.setState({cursor: [parseInt(e.currentTarget.getAttribute("y")), parseInt(e.currentTarget.getAttribute("x"))]});
+            let y = parseInt(target.getAttribute("y"));
+            let x = parseInt(target.getAttribute("x"));
+            if (this.isPlayer[y][x]) {
+                this.setState({cursor: [y, x]});
             }
         };
     }
@@ -142,12 +144,29 @@ class Game extends Component {
         }
     }
 
-    // take a list of new squares for us to update
     updateGame(newState) {
-        this.setState({
-            squares: newState.squares,
-            playerStatus: newState.playerStatus
+        // check for valid queue
+        let isPlayer = newState.squares.map(row => {
+            return row.map(cell => {
+                return cell.unit && cell.unit.playerId === player;
+            });
         });
+
+        this.actionQueue = this.actionQueue.filter(action => {
+            if (action.action === "move") {
+                let [y, x] = action.source;
+                if (isPlayer[y][x]) {
+                    isPlayer[y][x] = false;
+                    let [newY, newX] = action.target;
+                    isPlayer[newY][newX] = true;
+                    return true;
+                }
+            }
+            return false; // bad queued move
+        });
+        this.isPlayer = isPlayer;
+
+        this.setState({squares: newState.squares, playerStatus: newState.playerStatus});
     }
 
     onUpdateRequest() {

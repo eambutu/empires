@@ -5,14 +5,18 @@ var expressWs = require('express-ws')(app);
 var path = require('path');
 var wss = expressWs.getWss('/');
 
+Vision = {
+    UNIT: 1,
+    BASE: 3
+};
+
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
-gameStarted = false;
-sockets = {};
+game = null;
+sockets = {1: null, 2: null};
 names = {1: 'player_1', 2: 'player_2'};
 moves = [];
-
 
 
 app.use(express.static(path.join(__dirname, 'client/build')));
@@ -24,21 +28,21 @@ app.get('/', function (req, res) {
 app.ws('/', function (ws, req) {
     ws.isAlive = true;
     ws.on('message', function (msg) {
+        let moves = cache.get('moves')
         ws.isAlive = true;
         data = JSON.parse(msg);
         if (data.id === id1) {
-            cache.put('playerOneMove', data.action);
             data.player = 1;
             moves.push(data);
         }
         else if (data.id === id2) {
-            cache.put('playerTwoMove', data.action);
             data.player = 2;
             moves.push(data);
         }
+        cache.put('moves', moves);
     });
 
-    if (!gameStarted) {
+    if (game !== 'null') {
         if (wss.clients.size === 1) {
             ws.send(JSON.stringify(
                 {
@@ -86,17 +90,65 @@ SquareTypeEnum = {
 }
 
 class SquareState {
-    constructor(y, x, count, squareType, unit) {
+    constructor(y, x, squareType, unit) {
         this.pos = [y, x];
-        this.count = count;
         this.squareType = squareType;
         this.unit = unit;
     }
 }
 
+class SquareCounts {
+    constructor(counts) {
+        this.counts = counts;
+    }
+
+    collapseUnits() {
+        let max_idx = -1;
+        let max_num = 0;
+        let second_max_idx = -1;
+        let second_max_num = 0;
+        this.counts.forEach(function (count, idx) {
+            if (count > max_num) {
+                second_max_idx = max_idx;
+                second_max_num = max_num;
+                max_idx = idx;
+                max_num = count;
+            }
+            else if (count > second_max_num) {
+                second_max_idx = idx;
+                second_max_num = count;
+            }
+        })
+
+        if (max_idx === -1 || max_num === second_max_num) {
+            for (let idx = 0; idx < this.counts.length; idx++) {
+                this.counts[idx] = 0;
+            }
+        }
+        else {
+            for (let idx = 0; idx < this.counts.length; idx++) {
+                this.counts[idx] = 0;
+                if (idx === max_idx) {
+                    this.counts[idx] = max_num - second_max_num;
+                }
+            }
+        }
+    };
+
+    nonZeroIdx() {
+        for (let idx = 0; idx < this.counts.length; idx++) {
+            if (this.counts[idx] > 0) {
+                return idx;
+            }
+        }
+        return -1;
+    }
+}
+
 class Unit {
-    constructor(playerId) {
+    constructor(playerId, count) {
         this.playerId = playerId;
+        this.count = count;
     }
 }
 
@@ -104,7 +156,7 @@ function runGame() {
     gameStarted = true;
     initState();
     broadcastInit();
-    setInterval(
+    game = setInterval(
         performOneTurn,
         ts
     );
@@ -112,13 +164,26 @@ function runGame() {
 
 
 function performOneTurn() {
+    maybeEndGame();
     requestActions();
-
     setTimeout(function() {
         updateState();
         broadcastState();
     }, (ts / 2));
 
+}
+
+function maybeEndGame() {
+    allDead = true;
+    Object.keys(sockets).forEach(function(key) {
+        if (sockets[key].isAlive) {
+            allDead = false;
+        }
+    });
+    if (allDead){
+        console.log('RESTART GAME');
+        clearInterval(game);
+    }
 }
 
 function requestActions() {
@@ -154,6 +219,7 @@ function broadcastState() {
 
 function initState () {
     let squareStates = [];
+    let squareCounts = [];
     let playerBases = [];
 
     playerBases[0] = [0, 0];
@@ -161,23 +227,27 @@ function initState () {
 
     for (let i = 0; i < 15; i++) {
         squareStates[i] = [];
+        squareCounts[i] = [];
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
+                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.BASE, new Unit(1, 1));
+                squareCounts[i][j] = new SquareCounts([1, 0]);
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(2));
+                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.BASE, new Unit(2, 1));
+                squareCounts[i][j] = new SquareCounts([0, 1]);
             }
             else {
-                squareStates[i][j] = new SquareState(i, j, 0, SquareTypeEnum.REGULAR, null);
+                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.REGULAR, null);
+                squareCounts[i][j] = new SquareCounts([0, 0]);
             }
         }
     }
 
     cache.put('playerBases', playerBases);
     cache.put('squareStates', squareStates);
-    cache.put('playerOneMove', null);
-    cache.put('playerTwoMove', null);
+    cache.put('squareCounts', squareCounts);
+    cache.put('moves', []);
     console.log('State initialized');
 }
 
@@ -204,41 +274,33 @@ function getState() {
 
 function updateState () {
     let squareStates = cache.get('squareStates');
-    let playerOneMove = cache.get('playerOneMove') || {};
-    let playerTwoMove = cache.get('playerTwoMove') || {};
-    // console.log("Current P1 move", playerOneMove);
-    // console.log("Current P2 move", playerTwoMove);
+    let squareCounts = cache.get('squareCounts');
+    let moves = cache.get('moves');
 
-    if (playerOneMove.target !== playerTwoMove.target) {
-        if (playerOneMove.action && playerOneMove.source && playerOneMove.target) {
-            var playerOnePrevSquare = squareStates[playerOneMove.source[0]][playerOneMove.source[1]];
-            var playerOneCount = playerOnePrevSquare.count;
-            var playerOneUnit = playerOnePrevSquare.unit;
-
-            playerOnePrevSquare.count = 0;
-            playerOnePrevSquare.unit = null;
+    moves.forEach(function (move) {
+        let action = move.action;
+        let player = move.player - 1;
+        if (action && action.action && action.source && action.target) {
+            console.log(action);
+            squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
+            squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
         }
-        if (playerTwoMove.action && playerTwoMove.source && playerTwoMove.target) {
-            // console.log(playerTwoMove.source);
-            var playerTwoPrevSquare = squareStates[playerTwoMove.source[0]][playerTwoMove.source[1]];
-            var playerTwoCount = playerTwoPrevSquare.count;
-            var playerTwoUnit = playerTwoPrevSquare.unit;
+    })
 
-            playerTwoPrevSquare.count = 0;
-            playerTwoPrevSquare.unit = null;
-        }
-
-        if (playerOneMove.action && playerOneMove.source && playerOneMove.target) {
-            let playerOneNextSquare = squareStates[playerOneMove.target[0]][playerOneMove.target[1]];
-            playerOneNextSquare.count = playerOneCount;
-            playerOneNextSquare.unit = playerOneUnit;
-        }
-        if (playerTwoMove.action && playerTwoMove.source && playerTwoMove.target) {
-            let playerTwoNextSquare = squareStates[playerTwoMove.target[0]][playerTwoMove.target[1]];
-            playerTwoNextSquare.count = playerTwoCount;
-            playerTwoNextSquare.unit = playerTwoUnit;
+    for (let i = 0; i < 15; i++) {
+        for (let j = 0; j < 15; j++) {
+            squareCounts[i][j].collapseUnits();
+            let temp_idx = squareCounts[i][j].nonZeroIdx(true);
+            if (temp_idx === -1) {
+                squareStates[i][j].unit = null;
+            }
+            else {
+                squareStates[i][j].unit = new Unit(temp_idx + 1, squareCounts[i][j].counts[temp_idx]);
+            }
         }
     }
 
     cache.put('squareStates', squareStates);
+    cache.put('squareCounts', squareCounts);
+    cache.put('moves', []);
 }
