@@ -16,7 +16,7 @@ let id = 0;
 
 class Game extends Component {
     isInBound(y, x) {
-        return (0 <= y && y < this.state.height) && (0 <= x < this.state.width);
+        return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
     }
 
     constructor(props) {

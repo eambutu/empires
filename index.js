@@ -23,12 +23,12 @@ app.ws('/', function (ws, req) {
 
         data = JSON.parse(msg);
         if (data.id === id1) {
-            // cache.put('playerOneMove', data.action);
+            cache.put('playerOneMove', data.action);
             data.player = 1;
             moves.push(data);
         }
         else if (data.id === id2) {
-            // cache.put('playerTwoMove', data.action);
+            cache.put('playerTwoMove', data.action);
             data.player = 2;
             moves.push(data);
         }
