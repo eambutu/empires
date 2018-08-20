@@ -36,7 +36,7 @@ function Cell(props) {
         styleClass = "square highlighted"
     }
     if (square.unit){
-        return <td className={styleClass} onClick={handleClick} x={x} y={y}> <img src={attacker} /></td>;
+        return <td className={styleClass} onClick={handleClick} x={x} y={y} isattacker={"true"}> <img src={attacker} /></td>;
     }
     return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
 }

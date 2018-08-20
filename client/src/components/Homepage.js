@@ -3,10 +3,6 @@ import attacker from '../attacker.svg';
 import '../styles/Homepage.css';
 
 class Homepage extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     componentDidMount() {
         // Call our fetch function below once the component mounts
         this.callBackendAPI()
