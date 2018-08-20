@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Map.css';
 import attacker from "../attacker.svg";
+import castle from "../castle.svg";
 
 export default function Map(props) {
     const {squares, cursor, handleClick} = props;
@@ -35,7 +36,10 @@ function Cell(props) {
     if (highlighted){
         styleClass = "square highlighted"
     }
-    if (square.unit){
+    if (typeMap[square.type] === "base") {
+        return <td className={styleClass} onClick={handleClick} x={x} y={y} isattacker={"true"}> <img src={castle} /></td>;
+    }
+    else if (square.unit) {
         return <td className={styleClass} onClick={handleClick} x={x} y={y} isattacker={"true"}> <img src={attacker} /></td>;
     }
     return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
