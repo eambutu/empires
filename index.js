@@ -53,8 +53,8 @@ SquareTypeEnum = {
 }
 
 class SquareState {
-    constructor(x, y, count, squareType, unit) {
-        this.pos = [x, y];
+    constructor(y, x, count, squareType, unit) {
+        this.pos = [y, x];
         this.count = count;
         this.squareType = squareType;
         this.unit = unit;
@@ -167,5 +167,4 @@ function updateState () {
     }
 
     cache.put('squareStates', squareStates);
-
 }

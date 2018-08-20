@@ -31,11 +31,11 @@ class Game extends Component {
             console.log(e.key);
             const dPos = keyMap[e.key];
             if (dPos) {
-                let newCursor = [this.state.cursor[0] + dPos.dx, this.state.cursor[1] + dPos.dy]
+                let newCursor = [this.state.cursor[1] + dPos.dy, this.state.cursor[0] + dPos.dx]
                 actionQueue.push({
                     "action" : "move",
                     "source": this.state.cursor,
-                    "target": [this.state.cursor[0] + dPos.dx, this.state.cursor[1] + dPos.dy]
+                    "target": [this.state.cursor[1] + dPos.dy, this.state.cursor[0] + dPos.dx]
                 })
                 this.setState({cursor: newCursor})
             }

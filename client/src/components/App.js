@@ -28,7 +28,7 @@ class App extends Component {
                 break;
             case "game":
                 comp = (
-                        <Game />
+                    <Game />
                 );
         }
 
