@@ -108,6 +108,7 @@ class Game extends Component {
     };
 
     render() {
+        console.log(this.state)
         if (this.state.squares && this.state.cursor) {
             return (
                 <div id="game-page">
