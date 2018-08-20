@@ -125,6 +125,17 @@ class Game extends Component {
 
         this.setState(newData);
     }
+
+    onUpdateRequest() {
+        if (actionQueue.length < 1){
+            return {};
+        }
+        else {
+            let returnedAction = actionQueue[0];
+            actionQueue.shift();
+            return returnedAction;
+        }
+    }
 }
 
 export default Game;
