@@ -68,12 +68,12 @@ class Game extends Component {
 
         this.ws.addEventListener('message',  event => {
             var json = JSON.parse(event.data);
-             if (json.event === 'init') {
-                 player = json.player;
-                 id = json.id;
-                 this.updateGame(json.init_state);
-            }
-            else if (json.event === 'request_action') {
+            //  if (json.event === 'init') {
+            //      player = json.player;
+            //      id = json.id;
+            //      this.updateGame(json.init_state);
+            // }
+            if (json.event === 'request_action') {
                  this.onUpdateRequest()
              }
             else if (json.event === 'update') {
