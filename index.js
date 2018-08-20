@@ -4,9 +4,9 @@ var app = express();
 var expressWs = require('express-ws')(app);
 var wss = expressWs.getWss('/');
 
-id1 = null;
-id2 = null;
-ts = 1000 / 2
+id1 = 1729;
+id2 = 1618;
+ts = 1000 / 2;
 
 app.get('/', function (req, res) {
     res.send('Hello World!');
@@ -17,21 +17,34 @@ app.ws('/', function (ws, req) {
         console.log(msg);
 
         data = JSON.parse(msg);
-        if (data.player === "1") {
+        if (data.id === id1) {
             cache.put('playerOneMove', data.action);
         }
-        else if (data.player === "2") {
+        else if (data.id === id2) {
             cache.put('playerTwoMove', data.action);
         }
     });
 
     if (wss.clients.size == 1) {
-        ws.send('Player 1');
+        ws.send(JSON.stringify(
+            {
+                'event': 'init',
+                'player': 1,
+                'id': id1,
+                'init_state': getState()
+            }
+        ));
         console.log('Player 1 connected')
     }
     else if (wss.clients.size == 2) {
-        ws.send('Player 2');
-        console.log('Player 2 connected')
+        ws.send(JSON.stringify(
+            {
+                'event': 'init',
+                'player': 2,
+                'id': id2,
+                'init_state': getState()
+            }
+        ));        console.log('Player 2 connected')
         runGame();
     }
     else {
@@ -89,13 +102,13 @@ function performOneTurn() {
 
 function requestActions() {
     wss.clients.forEach(function (client) {
-        client.send('give me action');
+        client.send(JSON.stringify({'event': 'request_action'}));
     });
 }
 
 function broadcastState() {
     wss.clients.forEach(function (client) {
-        client.send(JSON.stringify(getState()));
+        client.send(JSON.stringify({'event': 'update', 'state': getState()}));
     });
     console.log("Sent state");
 }
