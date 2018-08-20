@@ -7,8 +7,15 @@ import base from "../base.svg";
 // Cooresponds with the SquareTypeEnum in server-side code
 const typeMap = {
     1: 'REGULAR',
-    2: 'BASE',
+    2: 'BASE1',
+    3: 'BASE2'
 };
+
+const colorMap = {
+    1: 'white',
+    2: 'red',
+    3: 'blue'
+}
 
 export default function Map(props) {
     const {squares, cursor, handleClick} = props;
@@ -38,15 +45,23 @@ export default function Map(props) {
 function Cell(props) {
     const {square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
+    let divStyle = {
+        color: colorMap[square.squareType]
+    };
+    if (square.unit){
+        divStyle = {
+            color: 'green'
+        };
+    }
     if (highlighted){
         console.log("hi")
         styleClass = "square-holder highlighted"
     }
-    if (typeMap[square.squareType] === "BASE") {
-        return <td className={styleClass} onClick={handleClick} x={x} y={y}> <div className={"square"}><img src={base} /></div></td>;
+    if (typeMap[square.squareType] === "BASE1" || typeMap[square.squareType] === "BASE2") {
+        return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}> <div className={"square"}><img src={base} /></div></td>;
     }
     else if (square.unit){
-        return <td className={styleClass} onClick={handleClick} x={x} y={y} unit={square.unit}> <div className={"square"}><img src={attacker} /></div></td>;
+        return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y} unit={square.unit}> <div className={"square"}><img src={attacker} /></div></td>;
     }
-    return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
+    return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}></td>;
 }

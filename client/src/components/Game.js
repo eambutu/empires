@@ -27,7 +27,7 @@ class Game extends Component {
             width: 0,
             height: 0,
             cursor: null,
-            playerStatus: "lost"
+            playerStatus: "playing"
         };
         this.actionQueue = [];
 
