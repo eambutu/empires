@@ -12,7 +12,6 @@ const typeMap = {
 export default function Map(props) {
     const {squares, cursor, handleClick} = props;
 
-
     return (
         <table className={"map"}>
             <tbody>
@@ -25,7 +24,7 @@ export default function Map(props) {
                             handleClick={handleClick}
                             y = {rowindex}
                             x = {indexintorow}
-                            highlighted={cursor[1] == indexintorow && cursor[0] == rowindex}
+                            highlighted={cursor[1] === indexintorow && cursor[0] === rowindex}
                         />
                     ))}
                 </tr>
@@ -37,12 +36,12 @@ export default function Map(props) {
 
 function Cell(props) {
     const {square, highlighted, handleClick, x, y} = props;
-    let styleClass = "square"
+    let styleClass = "square";
     if (highlighted){
         styleClass = "square highlighted"
     }
     if (square.unit){
-        return <td className={styleClass} onClick={handleClick} x={x} y={y} isattacker={"true"}> <img src={attacker} /></td>;
+        return <td className={styleClass} onClick={handleClick} x={x} y={y} unit={square.unit}> <img src={attacker} /></td>;
     }
     return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
 }
