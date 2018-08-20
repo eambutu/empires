@@ -123,7 +123,7 @@ function broadcastInit() {
     // Things that get broadcast in the beginning of the game
     let playerBases = cache.get('playerBases');
     Object.keys(sockets).forEach(function (key) {
-        sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1]}));
+        sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
     })
 }
 
@@ -140,15 +140,15 @@ function initState () {
     let playerBases = [];
 
     playerBases[0] = [0, 0];
-    playerBases[1] = [2, 3];
+    playerBases[1] = [14, 14];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 15; i++) {
         squareStates[i] = [];
-        for (let j = 0; j < 4; j++) {
-            if (i === 0 && j === 0) {
+        for (let j = 0; j < 15; j++) {
+            if (i === playerBases[0][0] && j === playerBases[0][1]) {
                 squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.REGULAR, new Unit(0));
             }
-            else if (i === 3 && j === 3) {
+            else if (i === playerBases[1][0] && j === playerBases[1][1]) {
                 squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.REGULAR, new Unit(1));
             }
             else {

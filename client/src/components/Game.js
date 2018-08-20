@@ -22,8 +22,8 @@ class Game extends Component {
         super(props);
         this.state = {
             squares: null,
-            width: 4,
-            height: 4,
+            width: -1,
+            height: -1,
             cursor: [0,0],
         }
 
@@ -33,8 +33,8 @@ class Game extends Component {
             if (dPos) {
                 // console.log(Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx)))
                 let newCursor = [
-                    Math.min(3, Math.max(0, this.state.cursor[0] + dPos.dy)),
-                    Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx))
+                    Math.min(this.state.height - 1, Math.max(0, this.state.cursor[0] + dPos.dy)),
+                    Math.min(this.state.width - 1, Math.max(0, this.state.cursor[1] + dPos.dx))
                 ]
                 console.log(this.state.cursor[0])
                 console.log(this.state.cursor[0] + dPos.dy)
@@ -75,8 +75,11 @@ class Game extends Component {
                 id = json.id;
             }
             else if (json.event === 'init') {
-                let startCursor = json.base;
-                this.setState({cursor: startCursor})
+                this.setState({
+                    cursor: json.base,
+                    width: json.width,
+                    height: json.height,
+                })
             }
             else if (json.event === 'request_action') {
                 this.onUpdateRequest()
