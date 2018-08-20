@@ -1,0 +1,13 @@
+.map {
+    border-spacing: 0;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.square {
+    height: 40px;
+    width: 40px;
+    border-style: solid;
+    border-color: black;
+    border-width: 0.5px;
+}

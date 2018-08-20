@@ -2,8 +2,19 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/App.css';
 import Homepage from './Homepage.js';
+import Game from './Game.js';
 
 class App extends Component {
+
+    state = {
+        curState: "home",
+    };
+
+    startGame() {
+        console.log("changed state")
+        this.setState({curState: "game"});
+        console.log(this.state)
+    }
 
     componentDidMount() {
         // Call our fetch function below once the component mounts
@@ -23,9 +34,24 @@ class App extends Component {
     };
 
     render() {
+        var comp = "wtf happened";
+        console.log("rerender")
+        console.log(this.state.curState)
+        switch (this.state.curState) {
+            case "home":
+                comp = (
+                    <Homepage startGame={() => this.startGame()}/>
+                )
+                break;
+            case "game":
+                comp = (
+                        <Game />
+                );
+        }
+
         return (
             <div>
-                <Homepage />
+                {comp}
             </div>
         )
     }

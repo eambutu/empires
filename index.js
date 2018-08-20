@@ -4,7 +4,7 @@ app.get('/', function (req, res) {
     res.send('Hello World!');
 });
 app.listen(5000, function () {
-    console.log('App listening on port 3000!');
+    console.log('App listening on port 5000!');
 });
 
 // create a GET route
