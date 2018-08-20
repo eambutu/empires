@@ -2,14 +2,21 @@ var express = require('express');
 var cache = require('memory-cache');
 var app = express();
 var expressWs = require('express-ws')(app);
+var path = require('path');
 var wss = expressWs.getWss('/');
 
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
 
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+id1 = 1729;
+id2 = 1618;
+ts = 1000 / 2;
+
 app.get('/', function (req, res) {
-    res.send('Hello World!');
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
 app.ws('/', function (ws, req) {
@@ -25,7 +32,7 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    if (wss.clients.size == 1) {
+    if (wss.clients.size === 1) {
         ws.send(JSON.stringify(
             {
                 'event': 'init',
@@ -36,7 +43,7 @@ app.ws('/', function (ws, req) {
         ));
         console.log('Player 1 connected')
     }
-    else if (wss.clients.size == 2) {
+    else if (wss.clients.size === 2) {
         ws.send(JSON.stringify(
             {
                 'event': 'init',
