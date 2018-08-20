@@ -8,6 +8,8 @@ id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
 
+sockets = {}
+
 app.get('/', function (req, res) {
     res.send('Hello World!');
 });
@@ -28,23 +30,26 @@ app.ws('/', function (ws, req) {
     if (wss.clients.size == 1) {
         ws.send(JSON.stringify(
             {
-                'event': 'init',
+                'event': 'connected',
                 'player': 1,
-                'id': id1,
-                'init_state': getState()
+                'id': id1
             }
         ));
+        ws.id = 1;
+        sockets[ws.id] = ws;
         console.log('Player 1 connected')
     }
     else if (wss.clients.size == 2) {
         ws.send(JSON.stringify(
             {
-                'event': 'init',
+                'event': 'connected',
                 'player': 2,
-                'id': id2,
-                'init_state': getState()
+                'id': id2
             }
-        ));        console.log('Player 2 connected')
+        ));
+        ws.id = 2;
+        sockets[ws.id] = ws;
+        console.log('Player 2 connected')
         runGame();
     }
     else {
@@ -83,6 +88,8 @@ class Unit {
 
 function runGame() {
     initState();
+    broadcastState();
+    broadcastInit();
     setInterval(
         performOneTurn,
         ts
@@ -101,14 +108,22 @@ function performOneTurn() {
 }
 
 function requestActions() {
-    wss.clients.forEach(function (client) {
-        client.send(JSON.stringify({'event': 'request_action'}));
+    Object.keys(sockets).forEach(function(key) {
+        sockets[key].send(JSON.stringify({'event': 'request_action'}));
     });
 }
 
+function broadcastInit() {
+    // Things that get broadcast in the beginning of the game
+    let playerBases = cache.get('playerBases');
+    Object.keys(sockets).forEach(function (key) {
+        sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1]}));
+    })
+}
+
 function broadcastState() {
-    wss.clients.forEach(function (client) {
-        client.send(JSON.stringify({'event': 'update', 'state': getState()}));
+    Object.keys(sockets).forEach(function (key) {
+        sockets[key].send(JSON.stringify({'event': 'update', 'state': getState()}));
     });
     console.log("Sent state");
 }
@@ -116,6 +131,11 @@ function broadcastState() {
 
 function initState () {
     let squareStates = [];
+    let playerBases = [];
+
+    playerBases[0] = [0, 0];
+    playerBases[1] = [2, 3];
+
     for (let i = 0; i < 4; i++) {
         squareStates[i] = [];
         for (let j = 0; j < 4; j++) {
@@ -130,6 +150,8 @@ function initState () {
             }
         }
     }
+
+    cache.put('playerBases', playerBases);
     cache.put('squareStates', squareStates);
     cache.put('playerOneMove', null);
     cache.put('playerTwoMove', null);

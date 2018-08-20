@@ -68,55 +68,23 @@ class Game extends Component {
 
         this.ws.addEventListener('message',  event => {
             var json = JSON.parse(event.data);
-             if (json.event === 'init') {
-                 player = json.player;
-                 id = json.id;
-                 this.updateGame(json.init_state);
+            if (json.event === 'connected') {
+                player = json.player;
+                id = json.id;
+            }
+            else if (json.event === 'init') {
+                let startCursor = json.base;
+                this.setState({cursor: startCursor})
             }
             else if (json.event === 'request_action') {
-                 this.onUpdateRequest()
-             }
+                this.onUpdateRequest()
+            }
             else if (json.event === 'update') {
                 this.updateGame(json.state);
-             }
-             else {
-                 console.log("dafuck");
-             }
-
-        });
-
-        // temp
-        this.setState({
-            squares:
-                [
-                    [
-                        {type: "empty", unit: { Unit: { playerId : 0 }}},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty", unit: { Unit: { playerId : 1 }}},
-                    ],
-                ],
-            width: this.state.width,
-            height: this.state.height,
-            cursor: this.state.cursor,
+            }
+            else {
+                console.log("dafuck");
+            }
         });
     }
 
