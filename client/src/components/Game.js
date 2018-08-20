@@ -16,7 +16,7 @@ let id = 0;
 
 class Game extends Component {
     isInBound(y, x) {
-        return (0 <= y && y < this.state.height) && (0 <= x < this.state.width);
+        return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
     }
 
     constructor(props) {
@@ -130,12 +130,12 @@ class Game extends Component {
 
     onUpdateRequest() {
         if (this.actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'player':player, 'id': id, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify({'id': id, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = this.actionQueue[0];
             this.actionQueue.shift();
-            this.ws.send(JSON.stringify({'player': player, 'id': id, 'action': returnedAction}));
+            this.ws.send(JSON.stringify({'id': id, 'action': returnedAction}));
         }
     }
 }
