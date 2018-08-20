@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Map.css';
+import attacker from "../attacker.svg";
 
 export default function Map(props) {
     const {squares} = props;
@@ -28,7 +29,7 @@ export default function Map(props) {
 function Cell(props) {
     const {square} = props;
     if (square.unit){
-        return <td className={"square"} > X </td>;
+        return <td className={"square"} > <img src={attacker} /></td>;
     }
     return <td className={"square"} ></td>;
 }

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import logo from '../logo.svg';
+import attacker from '../attacker.svg';
 import '../styles/Homepage.css';
 
 class Homepage extends Component {
@@ -28,7 +28,7 @@ class Homepage extends Component {
         return (
             <div className="App">
                 <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo" />
+                    <img src={attacker} className="App-logo" alt="logo" />
                     <h1 className="App-title">Control Towers</h1>
                 </header>
                 {/*<p className="App-intro">{this.state.data}</p>*/}
