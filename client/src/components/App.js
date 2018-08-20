@@ -7,7 +7,7 @@ import Game from './Game.js';
 class App extends Component {
 
     state = {
-        curState: "home",
+        curState: "game",
     };
 
     startGame() {

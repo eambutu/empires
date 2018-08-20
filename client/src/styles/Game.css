@@ -11,3 +11,7 @@
     border-color: black;
     border-width: 0.5px;
 }
+
+.highlighted {
+    border-width: 2px;
+}

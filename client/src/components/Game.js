@@ -31,17 +31,27 @@ class Game extends Component {
             console.log(e.key);
             const dPos = keyMap[e.key];
             if (dPos) {
+                // console.log(Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx)))
                 let newCursor = [
                     Math.min(3, Math.max(0, this.state.cursor[0] + dPos.dy)),
                     Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx))
                 ]
+                console.log(this.state.cursor[0])
+                console.log(this.state.cursor[0] + dPos.dy)
+                console.log(Math.min(3, Math.max(0, this.state.cursor[0] + dPos.dy)))
                 actionQueue.push({
                     "action" : "move",
                     "source": this.state.cursor,
                     "target": newCursor
                 })
+                console.log(actionQueue)
                 this.setState({cursor: newCursor})
             }
+        };
+
+        this.onClickBound = e => {
+            console.log(e.currentTarget);
+            this.setState({cursor: [parseInt(e.currentTarget.getAttribute("y")), parseInt(e.currentTarget.getAttribute("x"))]});
         };
     }
 
@@ -66,7 +76,7 @@ class Game extends Component {
             }
             else {
                 var parsed = JSON.parse(event.data);
-                console.log(parsed);
+                // console.log(parsed);
                 this.updateGame(parsed);
              }
 
@@ -126,7 +136,7 @@ class Game extends Component {
         if (this.state.squares) {
             return (
                 <div id="game-page">
-                    <Map squares={this.state.squares}/>
+                    <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
                 </div>
             );
         }

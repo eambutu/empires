@@ -4,19 +4,22 @@ import '../styles/Map.css';
 import attacker from "../attacker.svg";
 
 export default function Map(props) {
-    const {squares} = props;
+    const {squares, cursor, handleClick} = props;
 
 
     return (
         <table className={"map"}>
             <tbody>
-            {squares.map((row, col) => (
-                <tr key={col}>
+            {squares.map((row, rowindex) => (
+                <tr key={rowindex}>
                     {row.map((square, indexintorow) => (
                         <Cell
                             key = {indexintorow}
                             square={square}
-                            // isPlayer={x == tx && y == ty}
+                            handleClick={handleClick}
+                            y = {rowindex}
+                            x = {indexintorow}
+                            highlighted={cursor[1] == indexintorow && cursor[0] == rowindex}
                         />
                     ))}
                 </tr>
@@ -27,9 +30,13 @@ export default function Map(props) {
 }
 
 function Cell(props) {
-    const {square} = props;
-    if (square.unit){
-        return <td className={"square"} > <img src={attacker} /></td>;
+    const {square, highlighted, handleClick, x, y} = props;
+    let styleClass = "square"
+    if (highlighted){
+        styleClass = "square highlighted"
     }
-    return <td className={"square"} ></td>;
+    if (square.unit){
+        return <td className={styleClass} onClick={handleClick} x={x} y={y}> <img src={attacker} /></td>;
+    }
+    return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
 }
