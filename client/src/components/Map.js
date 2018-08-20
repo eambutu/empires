@@ -41,7 +41,7 @@ function Cell(props) {
     if (highlighted){
         styleClass = "square highlighted"
     }
-    if (typeMap[square.type] === "base") {
+    if (typeMap[square.type] === "BASE") {
         return <td className={styleClass} onClick={handleClick} x={x} y={y} isattacker={"true"}> <img src={castle} /></td>;
     }
     else if (square.unit){
