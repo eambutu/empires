@@ -16,16 +16,15 @@ export default function Map(props) {
     return (
         <table className={"map"}>
             <tbody>
-            {squares.map((row, rowindex) => (
-                <tr key={rowindex}>
-                    {row.map((square, indexintorow) => (
+            {squares.map((row, y) => (
+                <tr key={y}>
+                    {row.map((square, x) => (
                         <Cell
-                            key = {indexintorow}
+                            key={x}
                             square={square}
                             handleClick={handleClick}
-                            y = {rowindex}
-                            x = {indexintorow}
-                            highlighted={cursor[1] === indexintorow && cursor[0] === rowindex}
+                            y={y} x={x}
+                            highlighted={cursor[1] === x && cursor[0] === y}
                         />
                     ))}
                 </tr>
@@ -42,11 +41,11 @@ function Cell(props) {
         console.log("hi")
         styleClass = "square-holder highlighted"
     }
+    let content = null;
     if (typeMap[square.squareType] === "BASE") {
-        return <td className={styleClass} onClick={handleClick} x={x} y={y}> <div className={"square"}><img src={base} /></div></td>;
+        content = <div className={"square"}><img src={base}/></div>;
+    } else if (square.unit) {
+        content = <div className={"square"}><img src={attacker}/></div>;
     }
-    else if (square.unit){
-        return <td className={styleClass} onClick={handleClick} x={x} y={y} unit={square.unit}> <div className={"square"}><img src={attacker} /></div></td>;
-    }
-    return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
+    return <td className={styleClass} onClick={handleClick} x={x} y={y}>{content}</td>;
 }
