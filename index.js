@@ -10,6 +10,7 @@ id2 = 1618;
 ts = 1000 / 2;
 gameStarted = false;
 sockets = {};
+names = {1: 'player_1', 2: 'player_2'};
 moves = [];
 
 
@@ -133,6 +134,7 @@ function broadcastInit() {
     // Things that get broadcast in the beginning of the game
     let playerBases = cache.get('playerBases');
     Object.keys(sockets).forEach(function (key) {
+        console.log(playerBases)
         if (sockets[key].isAlive) {
             sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
         }
@@ -161,10 +163,10 @@ function initState () {
         squareStates[i] = [];
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(0));
+                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
+                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(2));
             }
             else {
                 squareStates[i][j] = new SquareState(i, j, 0, SquareTypeEnum.REGULAR, null);
@@ -185,10 +187,10 @@ function getState() {
     const playerStatus = {};
     Object.entries(sockets).forEach(([id, ws]) => {
         if (ws.isAlive) {
-            playerStatus[id] = 'playing';
+            playerStatus[names[id]] = 'playing';
         }
         else {
-            playerStatus[id] = 'disconnected';
+            playerStatus[names[id]] = 'disconnected';
         }
     });
     // const flattenedSquares = squares.reduce(function (prev, cur) {
@@ -196,7 +198,7 @@ function getState() {
     // });
 
     state = {'squares': squares, 'playerStatus': playerStatus};
-    console.log(state);
+    // console.log(state);
     return state
 }
 
@@ -204,8 +206,8 @@ function updateState () {
     let squareStates = cache.get('squareStates');
     let playerOneMove = cache.get('playerOneMove') || {};
     let playerTwoMove = cache.get('playerTwoMove') || {};
-    console.log("Current P1 move", playerOneMove);
-    console.log("Current P2 move", playerTwoMove);
+    // console.log("Current P1 move", playerOneMove);
+    // console.log("Current P2 move", playerTwoMove);
 
     if (playerOneMove.target !== playerTwoMove.target) {
         if (playerOneMove.action && playerOneMove.source && playerOneMove.target) {
@@ -217,7 +219,7 @@ function updateState () {
             playerOnePrevSquare.unit = null;
         }
         if (playerTwoMove.action && playerTwoMove.source && playerTwoMove.target) {
-            console.log(playerTwoMove.source);
+            // console.log(playerTwoMove.source);
             var playerTwoPrevSquare = squareStates[playerTwoMove.source[0]][playerTwoMove.source[1]];
             var playerTwoCount = playerTwoPrevSquare.count;
             var playerTwoUnit = playerTwoPrevSquare.unit;

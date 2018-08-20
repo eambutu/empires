@@ -28,7 +28,6 @@ class Game extends Component {
             width: 0,
             height: 0,
             cursor: null,
-            playerStatus: "playing"
         };
         this.actionQueue = [];
 
@@ -77,11 +76,13 @@ class Game extends Component {
                 id = json.id;
             }
             else if (json.event === 'init') {
+                console.log("initializing")
                 this.setState({
                     cursor: json.base,
                     width: json.width,
                     height: json.height,
                 })
+                console.log(json)
             }
             else if (json.event === 'request_action') {
                 this.onUpdateRequest()
@@ -129,6 +130,8 @@ class Game extends Component {
             return (
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                    {JSON.stringify(this.state.playerStatus)}
+                    {player}
                 </div>
             );
         }
@@ -140,10 +143,10 @@ class Game extends Component {
     }
 
     // take a list of new squares for us to update
-    updateGame(state) {
+    updateGame(newState) {
         this.setState({
-            squares: state.squares,
-            playerStatus: state.playerStatus
+            squares: newState.squares,
+            playerStatus: newState.playerStatus
         });
     }
 
