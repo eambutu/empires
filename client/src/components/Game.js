@@ -51,7 +51,9 @@ class Game extends Component {
 
         this.onClickBound = e => {
             console.log(e.currentTarget);
-            this.setState({cursor: [parseInt(e.currentTarget.getAttribute("y")), parseInt(e.currentTarget.getAttribute("x"))]});
+            if (e.currentTarget.getAttribute("isattacker") === "true") {
+                this.setState({cursor: [parseInt(e.currentTarget.getAttribute("y")), parseInt(e.currentTarget.getAttribute("x"))]});
+            }
         };
     }
 
