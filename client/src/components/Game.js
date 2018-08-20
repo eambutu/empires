@@ -3,6 +3,7 @@ import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
 import update from 'immutability-helper';
+import EndGame from "./EndGame";
 
 const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
@@ -26,7 +27,8 @@ class Game extends Component {
             playerStatus: null,
             width: 0,
             height: 0,
-            cursor: null
+            cursor: null,
+            playerStatus: "lost"
         };
         this.actionQueue = [];
 
@@ -114,6 +116,16 @@ class Game extends Component {
     render() {
         console.log(this.state)
         if (this.state.squares && this.state.cursor) {
+            if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
+                return (
+                    <div id="game-page">
+                        <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+
+                        <EndGame status={this.state.playerStatus}/>
+                    </div>
+
+                );
+            }
             return (
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
