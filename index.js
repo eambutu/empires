@@ -147,10 +147,10 @@ function initState () {
         squareStates[i] = [];
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.REGULAR, new Unit(0));
+                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(0));
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.REGULAR, new Unit(1));
+                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
             }
             else {
                 squareStates[i][j] = new SquareState(i, j, 0, SquareTypeEnum.REGULAR, null);
