@@ -7,7 +7,9 @@ button {
   cursor: pointer;
 }
 
-
+body {
+  margin: 30px;
+}
 
 .App {
   text-align: center;

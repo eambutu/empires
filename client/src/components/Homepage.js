@@ -2,7 +2,10 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Homepage.css';
 
-class App extends Component {
+class Homepage extends Component {
+    constructor(props) {
+        super(props);
+    }
 
     componentDidMount() {
         // Call our fetch function below once the component mounts
@@ -29,10 +32,10 @@ class App extends Component {
                     <h1 className="App-title">Control Towers</h1>
                 </header>
                 {/*<p className="App-intro">{this.state.data}</p>*/}
-                <button className="play-button" onClick="startGame()">Play</button>
+                <button className="play-button" onClick={this.props.startGame}>Play</button>
             </div>
         );
     }
 }
 
-export default App;
+export default Homepage;

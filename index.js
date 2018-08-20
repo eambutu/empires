@@ -26,7 +26,7 @@ app.ws('/', function (ws, req) {
     else if (wss.clients.size == 2) {
         ws.send(`You are Player 2`);
         id2 = ws.id;
-        initState();
+        runGame();
     }
     else {
         ws.send(`Lobby is full`)
@@ -46,11 +46,11 @@ SquareTypeEnum = {
 }
 
 class SquareState {
-    constructor(x, y, count, squareType, occupied) {
+    constructor(x, y, count, squareType, unit) {
         this.pos = (x, y);
         this.count = count;
         this.squareType = squareType;
-        this.occupied = occupied;
+        this.unit = unit;
     }
 }
 
@@ -70,11 +70,11 @@ function runGame() {
     );
 }
 
-function initState() {
-    var squareStates = [];
-    for (var i = 0; i < 8; i++) {
+function initState () {
+    let squareStates = [];
+    for (let i = 0; i < 8; i++) {
         squareStates[i] = [];
-        for (var j = 0; j < 8; j++) {
+        for (let j = 0; j < 8; j++) {
             if (i == 0 && j == 0) {
                 squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.REGULAR, new Unit(0));
             }
@@ -97,8 +97,32 @@ function getState() {
     const flattenedSquares = squares.reduce(function (prev, cur) {
         return prev.concat(cur);
     });
+
+    return flattenedSquares;
 }
 
-function updateState() {
+function updateState () {
+    let squareStates = cache.get('squareStates');
+    let playerOneMove = cache.get('playerOneMove');
+    let playerTwoMove = cache.get('playerTwoMove');
+    if (playerOneMove.target !== playerTwoMove.target) {
+        let playerOnePrevSquare = squareStates[playerOneMove.source[0]][playerOneMove.source[1]];
+        let playerTwoPrevSquare = squareStates[playerTwoMove.source[0]][playerTwoMove.source[1]];
+        let playerOneCount = playerOnePrevSquare.count;
+        let playerTwoCount = playerTwoPrevSquare.count;
+        let playerOneUnit = playerOnePrevSquare.unit;
+        let playerTwoUnit = playerTwoPrevSquare.unit;
+        playerOnePrevSquare.count = 0;
+        playerTwoPrevSquare.count = 0;
+        playerOnePrevSquare.unit = null;
+        playerTwoPrevSquare.unit = null;
 
+        let playerOneNextSquare = squareStates[playerOneMove.target[0]][playerOneMove.target[1]];
+        let playerTwoNextSquare = squareStates[playerTwoMove.target[0]][playerTwoMove.target[1]];
+        playerOneNextSquare.count = playerOneCount;
+        playerTwoNextSquare.count = playerTwoCount;
+        playerOneNextSquare.unit = playerOneUnit;
+        playerTwoNextSquare.unit = playerTwoUnit;
+    }
+    cache.put('squareStates', squareStates);
 }
