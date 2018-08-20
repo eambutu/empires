@@ -78,17 +78,25 @@ SquareTypeEnum = {
 }
 
 class SquareState {
-    constructor(y, x, count, squareType, unit) {
+    constructor(y, x, squareType, unit) {
         this.pos = [y, x];
-        this.count = count;
         this.squareType = squareType;
         this.unit = unit;
     }
 }
 
+class SquareStateTemp {
+    constructor(y, x, squareType, units) {
+        this.pos = [y, x];
+        this.squareType = squareType;
+        this.units = units;
+    }
+}
+
 class Unit {
-    constructor(playerId) {
+    constructor(playerId, count) {
         this.playerId = playerId;
+        this.count = count;
     }
 }
 
@@ -146,13 +154,18 @@ function initState () {
         squareStates[i] = [];
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(0));
+                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.BASE, new Unit(0, 1));
+                squareStatesTemp[i][j] = new SquareStateTemp(i, j, SquareTypeEnum.BASE, [new Unit(0, 1)]);
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, 1, SquareTypeEnum.BASE, new Unit(1));
+                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.BASE, new Unit(1, 1));
+                squareStatesTemp[i][j] = new SquareStateTemp(i, j, SquareTypeEnum.BASE, [new Unit(1, 1)]);
+
             }
             else {
-                squareStates[i][j] = new SquareState(i, j, 0, SquareTypeEnum.REGULAR, null);
+                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.REGULAR, null);
+                squareStatesTemp[i][j] = new SquareStateTemp(i, j, SquareTypeEnum.BASE, []);
+
             }
         }
     }
