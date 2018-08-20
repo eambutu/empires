@@ -138,12 +138,12 @@ class Game extends Component {
 
     onUpdateRequest() {
         if (actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'player':player, 'id': id, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify({'id': id, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = actionQueue[0];
             actionQueue.shift();
-            this.ws.send(JSON.stringify({'player': player, 'id': id, 'action': returnedAction}));
+            this.ws.send(JSON.stringify({'id': id, 'action': returnedAction}));
         }
     }
 }

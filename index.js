@@ -8,13 +8,10 @@ var wss = expressWs.getWss('/');
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;
+sockets = {};
+moves = [];
 
-sockets = {}
 app.use(express.static(path.join(__dirname, 'client/build')));
-
-id1 = 1729;
-id2 = 1618;
-ts = 1000 / 2;
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
@@ -26,10 +23,14 @@ app.ws('/', function (ws, req) {
 
         data = JSON.parse(msg);
         if (data.id === id1) {
-            cache.put('playerOneMove', data.action);
+            // cache.put('playerOneMove', data.action);
+            data.player = 1;
+            moves.push(data);
         }
         else if (data.id === id2) {
-            cache.put('playerTwoMove', data.action);
+            // cache.put('playerTwoMove', data.action);
+            data.player = 2;
+            moves.push(data);
         }
     });
 
