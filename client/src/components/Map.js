@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Map.css';
 import attacker from "../attacker.svg";
-import castle from "../castle.svg";
+import base from "../base.svg";
 
 // Cooresponds with the SquareTypeEnum in server-side code
 const typeMap = {
@@ -37,15 +37,16 @@ export default function Map(props) {
 
 function Cell(props) {
     const {square, highlighted, handleClick, x, y} = props;
-    let styleClass = "square";
+    let styleClass = "square-holder";
     if (highlighted){
-        styleClass = "square highlighted"
+        console.log("hi")
+        styleClass = "square-holder highlighted"
     }
-    if (typeMap[square.type] === "BASE") {
-        return <td className={styleClass} onClick={handleClick} x={x} y={y} isattacker={"true"}> <img src={castle} /></td>;
+    if (typeMap[square.squareType] === "BASE") {
+        return <td className={styleClass} onClick={handleClick} x={x} y={y}> <div className={"square"}><img src={base} /></div></td>;
     }
     else if (square.unit){
-        return <td className={styleClass} onClick={handleClick} x={x} y={y} unit={square.unit} isattacker={"true"}> <img src={attacker} /></td>;
+        return <td className={styleClass} onClick={handleClick} x={x} y={y} unit={square.unit}> <div className={"square"}><img src={attacker} /></div></td>;
     }
     return <td className={styleClass} onClick={handleClick} x={x} y={y}></td>;
 }
