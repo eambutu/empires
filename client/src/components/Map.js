@@ -46,7 +46,7 @@ function Cell(props) {
     const {square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
     let divStyle = {
-        color: colorMap[square.squareType]
+        "background-color": colorMap[square.squareType]
     };
     if (square.unit){
         divStyle = {
@@ -58,10 +58,22 @@ function Cell(props) {
         styleClass = "square-holder highlighted"
     }
     if (typeMap[square.squareType] === "BASE1" || typeMap[square.squareType] === "BASE2") {
-        return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}> <div className={"square"}><img src={base} /></div></td>;
+        return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
+            <div className={"square"}>
+                <object type={"image/svg+xml"} data={base}>
+                    Your browser does not support SVG
+                </object>
+            </div>
+        </td>;
     }
     else if (square.unit){
-        return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y} unit={square.unit}> <div className={"square"}><img src={attacker} /></div></td>;
+        return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y} unit={square.unit}>
+            <div className={"square"}>
+                <object type={"image/svg+xml"} data={attacker}>
+                    Your browser does not support SVG
+                </object>
+            </div>
+        </td>;
     }
     return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}></td>;
 }

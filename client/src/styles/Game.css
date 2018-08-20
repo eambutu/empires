@@ -9,9 +9,8 @@
 .square-holder {
     height: 36px;
     width: 36px;
-    border-style: solid;
-    border-color: black;
-    border-width: 0.5px;
+    border: 0.5px solid #aaaaaa;
+    background-color: black;
 }
 
 
@@ -26,9 +25,7 @@
 .highlighted {
     height: 33px;
     width: 33px;
-    border-style: solid;
-    border-color: black;
-    border-width: 2px;
+    border: 2px solid white;
 }
 
 
