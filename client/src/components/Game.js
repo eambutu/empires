@@ -11,47 +11,46 @@ const keyMap = {
     ArrowRight: { dx: 1, dy: 0 }
 };
 
-let actionQueue = [];
-
 let player = 0;
 let id = 0;
 
 class Game extends Component {
+    isInBound(y, x) {
+        return (0 <= y && y < this.state.height) && (0 <= x < this.state.width);
+    }
 
     constructor(props) {
         super(props);
         this.state = {
             squares: null,
-            width: 4,
-            height: 4,
-            cursor: [0,0],
-        }
+            width: 0,
+            height: 0,
+            cursor: null
+        };
+        this.actionQueue = [];
 
         this.keyDownBound = e => {
             console.log(e.key);
             const dPos = keyMap[e.key];
-            if (dPos) {
-                // console.log(Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx)))
-                let newCursor = [
-                    Math.min(3, Math.max(0, this.state.cursor[0] + dPos.dy)),
-                    Math.min(3, Math.max(0, this.state.cursor[1] + dPos.dx))
-                ]
-                console.log(this.state.cursor[0])
-                console.log(this.state.cursor[0] + dPos.dy)
-                console.log(Math.min(3, Math.max(0, this.state.cursor[0] + dPos.dy)))
-                actionQueue.push({
-                    "action" : "move",
-                    "source": this.state.cursor,
-                    "target": newCursor
-                })
-                console.log(actionQueue)
-                this.setState({cursor: newCursor})
+            if (dPos && this.state.cursor) {
+                let [cursorY, cursorX] = this.state.cursor;
+                let targetY = cursorY + dPos.dy;
+                let targetX = cursorX + dPos.dx;
+                if (this.isInBound(targetY, targetX)) {
+                    let target = [targetY, targetX];
+                    this.actionQueue.push({
+                        "action": "move",
+                        "source": this.state.cursor,
+                        "target": target
+                    });
+                    this.setState({cursor: target});
+                }
             }
         };
 
         this.onClickBound = e => {
-            console.log(e.currentTarget);
-            if (e.currentTarget.getAttribute("isattacker") === "true") {
+            let target = e.currentTarget;
+            if (target.getAttribute("unit") === player) {
                 this.setState({cursor: [parseInt(e.currentTarget.getAttribute("y")), parseInt(e.currentTarget.getAttribute("x"))]});
             }
         };
@@ -70,55 +69,26 @@ class Game extends Component {
 
         this.ws.addEventListener('message',  event => {
             var json = JSON.parse(event.data);
-            //  if (json.event === 'init') {
-            //      player = json.player;
-            //      id = json.id;
-            //      this.updateGame(json.init_state);
-            // }
-            if (json.event === 'request_action') {
-                 this.onUpdateRequest()
-             }
+            if (json.event === 'connected') {
+                player = json.player;
+                id = json.id;
+            }
+            else if (json.event === 'init') {
+                this.setState({
+                    cursor: json.base,
+                    width: json.width,
+                    height: json.height,
+                })
+            }
+            else if (json.event === 'request_action') {
+                this.onUpdateRequest()
+            }
             else if (json.event === 'update') {
                 this.updateGame(json.state);
-             }
-             else {
-                 console.log("dafuck");
-             }
-
-        });
-
-        // temp
-        this.setState({
-            squares:
-                [
-                    [
-                        {type: "empty", unit: { Unit: { playerId : 0 }}},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty", unit: { Unit: { playerId : 1 }}},
-                    ],
-                ],
-            width: this.state.width,
-            height: this.state.height,
-            cursor: this.state.cursor,
+            }
+            else {
+                console.log("dafuck");
+            }
         });
     }
 
@@ -138,7 +108,7 @@ class Game extends Component {
     };
 
     render() {
-        if (this.state.squares) {
+        if (this.state.squares && this.state.cursor) {
             return (
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
@@ -154,24 +124,16 @@ class Game extends Component {
 
     // take a list of new squares for us to update
     updateGame(newSquares) {
-        let newData = {};
-        // newSquares.forEach( s => {
-        //     let [x, y] = s.pos;
-        //     newData = update(this.state, {
-        //         squares: {[x] : {[y] : {$set: s}}}
-        //     });
-        // });
-
         this.setState({squares: newSquares});
     }
 
     onUpdateRequest() {
-        if (actionQueue.length < 1){
+        if (this.actionQueue.length < 1){
             this.ws.send(JSON.stringify({'player':player, 'id': id, 'action': {action:null, source:null, target:null}}));
         }
         else {
-            let returnedAction = actionQueue[0];
-            actionQueue.shift();
+            let returnedAction = this.actionQueue[0];
+            this.actionQueue.shift();
             this.ws.send(JSON.stringify({'player': player, 'id': id, 'action': returnedAction}));
         }
     }
