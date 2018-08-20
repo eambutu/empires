@@ -27,5 +27,8 @@ export default function Map(props) {
 
 function Cell(props) {
     const {square} = props;
+    if (square.unit){
+        return <td className={"square"} > X </td>;
+    }
     return <td className={"square"} ></td>;
 }

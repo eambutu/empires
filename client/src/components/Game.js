@@ -53,13 +53,7 @@ class Game extends Component {
             squares:
                 [
                     [
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                        {type: "empty"},
-                    ],
-                    [
-                        {type: "empty"},
+                        {type: "empty", unit: { Unit: { playerId : 0 }}},
                         {type: "empty"},
                         {type: "empty"},
                         {type: "empty"},
@@ -75,6 +69,12 @@ class Game extends Component {
                         {type: "empty"},
                         {type: "empty"},
                         {type: "empty"},
+                    ],
+                    [
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty"},
+                        {type: "empty", unit: { Unit: { playerId : 1 }}},
                     ],
                 ],
             width: this.state.width,
