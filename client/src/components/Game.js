@@ -81,6 +81,7 @@ class Game extends Component {
              }
              else {
                  console.log("dafuck");
+             }
 
         });
 
