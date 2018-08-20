@@ -1,21 +1,16 @@
 import React, { Component } from 'react';
+import {SquareType} from "./config"
 import logo from '../logo.svg';
 import '../styles/Map.css';
 import attacker from "../attacker.svg";
 import base from "../base.svg";
 
-// Cooresponds with the SquareTypeEnum in server-side code
-const typeMap = {
-    1: 'REGULAR',
-    2: 'BASE1',
-    3: 'BASE2'
-};
 
 const colorMap = {
-    1: 'white',
-    2: 'red',
-    3: 'blue'
-}
+    [SquareType.REGULAR]: 'white',
+    [SquareType.BASE1]: 'red',
+    [SquareType.BASE2]: 'blue'
+};
 
 export default function Map(props) {
     const {squares, cursor, handleClick} = props;
@@ -58,7 +53,7 @@ function Cell(props) {
     }
 
     let content = null;
-    if (typeMap[square.squareType] === "BASE1" || typeMap[square.squareType] === "BASE2") {
+    if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         content = <div className={"square"}><img src={base}/></div>;
     } else if (square.unit) {
         content = <div className={"square"}><img src={attacker}/></div>;

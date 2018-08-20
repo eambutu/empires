@@ -5,6 +5,11 @@ var expressWs = require('express-ws')(app);
 var path = require('path');
 var wss = expressWs.getWss('/');
 
+Vision = {
+    UNIT: 1,
+    BASE: 3
+};
+
 id1 = 1729;
 id2 = 1618;
 ts = 1000 / 2;

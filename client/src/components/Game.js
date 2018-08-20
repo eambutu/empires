@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
-import update from 'immutability-helper';
 import EndGame from "./EndGame";
 
 const keyMap = {
