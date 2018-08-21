@@ -122,7 +122,7 @@ class Game extends Component {
             if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
                 return (
                     <div id="game-page">
-                        <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                        <Map player={player} squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
 
                         <EndGame status={this.state.playerStatus}/>
                     </div>
