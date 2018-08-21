@@ -1,24 +1,19 @@
 import React, { Component } from 'react';
+import {SquareType} from "./config"
 import logo from '../logo.svg';
 import '../styles/Map.css';
 import attacker from "../attacker.svg";
 import base from "../base.svg";
 
-// Cooresponds with the SquareTypeEnum in server-side code
-const typeMap = {
-    1: 'REGULAR',
-    2: 'BASE1',
-    3: 'BASE2'
-};
 
 const colorMap = {
-    1: 'white',
-    2: 'red',
-    3: 'blue'
-}
+    [SquareType.REGULAR]: 'black',
+    [SquareType.BASE1]: 'red',
+    [SquareType.BASE2]: 'blue'
+};
 
 export default function Map(props) {
-    const {squares, cursor, handleClick} = props;
+    const {player, squares, cursor, handleClick} = props;
 
     return (
         <table className={"map"}>
@@ -27,6 +22,7 @@ export default function Map(props) {
                 <tr key={y}>
                     {row.map((square, x) => (
                         <Cell
+                            player={player}
                             key={x}
                             square={square}
                             handleClick={handleClick}
@@ -42,15 +38,22 @@ export default function Map(props) {
 }
 
 function Cell(props) {
-    const {square, highlighted, handleClick, x, y} = props;
+    const {player, square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
     let divStyle = {
-        color: colorMap[square.squareType]
+        "background-color": colorMap[square.squareType]
     };
     if (square.unit){
-        divStyle = {
-            color: 'green'
-        };
+        if (player === 1) {
+            divStyle = {
+                "background-color": 'red'
+            };
+        }
+        else{
+            divStyle = {
+                "background-color": 'blue'
+            };
+        }
     }
     if (highlighted){
         console.log("hi")
@@ -58,10 +61,18 @@ function Cell(props) {
     }
 
     let content = null;
-    if (typeMap[square.squareType] === "BASE1" || typeMap[square.squareType] === "BASE2") {
-        content = <div className={"square"}><img src={base}/></div>;
+    if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
+        content = <div className={"square"}>
+                    <object type={"image/svg+xml"} data={base}>
+                        Your browser does not support SVG
+                    </object>
+                  </div>;
     } else if (square.unit) {
-        content = <div className={"square"}><img src={attacker}/></div>;
+        content = <div className={"square"}>
+                    <object type={"image/svg+xml"} data={attacker}>
+                        Your browser does not support SVG
+                    </object>
+                  </div>;
     }
     return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>{content}</td>;
 }

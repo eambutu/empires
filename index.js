@@ -5,6 +5,12 @@ var expressWs = require('express-ws')(app);
 var path = require('path');
 var wss = expressWs.getWss('/');
 
+
+Vision = {
+    UNIT: 1,
+    BASE: 3
+};
+
 ts = 1000 / 2;
 started = false;
 gameInterval = null;
@@ -25,9 +31,12 @@ app.ws('/', function (ws, req) {
         let moves = cache.get('moves')
         data = JSON.parse(msg);
 
+        console.log(data);
+
         if (data.secret === ws.secret) {
             data.player = ws.player;
             moves.push(data);
+            console.log('pushed move');
         }
         cache.put('moves', moves);
     });

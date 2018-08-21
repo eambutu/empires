@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
-import update from 'immutability-helper';
 import EndGame from "./EndGame";
 
 const keyMap = {
@@ -124,7 +123,7 @@ class Game extends Component {
             if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
                 return (
                     <div id="game-page">
-                        <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                        <Map player={player} squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
 
                         <EndGame status={this.state.playerStatus}/>
                     </div>
