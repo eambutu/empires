@@ -12,6 +12,7 @@ Vision = {
     BASE: 3
 };
 
+
 ts = 1000 / 4;
 full = false;
 gameInterval = null;
