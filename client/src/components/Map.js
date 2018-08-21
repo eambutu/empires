@@ -4,6 +4,7 @@ import '../styles/Map.css';
 import sword from '../sword.svg';
 import base from "../base.svg";
 import eye from "../eye.svg"
+import shards from "../shard.svg"
 
 import up_arrow from "../up_arrow.svg";
 import down_arrow from "../down_arrow.svg";
@@ -89,6 +90,9 @@ function Cell(props) {
     let actionVisualEntries = Object.entries(actionVisuals);
     let overlayComponent = null;
     let text = "";
+    if (square.squareType > 2) {
+        console.log(square.squareType)
+    }
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         overlayComponent = (
             <div className={"square base"}>
@@ -101,7 +105,11 @@ function Cell(props) {
         </div>
         );
     }
-
+    else if (square.squareType === SquareType.TOWER){
+        overlayComponent = 
+        <object className={"icon"} type={"image/svg+xml"} data={shards}>
+        </object>
+    }
     else if (square.unit) {
         overlayComponent = (
             <div className={"square attacker count-text"}>
