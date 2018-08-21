@@ -12,7 +12,7 @@ Vision = {
     BASE: 3
 };
 
-ts = 1000 / 2;
+ts = 1000 / 4;
 started = false;
 gameInterval = null;
 maxPlayers = 2;
