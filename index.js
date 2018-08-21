@@ -158,9 +158,11 @@ function heartbeat() {
 
 function pingPlayers() {
     wss.clients.forEach(client => {
-        client.isAlive = client.ponged;
-        client.ping();
-        client.ponged = false;
+        if (client.readyState === 1) {
+            client.isAlive = client.ponged;
+            client.ping();
+            client.ponged = false;
+        }
     });
 }
 
