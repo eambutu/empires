@@ -1,18 +1,15 @@
-var SquareType = require('./config').SquareType;
-var AttackerCost = require('./config').AttackerCost;
-var express = require('express');
-var cache = require('memory-cache');
-var app = express();
-var expressWs = require('express-ws')(app);
-var path = require('path');
-var wss = expressWs.getWss('/');
-
+let express = require('express');
+let cache = require('memory-cache');
+let app = express();
+let wss = require('express-ws')(app).getWss('/');
+let path = require('path');
+const {SquareType, AttackerCost} = require('./config');
 
 Vision = {
     UNIT: 1,
-    BASE: 3
+    BASE: 3,
+    WATCHTOWER: 4,
 };
-
 
 ts = 1000 / 4;
 full = false;
@@ -31,9 +28,8 @@ app.get('/', function (req, res) {
 app.ws('/', function (ws, req) {
     ws.on('message', function (msg) {
         ws.isAlive = true;
-        data = JSON.parse(msg);
-
-        if (data.event === 'move'){
+        let data = JSON.parse(msg);
+        if (data.event === 'move') {
             console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = cache.get('queues');
@@ -195,10 +191,14 @@ function resetIfEmpty() {
     }
 }
 
-function resetGame() {
-    console.log('RESTART GAME');
+function endGame() {
     clearInterval(gameInterval);
     clearInterval(heartbeatInterval);
+}
+
+function resetGame() {
+    console.log('RESTART GAME');
+    endGame();
     setTimeout(function () {
         full = false;
     }, 1000);
@@ -258,6 +258,10 @@ function initState() {
         [14, 0]
     ]
 
+    let watchTowers = [
+        [7, 7]
+    ]
+
     for (let i = 0; i < height; i++) {
         squareStates[i] = [];
         squareCounts[i] = [];
@@ -275,6 +279,11 @@ function initState() {
                 towers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
                         squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, null);
+                    }
+                })
+                watchTowers.forEach(function(tower) {
+                    if (i === tower[0] && j === tower[1]) {
+                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, null);
                     }
                 })
                 squareCounts[i][j] = new SquareCounts([0, 0]);
@@ -312,6 +321,8 @@ function maskForPlayer(squares, playerId) {
                 range = Vision.BASE;
             } else if (playerId === 2 && cell.squareType === SquareType.BASE2) {
                 range = Vision.BASE;
+            } else if (cell.squareType === SquareType.WATCHTOWER && cell.unit && cell.unit.playerId === playerId) {
+                range = Vision.WATCHTOWER;
             } else if (cell.unit && cell.unit.playerId === playerId) {
                 range = Vision.UNIT;
             } else {
@@ -430,8 +441,10 @@ function updateState() {
 
         // Execute the action
         if (move && move.action && move.action.includes('move') && move.source && move.target) {
-            squareCounts[move.target[0]][move.target[1]].counts[player] += squareCounts[move.source[0]][move.source[1]].counts[player];
-            squareCounts[move.source[0]][move.source[1]].counts[player] = 0;
+            if (!(playerBases[player][0] === move.target[0] && playerBases[player][1] === move.target[1])) {
+                squareCounts[move.target[0]][move.target[1]].counts[player] += squareCounts[move.source[0]][move.source[1]].counts[player];
+                squareCounts[move.source[0]][move.source[1]].counts[player] = 0;
+            }
         }
         else if (move && move.action && move.action === 'spawn' && move.target) {
             spawnUnit(move.target[0], move.target[1], move.player);
@@ -512,6 +525,7 @@ function updateState() {
             }
         }
         cache.put('gameWonStatus', gameWonStatus);
+        endGame();
     }
 
     cache.put('squareStates', squareStates);
