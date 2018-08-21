@@ -358,7 +358,7 @@ function updateState() {
     let moves = [];
 
     wss.clients.forEach(client => {
-        if (queues[client.player].length > 0 ) {
+        if ((client.readyState === 1) && (queues[client.player].length > 0)) {
             move = queues[client.player].shift();
             move.player = client.player;
             shards[move.player - 1] += client.shardsDelta;
