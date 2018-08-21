@@ -307,16 +307,16 @@ function getState(playerId) {
     const playerStatus = {};
     if (gameWonStatus) {
         wss.clients.forEach(client => {
-            playerStatus[client.player] = {'name': client.names, 'status': gameWonStatus[client.player - 1]};
+            playerStatus[client.player] = {'name': client.name, 'status': gameWonStatus[client.player - 1]};
         });
     }
     else {
         wss.clients.forEach(client => {
             if (client.isAlive) {
-                playerStatus[client.player] = {'name': client.names, 'status': 'playing'};
+                playerStatus[client.player] = {'name': client.name, 'status': 'playing'};
             }
             else {
-                playerStatus[client.player] = {'name': client.names, 'status': 'disconnected'};
+                playerStatus[client.player] = {'name': client.name, 'status': 'disconnected'};
             }
         });
     };

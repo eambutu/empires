@@ -1,0 +1,14 @@
+.player-table{
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 25;
+
+}
+
+.player-table td{
+    background-color: white;
+    padding: 4px;
+    text-align: center;
+
+}

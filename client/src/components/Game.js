@@ -3,6 +3,8 @@ import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map from "./Map";
 import EndGame from "./EndGame";
+import PlayerBoard from "./PlayerBoard";
+import ResourceBoard from "./ResourceBoard";
 
 const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
@@ -130,7 +132,7 @@ class Game extends Component {
             if (playerStatus[player]['status'] === "lost" || playerStatus[player]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        {/*<PlayerBoard playerStatus={playerStatus}/>*/}
+                        <PlayerBoard playerStatus={this.state.playerStatus}/>
 
                         <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
 
@@ -141,9 +143,11 @@ class Game extends Component {
             }
             return (
                 <div id="game-page">
+                    <PlayerBoard playerStatus={this.state.playerStatus}/>
+
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
-                    {JSON.stringify(playerStatus)}
-                    You are Player {player}
+
+                    <ResourceBoard shards={this.state.shards}/>
                 </div>
             );
         }
