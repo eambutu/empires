@@ -27,6 +27,10 @@
     width: 33px !important;
 }
 
+.watchtower {
+    background-image: url("/static/media/eye.db6f3f01.svg");
+}
+
 .square {
     line-height: 30px;
     text-align: center;

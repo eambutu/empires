@@ -3,6 +3,7 @@ import logo from '../logo.svg';
 import '../styles/Map.css';
 import sword from '../sword.svg';
 import base from "../base.svg";
+import eye from "../eye.svg"
 
 import up_arrow from "../up_arrow.svg";
 import down_arrow from "../down_arrow.svg";
@@ -93,7 +94,17 @@ function Cell(props) {
             <div className={"square base"}>
     </div>
         );
-    } else if (square.unit) {
+    }
+    if (square.squareType === SquareType.WATCHTOWER){
+        overlayComponent = (
+            {/*<object className={"icon"} type={"image/svg+xml"} data={eye}>*/}
+                {/*Your browser does not support SVG*/}
+            {/*</object>*/}
+        <div className={"square watchtower"}>
+        </div>
+        );
+    }
+    else if (square.unit) {
         overlayComponent = (
             <div className={"square attacker count-text"}>
                 {square.unit.count}
