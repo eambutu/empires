@@ -20,6 +20,7 @@ const SquareColor = {
     [SquareType.BASE2]: 'blue',
     [SquareType.TOWER]: 'gray',
     [SquareType.WATCHTOWER]: 'gray',
+    [SquareType.RIVER]: 'white',
 };
 
 export const ActionProp = {
@@ -110,9 +111,9 @@ function Cell(props) {
     else if (square.squareType === SquareType.TOWER){
         overlayComponent =
             <div className={"square shardtower"}>
+        {/*<object className={"icon"} type={"image/svg+xml"} data={eye}>*/}
+        {/*</object>*/}
             </div>
-        // <object className={"icon"} type={"image/svg+xml"} data={shards}>
-        // </object>
     }
     else if (square.unit) {
         overlayComponent = (
