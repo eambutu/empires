@@ -92,24 +92,24 @@ class SquareCounts {
     }
 
     collapseUnits() {
-        let max_idx = -1;
-        let max_num = 0;
-        let second_max_idx = -1;
-        let second_max_num = 0;
+        let maxIdx = -1;
+        let maxNum = 0;
+        let secondMaxIdx = -1;
+        let secondMaxNum = 0;
         this.counts.forEach(function (count, idx) {
-            if (count > max_num) {
-                second_max_idx = max_idx;
-                second_max_num = max_num;
-                max_idx = idx;
-                max_num = count;
+            if (count > maxNum) {
+                secondMaxIdx = maxIdx;
+                secondMaxNum = maxNum;
+                maxIdx = idx;
+                maxNum = count;
             }
-            else if (count > second_max_num) {
-                second_max_idx = idx;
-                second_max_num = count;
+            else if (count > secondMaxNum) {
+                secondMaxIdx = idx;
+                secondMaxNum = count;
             }
         })
 
-        if (max_idx === -1 || max_num === second_max_num) {
+        if (maxIdx === -1 || maxNum === secondMaxNum) {
             for (let idx = 0; idx < this.counts.length; idx++) {
                 this.counts[idx] = 0;
             }
@@ -117,8 +117,8 @@ class SquareCounts {
         else {
             for (let idx = 0; idx < this.counts.length; idx++) {
                 this.counts[idx] = 0;
-                if (idx === max_idx) {
-                    this.counts[idx] = max_num - second_max_num;
+                if (idx === maxIdx) {
+                    this.counts[idx] = maxNum - secondMaxNum;
                 }
             }
         }
