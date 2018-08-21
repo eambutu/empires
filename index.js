@@ -68,7 +68,6 @@ app.ws('/', function (ws, req) {
     }
 
     ws.on('close', function () {
-        ws.isAlive = false;
         console.log('Client disconnected')
     });
 });
@@ -172,7 +171,7 @@ function maybeEndGame() {
 
 function requestActions() {
     wss.clients.forEach(client => {
-        if (client.isAlive) {
+        if (client.readyState === 1) {
             client.send(JSON.stringify({'event': 'request_action'}));
         }
         client.isAlive = false;
@@ -183,7 +182,7 @@ function requestActions() {
 function broadcastStarting() {
     // Things that get broadcast in the beginning of the game
     wss.clients.forEach(client => {
-        if (client.isAlive) {
+        if (client.readyState === 1) {
             client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
         }
     });
@@ -194,7 +193,7 @@ function broadcastInit() {
     // Things that get broadcast in the beginning of the game
     let playerBases = cache.get('playerBases');
     wss.clients.forEach(client => {
-        if (client.isAlive) {
+        if (client.readyState === 1) {
             client.send(JSON.stringify({'event': 'init', 'base': playerBases[client.player - 1], 'width': 15, 'height': 15}));
         }
     });
@@ -203,7 +202,7 @@ function broadcastInit() {
 
 function broadcastState() {
     wss.clients.forEach(client => {
-        if (client.isAlive){
+        if (client.readyState === 1){
             client.send(JSON.stringify({'event': 'update', 'state': getState(client.player)}));
         }
     });
@@ -306,16 +305,20 @@ function getState(playerId) {
     const playerStatus = {};
     if (gameWonStatus) {
         wss.clients.forEach(client => {
-            playerStatus[client.player] = {'name': client.name, 'status': gameWonStatus[client.player - 1]};
+            if (client.readyState === 1) {
+                playerStatus[client.player] = {'name': client.name, 'status': gameWonStatus[client.player - 1]};
+            }
         });
     }
     else {
         wss.clients.forEach(client => {
-            if (client.isAlive) {
-                playerStatus[client.player] = {'name': client.name, 'status': 'playing'};
-            }
-            else {
-                playerStatus[client.player] = {'name': client.name, 'status': 'disconnected'};
+            if (client.readyState === 1) {
+                if (client.isAlive) {
+                    playerStatus[client.player] = {'name': client.names, 'status': 'playing'};
+                }
+                else {
+                    playerStatus[client.player] = {'name': client.names, 'status': 'afk'};
+                }
             }
         });
     };
