@@ -237,11 +237,14 @@ function initState() {
     let towers = [
         [0, 14],
         [14, 0]
-    ]
+    ];
 
     let watchTowers = [
         [7, 7]
-    ]
+    ];
+
+    let rivers = [
+    ];
 
     for (let i = 0; i < height; i++) {
         squareStates[i] = [];
@@ -265,6 +268,11 @@ function initState() {
                 watchTowers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
                         squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, null);
+                    }
+                })
+                rivers.forEach(function (river) {
+                    if (i === river[0] && j === river[1]) {
+                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, null);
                     }
                 })
                 squareCounts[i][j] = new SquareCounts([0, 0]);
@@ -422,7 +430,9 @@ function updateState() {
 
         // Execute the action
         if (move && move.action && move.action.includes('move') && move.source && move.target) {
-            if (!(playerBases[player][0] === move.target[0] && playerBases[player][1] === move.target[1])) {
+            let moveIntoBase = (playerBases[player][0] === move.target[0] && playerBases[player][1] === move.target[1]);
+            let moveIntoRiver = (squareStates[move.target[0]][move.target[1]].squareType === SquareType.RIVER);
+            if (!(moveIntoBase || moveIntoRiver)) {
                 squareCounts[move.target[0]][move.target[1]].counts[player] += squareCounts[move.source[0]][move.source[1]].counts[player];
                 squareCounts[move.source[0]][move.source[1]].counts[player] = 0;
             }
