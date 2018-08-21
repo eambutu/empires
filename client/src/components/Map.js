@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import {SquareType} from "./config"
 import logo from '../logo.svg';
 import '../styles/Map.css';
 import attacker from "../attacker.svg";
 import base from "../base.svg";
 
+var SquareType = require("./config").SquareType;
 
 const colorMap = {
     [SquareType.REGULAR]: 'white',
