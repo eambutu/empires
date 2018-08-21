@@ -95,15 +95,13 @@ function Cell(props) {
     </div>
         );
     }
-    if (square.squareType === SquareType.WATCHTOWER){
+    else if (square.squareType === SquareType.WATCHTOWER){
         overlayComponent = (
-            {/*<object className={"icon"} type={"image/svg+xml"} data={eye}>*/}
-                {/*Your browser does not support SVG*/}
-            {/*</object>*/}
         <div className={"square watchtower"}>
         </div>
         );
     }
+
     else if (square.unit) {
         overlayComponent = (
             <div className={"square attacker count-text"}>
