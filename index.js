@@ -228,15 +228,21 @@ function initState() {
     let playerBases = [];
     let queues = {};
 
-    playerBases[0] = [0, 0];
-    playerBases[1] = [14, 14];
+    let corners = [
+        [0, 0],
+        [14, 0],
+        [0, 14],
+        [14, 14]
+    ]
 
     queues[1] = [];
     queues[2] = [];
 
     let towers = [
-        [0, 14],
-        [14, 0]
+        [4, 4],
+        [4, 10],
+        [10, 4],
+        [10, 10]
     ];
 
     let watchTowers = [
@@ -244,7 +250,32 @@ function initState() {
     ];
 
     let rivers = [
+        [0, 7],
+        [1, 7],
+        [2, 7],
+        [12, 7],
+        [13, 7],
+        [14, 7],
+        [7, 0],
+        [7, 1],
+        [7, 2],
+        [7, 12],
+        [7, 13],
+        [7, 14]
     ];
+
+    let randIdxOne = Math.floor(Math.random() * 4);
+    let randIdxTwo = Math.floor(Math.random() * 4);
+    while(randIdxTwo === randIdxOne) {
+        randIdxTwo = Math.floor(Math.random() * 4);
+    }
+    playerBases[0] = corners[randIdxOne];
+    playerBases[1] = corners[randIdxTwo];
+    corners.forEach(function(corner, idx) {
+        if (idx !== randIdxOne && idx !== randIdxTwo) {
+            towers.push(corner);
+        }
+    });
 
     for (let i = 0; i < height; i++) {
         squareStates[i] = [];
