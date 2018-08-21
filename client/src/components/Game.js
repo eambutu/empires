@@ -68,8 +68,9 @@ class Game extends Component {
 
         console.log('component did mount');
         document.addEventListener("keydown", this.keyDownBound);
+        console.log(window.location.host, window.location);
 
-        this.ws = new WebSocket('ws://localhost:5000');
+        this.ws = new WebSocket('ws://' + window.location.hostname + ':5000/');
 
         this.ws.addEventListener('message',  event => {
             var json = JSON.parse(event.data);

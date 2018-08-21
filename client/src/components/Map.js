@@ -40,17 +40,17 @@ function Cell(props) {
     const {square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
     let divStyle = {
-        "background-color": colorMap[square.squareType]
+        "backgroundColor": colorMap[square.squareType]
     };
     if (square.unit) {
         if (square.unit.playerId === 1) {
             divStyle = {
-                "background-color": 'red'
+                "backgroundColor": 'red'
             };
         }
         else{
             divStyle = {
-                "background-color": 'blue'
+                "backgroundColor": 'blue'
             };
         }
     }
