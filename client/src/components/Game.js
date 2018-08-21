@@ -123,13 +123,17 @@ class Game extends Component {
 
     render() {
         console.log(this.state)
+        let playerStatus = this.state.playerStatus;
+        let player = this.state.player;
         if (this.state.squares) {
-            if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
+            if (playerStatus[player]['status'] === "lost" || playerStatus[player]['status'] === "won") {
                 return (
                     <div id="game-page">
+                        {/*<PlayerBoard playerStatus={playerStatus}/>*/}
+
                         <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
 
-                        <EndGame status={this.state.playerStatus}/>
+                        <EndGame status={playerStatus[player]['status']}/>
                     </div>
 
                 );
@@ -137,8 +141,8 @@ class Game extends Component {
             return (
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
-                    {JSON.stringify(this.state.playerStatus)}
-                    You are Player {this.state.player}
+                    {JSON.stringify(playerStatus)}
+                    You are Player {player}
                 </div>
             );
         }
