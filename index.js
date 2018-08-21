@@ -349,6 +349,8 @@ function updateState () {
     moves.forEach(function (move) {
         let action = move.action;
         let player = move.player - 1;
+
+        // Execute the action
         if (action && action.action && action.action === 'move' && action.source && action.target) {
             squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
             squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
@@ -356,6 +358,9 @@ function updateState () {
         else if (action && action.action && action.action === 'spawn' && action.target) {
             spawnUnit(action.target[0], action.target[1], move.player);
         }
+
+        // Spend/refund the shards
+        shards[player] += move.shards_delta;
     })
 
     for (let i = 0; i < 15; i++) {
