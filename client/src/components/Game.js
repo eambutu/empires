@@ -6,6 +6,9 @@ import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
 
+const SquareType = require("./config").SquareType;
+const AttackerCost = require("./config").AttackerCost;
+
 const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
     ArrowUp: { dx: 0, dy: -1 },
@@ -16,6 +19,22 @@ const keyMap = {
 class Game extends Component {
     isInBound(y, x) {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
+    }
+
+    isInSpawningRange(y, x) {
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                if (this.isInBound(y + i, x + j)) {
+                    if (this.state.player === 1 && this.state.squares[y + i][x + j].squareType === SquareType.BASE1) {
+                        return true;
+                    }
+                    if (this.state.player === 2 && this.state.squares[y + i][x + j].squareType === SquareType.BASE2) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     constructor(props) {
@@ -33,6 +52,7 @@ class Game extends Component {
         };
         this.actionQueue = [];
         this.isPlayer = null;
+        this.shardsDelta = 0;
 
         this.keyDownBound = e => {
             console.log(e.key);
@@ -57,7 +77,17 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            if (this.isPlayer[y][x]) {
+            if (e.shiftKey) {
+                if (this.state.shards >= AttackerCost && this.isInSpawningRange(y, x)) {
+                    this.actionQueue.push({
+                        "action": "spawn",
+                        "target": [y, x]
+                    });
+                    this.setState({cursor: [y, x]});
+                    this.shardsDelta -= AttackerCost;
+                }
+            }
+            else if (this.isPlayer[y][x]) {
                 this.setState({cursor: [y, x]});
             }
         };
@@ -137,7 +167,6 @@ class Game extends Component {
     };
 
     render() {
-        console.log(this.state)
         let playerStatus = this.state.playerStatus;
         let player = this.state.player;
         if (this.state.squares) {
@@ -188,6 +217,15 @@ class Game extends Component {
                     return true;
                 }
             }
+            else if (action.action === "spawn") {
+                let [y, x] = action.target;
+                if (!this.isInSpawningRange(y, x)) {
+                    // Refund the cost for the cancelled spawn action
+                    this.shardsDelta += AttackerCost;
+                    return false;
+                }
+                return true;
+            }
             return false; // bad queued move
         });
         this.isPlayer = isPlayer;
@@ -195,11 +233,8 @@ class Game extends Component {
         let newCursor = this.state.cursor;
         if (newCursor) {
             let [y, x] = newCursor;
-            if (newCursor) {
-                let [y, x] = newCursor;
-                if (!isPlayer[y][x]) {
-                    newCursor = null;
-                }
+            if (!isPlayer[y][x]) {
+                newCursor = null;
             }
         }
 
@@ -207,14 +242,28 @@ class Game extends Component {
     }
 
     onUpdateRequest() {
+        console.log("onupdaterequest, ", this.actionQueue.length);
         if (this.actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'event': 'move', 'secret': this.state.secret, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify(
+                {
+                    'event': 'move',
+                    'secret': this.state.secret,
+                    'action': {action:null, source:null, target:null},
+                    'shards_delta': this.shardsDelta
+                }));
         }
         else {
             let returnedAction = this.actionQueue[0];
             this.actionQueue.shift();
-            this.ws.send(JSON.stringify({'event': 'move', 'secret': this.state.secret, 'action': returnedAction}));
+            this.ws.send(JSON.stringify(
+                {
+                    'event': 'move',
+                    'secret': this.state.secret,
+                    'action': returnedAction,
+                    'shards_delta': this.shardsDelta
+                }));
         }
+        this.shardsDelta = 0;
     }
 }
 

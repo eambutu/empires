@@ -4,8 +4,6 @@ import '../styles/PlayerBoard.css';
 export default function PlayerBoard(props) {
     const {playerStatus} = props;
 
-    console.log(playerStatus)
-
     return(
         <div className={"player-table-holder"}>
             <table className={"player-table"}>
@@ -24,7 +22,6 @@ export default function PlayerBoard(props) {
 
 function PlayerRow(props){
     const {player} = props;
-    console.log({player})
     return (
         <tr>
             <td>{player.name}</td>
