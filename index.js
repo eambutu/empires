@@ -13,7 +13,7 @@ Vision = {
 };
 
 ts = 1000 / 4;
-started = false;
+full = false;
 gameInterval = null;
 maxPlayers = 2;
 moves = [];
@@ -50,7 +50,7 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    if (!started && (wss.clients.size <= maxPlayers)) {
+    if (!full && (wss.clients.size <= maxPlayers)) {
         ws.isAlive = true;
         ws.player = wss.clients.size;
         ws.name = `player_${ws.player}`;
@@ -149,7 +149,7 @@ class Unit {
 }
 
 function runGame() {
-    started = true;
+    full = true;
     broadcastStarting();
     initState();
     broadcastInit();
@@ -163,7 +163,7 @@ function runGame() {
 function performOneTurn() {
     resetIfEmpty();
     requestActions();
-    setTimeout(function() {
+    setTimeout(function () {
         updateState();
         broadcastState();
     }, (ts / 2));
@@ -179,7 +179,9 @@ function resetIfEmpty() {
 function resetGame() {
     console.log('RESTART GAME');
     clearInterval(gameInterval);
-    started = false;
+    setTimeout(function () {
+        full = false;
+    }, 1000);
 }
 
 function requestActions() {
