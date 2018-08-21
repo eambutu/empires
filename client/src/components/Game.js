@@ -28,6 +28,7 @@ class Game extends Component {
             width: 0,
             height: 0,
             cursor: null,
+            waitingText: 'Waiting for players to join'
         };
         this.actionQueue = [];
         this.isPlayer = null;
@@ -94,7 +95,7 @@ class Game extends Component {
                 this.updateGame(json.state);
             }
             else if (json.event === 'full') {
-                console.log('Lobby is full');
+                this.setState({waitingText: json.text})
             }
             else {
                 console.log("dafuck");
@@ -134,13 +135,13 @@ class Game extends Component {
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
                     {JSON.stringify(this.state.playerStatus)}
-                    {player}
+                    You are Player {player}
                 </div>
             );
         }
         else {
             return (
-                <div>Pending game start</div>
+                <div>{this.state.waitingText}</div>
             )
         }
     }
