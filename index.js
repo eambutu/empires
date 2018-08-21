@@ -28,17 +28,26 @@ app.get('/', function (req, res) {
 app.ws('/', function (ws, req) {
     ws.on('message', function (msg) {
         ws.isAlive = true;
-
-        let moves = cache.get('moves')
         data = JSON.parse(msg);
 
-        console.log(data);
-
-        if (data.secret === ws.secret) {
-            data.player = ws.player;
-            moves.push(data);
+        if (data.event === 'move'){
+            let moves = cache.get('moves');
+            if (data.secret === ws.secret) {
+                data.player = ws.player;
+                moves.push(data);
+            }
+            cache.put('moves', moves);
         }
-        cache.put('moves', moves);
+        else if (data.event === 'reset') {
+            console.log(data);
+            resetGame();
+            runGame();
+        }
+        else if (data.event === 'exit') {
+            console.log(data);
+            ws.send(JSON.stringify({'event': 'refresh'}));
+            ws.close();
+        }
     });
 
     if (!started && (wss.clients.size <= maxPlayers)) {
@@ -152,7 +161,7 @@ function runGame() {
 
 
 function performOneTurn() {
-    maybeEndGame();
+    resetIfEmpty();
     requestActions();
     setTimeout(function() {
         updateState();
@@ -161,12 +170,16 @@ function performOneTurn() {
 
 }
 
-function maybeEndGame() {
+function resetIfEmpty() {
     if (wss.clients.size === 0) {
-        console.log('RESTART GAME');
-        clearInterval(gameInterval);
-        started = false;
+        resetGame();
     }
+}
+
+function resetGame() {
+    console.log('RESTART GAME');
+    clearInterval(gameInterval);
+    started = false;
 }
 
 function requestActions() {
@@ -234,7 +247,6 @@ function initState () {
                 squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, null);
                 squareCounts[i][j] = new SquareCounts([0, 0]);
             }
-            console.log(squareStates[i][j]);
         }
     }
 
@@ -375,7 +387,6 @@ function updateState () {
                 gameWonStatus[i] = 'won';
             }
         }
-        console.log(gameWonStatus);
         cache.put('gameWonStatus', gameWonStatus);
     }
 

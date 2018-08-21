@@ -75,6 +75,14 @@ class Game extends Component {
 
         this.ws = new WebSocket('ws://' + window.location.hostname + ':5000/');
 
+        this.onReset = e => {
+            this.ws.send(JSON.stringify({'event': 'reset'}));
+        };
+
+        this.onExit = e => {
+            this.ws.send(JSON.stringify({'event': 'exit'}));
+        };
+
         this.ws.addEventListener('message',  event => {
             var json = JSON.parse(event.data);
             if (json.event === 'connected') {
@@ -103,6 +111,9 @@ class Game extends Component {
             }
             else if (json.event === 'starting') {
                 this.setState({waitingText: json.text})
+            }
+            else if (json.event === 'refresh') {
+                window.location.reload()
             }
             else {
                 console.log("dafuck");
@@ -137,7 +148,7 @@ class Game extends Component {
 
                         <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
 
-                        <EndGame status={playerStatus[player]['status']}/>
+                        <EndGame resetClick={this.onReset} exitClick={this.onExit} status={playerStatus[player]['status']}/>
                     </div>
 
                 );
@@ -197,12 +208,12 @@ class Game extends Component {
 
     onUpdateRequest() {
         if (this.actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'secret': this.state.secret, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify({'event': 'move', 'secret': this.state.secret, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = this.actionQueue[0];
             this.actionQueue.shift();
-            this.ws.send(JSON.stringify({'secret': this.state.secret, 'action': returnedAction}));
+            this.ws.send(JSON.stringify({'event': 'move', 'secret': this.state.secret, 'action': returnedAction}));
         }
     }
 }
