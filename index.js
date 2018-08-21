@@ -18,7 +18,8 @@ ts = 1000 / 4;
 full = false;
 gameInterval = null;
 maxPlayers = 2;
-
+width = 15;
+height = 15;
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -203,8 +204,8 @@ function broadcastInit() {
             client.send(JSON.stringify({
                 'event': 'init',
                 'base': playerBases[client.player - 1],
-                'width': 15,
-                'height': 15
+                'width': width,
+                'height': height,
             }));
         }
     });
@@ -233,10 +234,15 @@ function initState() {
     queues[1] = [];
     queues[2] = [];
 
-    for (let i = 0; i < 15; i++) {
+    let towers = [
+        [0, 14],
+        [14, 0]
+    ]
+
+    for (let i = 0; i < height; i++) {
         squareStates[i] = [];
         squareCounts[i] = [];
-        for (let j = 0; j < 15; j++) {
+        for (let j = 0; j < width; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
                 squareStates[i][j] = new SquareState(i, j, SquareType.BASE1, null);
                 squareCounts[i][j] = new SquareCounts([0, 0]);
@@ -247,6 +253,11 @@ function initState() {
             }
             else {
                 squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, null);
+                towers.forEach(function(tower) {
+                    if (i === tower[0] && j === tower[1]) {
+                        squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, null);
+                    }
+                })
                 squareCounts[i][j] = new SquareCounts([0, 0]);
             }
         }
@@ -257,6 +268,8 @@ function initState() {
     cache.put('squareCounts', squareCounts);
     cache.put('queues', queues);
     cache.put('shards', [0, 0]);
+    cache.put('resourceCenterCounts', [0, 0]);
+    cache.put('towers', towers);
     cache.put('gameWonStatus', null);
     console.log('State initialized');
 }
@@ -298,6 +311,27 @@ function maskForPlayer(squares, playerId) {
             }
         })
     ));
+}
+
+function isInBound(y, x) {
+    return (0 <= y && y < height) && (0 <= x && x < width);
+}
+
+function isInSpawningRange(y, x, playerId) {
+    let squareStates = cache.get('squareStates');
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            if ((i !== 0 || j !== 0) && isInBound(y + i, x + j)) {
+                if (playerId === 1 && squareStates[y + i][x + j].squareType === SquareType.BASE1) {
+                    return true;
+                }
+                if (playerId === 2 && squareStates[y + i][x + j].squareType === SquareType.BASE2) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 function spawnUnit(y, x, playerId) {
@@ -354,12 +388,14 @@ function updateState() {
     let squareCounts = cache.get('squareCounts');
     let playerBases = cache.get('playerBases');
     let shards = cache.get('shards');
+    let resourceCenterCounts = cache.get('resourceCenterCounts');
+    let towers = cache.get('towers');
     let queues = cache.get('queues');
     let moves = [];
 
     wss.clients.forEach(client => {
         if (queues[client.player].length > 0 ) {
-            move = queues[client.player].shift();
+            let move = queues[client.player].shift();
             move.player = client.player;
             shards[move.player - 1] += client.shardsDelta;
             moves.push(move);
@@ -367,7 +403,7 @@ function updateState() {
     });
 
     for (let i = 0; i < shards.length; i++) {
-        shards[i]++;
+        shards[i] += resourceCenterCounts[i] + 1;
     }
 
     moves.forEach(function (move) {
@@ -383,8 +419,8 @@ function updateState() {
         }
     });
 
-    for (let i = 0; i < 15; i++) {
-        for (let j = 0; j < 15; j++) {
+    for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
             squareCounts[i][j].collapseUnits();
             let tempIdx = squareCounts[i][j].nonZeroIdx();
             if (tempIdx === -1) {
@@ -421,9 +457,9 @@ function updateState() {
             }
             else if (move.action === "spawn") {
                 let [y, x] = move.target;
-                if (!this.isInSpawningRange(y, x)) {
+                if (!isInSpawningRange(y, x)) {
                     // Refund the cost for the cancelled spawn action
-                    this.shardsDelta += AttackerCost;
+                    shards[playerId - 1] += AttackerCost;
                     return false;
                 }
                 return true;
@@ -431,6 +467,15 @@ function updateState() {
             return false; // bad queued move
         });
     });
+
+
+    resourceCenterCounts = new Array(resourceCenterCounts.length).fill(0);
+    towers.forEach(function(tower) {
+        let ownIdx = squareCounts[tower[0]][tower[1]].nonZeroIdx();
+        if (ownIdx !== -1) {
+            resourceCenterCounts[ownIdx]++;
+        }
+    })
 
     let winPlayerIdx = -1;
     for (let i = 0; i < playerBases.length; i++) {
@@ -453,5 +498,6 @@ function updateState() {
     cache.put('squareStates', squareStates);
     cache.put('squareCounts', squareCounts);
     cache.put('shards', shards);
+    cache.put('resourceCenterCounts', resourceCenterCounts);
     cache.put('queues', queues);
 }
