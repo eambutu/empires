@@ -24,6 +24,7 @@ class Game extends Component {
             player: null,
             secret: null,
             squares: null,
+            shards: 0,
             playerStatus: null,
             width: 0,
             height: 0,
@@ -191,7 +192,7 @@ class Game extends Component {
             }
         }
 
-        this.setState({squares: newState.squares, playerStatus: newState.playerStatus, cursor: newCursor});
+        this.setState({shards: newState.shards, squares: newState.squares, playerStatus: newState.playerStatus, cursor: newCursor});
     }
 
     onUpdateRequest() {
