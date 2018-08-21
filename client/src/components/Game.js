@@ -81,7 +81,7 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            if (e.shiftKey) {
+            if (e.ctrlKey) {
                 if (this.state.shards + this.shardsDelta >= AttackerCost && this.isInSpawningRange(y, x)) {
                     this.shardsDelta -= AttackerCost;
                     this.actionQueue.push({
