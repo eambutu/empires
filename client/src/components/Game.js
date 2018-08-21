@@ -13,7 +13,11 @@ const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
     ArrowUp: { dx: 0, dy: -1 },
     ArrowLeft: { dx: -1, dy: 0 },
-    ArrowRight: { dx: 1, dy: 0 }
+    ArrowRight: { dx: 1, dy: 0 },
+    s: { dx: 0, dy: 1 },
+    w: { dx: 0, dy: -1 },
+    a: { dx: -1, dy: 0 },
+    d: { dx: 1, dy: 0 }
 };
 
 class Game extends Component {
@@ -24,7 +28,7 @@ class Game extends Component {
     isInSpawningRange(y, x) {
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
-                if (this.isInBound(y + i, x + j)) {
+                if ((i !== 0 || j !== 0) && this.isInBound(y + i, x + j)) {
                     if (this.state.player === 1 && this.state.squares[y + i][x + j].squareType === SquareType.BASE1) {
                         return true;
                     }
@@ -124,7 +128,6 @@ class Game extends Component {
             else if (json.event === 'init') {
                 console.log("initializing")
                 this.setState({
-                    cursor: json.base,
                     width: json.width,
                     height: json.height,
                 })
