@@ -245,21 +245,35 @@ function initState () {
     cache.put('squareStates', squareStates);
     cache.put('squareCounts', squareCounts);
     cache.put('moves', []);
+    cache.put('gameWonStatus', null);
     console.log('State initialized');
 }
 
 function getState() {
     //TODO: logic to decide what to sends over
     const squares = cache.get('squareStates');
+    const gameWonStatus = cache.get('gameWonStatus');
     const playerStatus = {};
-    Object.entries(sockets).forEach(([id, ws]) => {
-        if (ws.isAlive) {
-            playerStatus[names[id]] = 'playing';
-        }
-        else {
-            playerStatus[names[id]] = 'disconnected';
-        }
-    });
+    if (gameWonStatus) {
+        Object.entries(sockets).forEach(([id, ws]) => {
+            if (ws.isAlive) {
+                playerStatus[names[id]] = gameWonStatus[id - 1];
+            }
+            else {
+                playerStatus[names[id]] = gameWonStatus[id - 1];
+            }
+        });
+    }
+    else {
+        Object.entries(sockets).forEach(([id, ws]) => {
+            if (ws.isAlive) {
+                playerStatus[names[id]] = 'playing';
+            }
+            else {
+                playerStatus[names[id]] = 'disconnected';
+            }
+        });
+    }
     // const flattenedSquares = squares.reduce(function (prev, cur) {
     //     return prev.concat(cur);
     // });
@@ -272,6 +286,7 @@ function getState() {
 function updateState () {
     let squareStates = cache.get('squareStates');
     let squareCounts = cache.get('squareCounts');
+    let playerBases = cache.get('playerBases');
     let moves = cache.get('moves');
 
     moves.forEach(function (move) {
@@ -287,14 +302,34 @@ function updateState () {
     for (let i = 0; i < 15; i++) {
         for (let j = 0; j < 15; j++) {
             squareCounts[i][j].collapseUnits();
-            let temp_idx = squareCounts[i][j].nonZeroIdx(true);
-            if (temp_idx === -1) {
+            let tempIdx = squareCounts[i][j].nonZeroIdx();
+            if (tempIdx === -1) {
                 squareStates[i][j].unit = null;
             }
             else {
-                squareStates[i][j].unit = new Unit(temp_idx + 1, squareCounts[i][j].counts[temp_idx]);
+                squareStates[i][j].unit = new Unit(tempIdx + 1, squareCounts[i][j].counts[tempIdx]);
             }
         }
+    }
+
+    let winPlayerIdx = -1;
+    for (let i = 0; i < playerBases.length; i++) {
+        let ownIdx = squareCounts[playerBases[i][0]][playerBases[i][1]].nonZeroIdx();
+        if (ownIdx !== -1 && ownIdx !== i) {
+            console.log('won');
+            winPlayerIdx = ownIdx;
+        }
+    }
+    let gameWonStatus = [];
+    if (winPlayerIdx !== -1) {
+        for (let i = 0; i < playerBases.length; i++) {
+            gameWonStatus[i] = 'lost';
+            if (i == winPlayerIdx) {
+                gameWonStatus[i] = 'won';
+            }
+        }
+        console.log(gameWonStatus);
+        cache.put('gameWonStatus', gameWonStatus);
     }
 
     cache.put('squareStates', squareStates);
