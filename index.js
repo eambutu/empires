@@ -27,7 +27,6 @@ app.get('/', function (req, res) {
 
 app.ws('/', function (ws, req) {
     ws.on('message', function (msg) {
-        ws.isAlive = true;
         let data = JSON.parse(msg);
         if (data.event === 'move') {
             console.log('received', data);
@@ -57,6 +56,7 @@ app.ws('/', function (ws, req) {
     });
 
     if (!full && (wss.clients.size <= maxPlayers)) {
+        ws.ponged = true;
         ws.isAlive = true;
         ws.player = wss.clients.size;
         ws.name = `player_${ws.player}`;
@@ -153,13 +153,16 @@ class Unit {
 }
 
 function heartbeat() {
-    this.isAlive = true;
+    this.ponged = true;
 }
 
 function pingPlayers() {
     wss.clients.forEach(client => {
-        client.isAlive = false;
+        if (!client.ponged) {
+            client.isAlive = false;
+        }
         client.ping();
+        client.ponged = false;
     });
 }
 
