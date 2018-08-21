@@ -67,7 +67,8 @@ app.ws('/', function (ws, req) {
             {
                 'event': 'connected',
                 'player': ws.player,
-                'secret': ws.secret
+                'secret': ws.secret,
+                'text': 'Connected! Waiting for other players to join.'
             }
         ));
         console.log(`Player ${ws.player} connected`);
@@ -79,7 +80,7 @@ app.ws('/', function (ws, req) {
     else {
         ws.send(JSON.stringify({
             'event': 'full',
-            'text': 'Lobby is full'
+            'text': 'Lobby is full.'
         }));
         ws.close();
     }

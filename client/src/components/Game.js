@@ -51,7 +51,7 @@ class Game extends Component {
             width: 0,
             height: 0,
             cursor: null,
-            waitingText: 'Waiting for players to join'
+            waitingText: ''
         };
         this.actionQueue = [];
         this.isPlayer = null;
@@ -121,7 +121,8 @@ class Game extends Component {
             if (json.event === 'connected') {
                 this.setState({
                     player: json.player,
-                    secret: json.secret
+                    secret: json.secret,
+                    waitingText: json.text
                 });
             }
             else if (json.event === 'init') {
