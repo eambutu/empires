@@ -1,3 +1,4 @@
+var SquareType = require('./config').SquareType;
 var express = require('express');
 var cache = require('memory-cache');
 var app = express();
@@ -76,11 +77,6 @@ app.ws('/', function (ws, req) {
 app.listen(5000, function () {
     console.log('App listening on port 5000!');
 });
-
-SquareTypeEnum = {
-    REGULAR: 1,
-    BASE: 2
-}
 
 class SquareState {
     constructor(y, x, squareType, unit) {
@@ -218,17 +214,18 @@ function initState () {
         squareCounts[i] = [];
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.BASE, new Unit(1, 1));
+                squareStates[i][j] = new SquareState(i, j, SquareType.BASE1, new Unit(1, 1));
                 squareCounts[i][j] = new SquareCounts([1, 0]);
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.BASE, new Unit(2, 1));
+                squareStates[i][j] = new SquareState(i, j, SquareType.BASE2, new Unit(2, 1));
                 squareCounts[i][j] = new SquareCounts([0, 1]);
             }
             else {
-                squareStates[i][j] = new SquareState(i, j, SquareTypeEnum.REGULAR, null);
+                squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, null);
                 squareCounts[i][j] = new SquareCounts([0, 0]);
             }
+            console.log(squareStates[i][j]);
         }
     }
 
