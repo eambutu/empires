@@ -288,6 +288,17 @@ function maskForPlayer(squares, playerId) {
     ));
 }
 
+function spawnUnit(y, x, playerId) {
+    // Assumes that the square given is a legitimate place to spawn a unit
+    let playerStates = cache.get('squareStates');
+    if (!playerStates[y][x].unit || playerStates[y][x].unit.playerId !== playerId) {
+        playerStates[y][x].unit = new Unit(playerId, 1);
+    }
+    else {
+        playerStates[y][x].unit.count++;
+    }
+    cache.put('squareStates', playerStates);
+}
 
 function getState(playerId) {
     const squares = cache.get('squareStates');
