@@ -1,18 +1,14 @@
-var SquareType = require('./config').SquareType;
-var AttackerCost = require('./config').AttackerCost;
-var express = require('express');
-var cache = require('memory-cache');
-var app = express();
-var expressWs = require('express-ws')(app);
-var path = require('path');
-var wss = expressWs.getWss('/');
-
+let express = require('express');
+let cache = require('memory-cache');
+let app = express();
+let wss = require('express-ws')(app).getWss('/');
+let path = require('path');
+const {SquareType, AttackerCost} = require('./config');
 
 Vision = {
     UNIT: 1,
     BASE: 3
 };
-
 
 ts = 1000 / 4;
 full = false;
@@ -30,9 +26,8 @@ app.get('/', function (req, res) {
 app.ws('/', function (ws, req) {
     ws.on('message', function (msg) {
         ws.isAlive = true;
-        data = JSON.parse(msg);
-
-        if (data.event === 'move'){
+        let data = JSON.parse(msg);
+        if (data.event === 'move') {
             console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = cache.get('queues');
@@ -177,9 +172,13 @@ function resetIfEmpty() {
     }
 }
 
+function endGame() {
+    clearInterval(gameInterval);
+}
+
 function resetGame() {
     console.log('RESTART GAME');
-    clearInterval(gameInterval);
+    endGame();
     setTimeout(function () {
         full = false;
     }, 1000);
@@ -493,6 +492,7 @@ function updateState() {
             }
         }
         cache.put('gameWonStatus', gameWonStatus);
+        endGame();
     }
 
     cache.put('squareStates', squareStates);
