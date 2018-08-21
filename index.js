@@ -1,5 +1,5 @@
 var SquareType = require('./config').SquareType;
-
+var AttackerCost = require('./config').AttackerCost;
 var express = require('express');
 var cache = require('memory-cache');
 var app = express();
@@ -18,7 +18,6 @@ ts = 1000 / 4;
 full = false;
 gameInterval = null;
 maxPlayers = 2;
-moves = [];
 
 
 app.use(express.static(path.join(__dirname, 'client/build')));
@@ -32,13 +31,14 @@ app.ws('/', function (ws, req) {
         ws.isAlive = true;
         data = JSON.parse(msg);
 
-        if (data.event === 'move') {
-            let moves = cache.get('moves');
+        if (data.event === 'move'){
+            console.log('received', data);
             if (data.secret === ws.secret) {
-                data.player = ws.player;
-                moves.push(data);
+                let queues = cache.get('queues');
+                queues[ws.player].push(data.move);
+                cache.put('queues', queues);
+                ws.shardsDelta = data.shardsDelta;
             }
-            cache.put('moves', moves);
         }
         else if (data.event === 'reset') {
             console.log(data);
@@ -57,7 +57,8 @@ app.ws('/', function (ws, req) {
         ws.player = wss.clients.size;
         ws.name = `player_${ws.player}`;
         ws.secret = Math.floor(Math.random() * 10000);
-        ;
+        ws.shardsDelta = 0;
+
         ws.send(JSON.stringify(
             {
                 'event': 'connected',
@@ -165,12 +166,8 @@ function runGame() {
 
 function performOneTurn() {
     resetIfEmpty();
-    requestActions();
-    setTimeout(function () {
-        updateState();
-        broadcastState();
-    }, (ts / 2));
-
+    updateState();
+    broadcastState();
 }
 
 function resetIfEmpty() {
@@ -187,15 +184,6 @@ function resetGame() {
     }, 1000);
 }
 
-function requestActions() {
-    wss.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'request_action'}));
-        }
-        client.isAlive = false;
-    });
-    console.log('Sent request');
-}
 
 function broadcastStarting() {
     // Things that get broadcast in the beginning of the game
@@ -237,9 +225,13 @@ function initState() {
     let squareStates = [];
     let squareCounts = [];
     let playerBases = [];
+    let queues = {};
 
     playerBases[0] = [0, 0];
     playerBases[1] = [14, 14];
+
+    queues[1] = [];
+    queues[2] = [];
 
     for (let i = 0; i < 15; i++) {
         squareStates[i] = [];
@@ -263,7 +255,7 @@ function initState() {
     cache.put('playerBases', playerBases);
     cache.put('squareStates', squareStates);
     cache.put('squareCounts', squareCounts);
-    cache.put('moves', []);
+    cache.put('queues', queues);
     cache.put('shards', [0, 0]);
     cache.put('gameWonStatus', null);
     console.log('State initialized');
@@ -332,6 +324,7 @@ function getState(playerId) {
     const squares = cache.get('squareStates');
     const gameWonStatus = cache.get('gameWonStatus');
     const shards = cache.get('shards');
+    const queues = cache.get('queues');
     const playerStatus = {};
     if (gameWonStatus) {
         wss.clients.forEach(client => {
@@ -352,14 +345,8 @@ function getState(playerId) {
             }
         });
     }
-    ;
 
-    const state = {
-        'squares': maskForPlayer(squares, playerId),
-        'playerStatus': playerStatus,
-        'shards': shards[playerId - 1]
-    };
-    return state
+    return {'queue': queues[playerId], 'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus, 'shards': shards[playerId - 1]};
 }
 
 function updateState() {
@@ -367,28 +354,34 @@ function updateState() {
     let squareCounts = cache.get('squareCounts');
     let playerBases = cache.get('playerBases');
     let shards = cache.get('shards');
-    let moves = cache.get('moves');
+    let queues = cache.get('queues');
+    let moves = [];
+
+    wss.clients.forEach(client => {
+        if (queues[client.player].length > 0 ) {
+            move = queues[client.player].shift();
+            move.player = client.player;
+            shards[move.player - 1] += client.shardsDelta;
+            moves.push(move);
+        }
+    });
 
     for (let i = 0; i < shards.length; i++) {
         shards[i]++;
     }
 
     moves.forEach(function (move) {
-        let action = move.action;
         let player = move.player - 1;
 
         // Execute the action
-        if (action && action.action && action.action.includes('move') && action.source && action.target) {
-            squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
-            squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
+        if (move && move.action && move.action.includes('move') && move.source && move.target) {
+            squareCounts[move.target[0]][move.target[1]].counts[player] += squareCounts[move.source[0]][move.source[1]].counts[player];
+            squareCounts[move.source[0]][move.source[1]].counts[player] = 0;
         }
-        else if (action && action.action && action.action === 'spawn' && action.target) {
-            spawnUnit(action.target[0], action.target[1], move.player);
+        else if (move && move.action && move.action === 'spawn' && move.target) {
+            spawnUnit(move.target[0], move.target[1], move.player);
         }
-
-        // Spend/refund the shards
-        shards[player] += move.shards_delta;
-    })
+    });
 
     for (let i = 0; i < 15; i++) {
         for (let j = 0; j < 15; j++) {
@@ -403,6 +396,42 @@ function updateState() {
         }
     }
 
+
+
+    Object.entries(queues).forEach(([playerId, queue]) => {
+        playerId = parseInt(playerId);
+        let isPlayer = squareStates.map(row => {
+            return row.map(cell => {
+                return cell.unit && cell.unit.playerId === playerId;
+            });
+        });
+
+        queues[playerId] = queue.filter(move => {
+            if (move.action.includes("move")) {
+                let [y, x] = move.source;
+                if (isPlayer[y][x]) {
+                    isPlayer[y][x] = false;
+                    let [newY, newX] = move.target;
+                    isPlayer[newY][newX] = true;
+                    return true;
+                }
+                else {
+                    console.log("removed move from queue");
+                }
+            }
+            else if (move.action === "spawn") {
+                let [y, x] = move.target;
+                if (!this.isInSpawningRange(y, x)) {
+                    // Refund the cost for the cancelled spawn action
+                    this.shardsDelta += AttackerCost;
+                    return false;
+                }
+                return true;
+            }
+            return false; // bad queued move
+        });
+    });
+
     let winPlayerIdx = -1;
     for (let i = 0; i < playerBases.length; i++) {
         let ownIdx = squareCounts[playerBases[i][0]][playerBases[i][1]].nonZeroIdx();
@@ -414,7 +443,7 @@ function updateState() {
     if (winPlayerIdx !== -1) {
         for (let i = 0; i < playerBases.length; i++) {
             gameWonStatus[i] = 'lost';
-            if (i == winPlayerIdx) {
+            if (i === winPlayerIdx) {
                 gameWonStatus[i] = 'won';
             }
         }
@@ -424,5 +453,5 @@ function updateState() {
     cache.put('squareStates', squareStates);
     cache.put('squareCounts', squareCounts);
     cache.put('shards', shards);
-    cache.put('moves', []);
+    cache.put('queues', queues);
 }
