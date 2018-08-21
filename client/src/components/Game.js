@@ -46,7 +46,7 @@ class Game extends Component {
             player: null,
             secret: null,
             squares: null,
-            shards: 0,
+            displayShards: 0,
             playerStatus: null,
             width: 0,
             height: 0,
@@ -55,7 +55,6 @@ class Game extends Component {
         };
         this.actionQueue = [];
         this.isPlayer = null;
-        this.shardsDelta = 0;
 
         this.keyDownBound = e => {
             const action = KeyMap[e.key];
@@ -83,8 +82,7 @@ class Game extends Component {
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
             if (e.ctrlKey || e.metaKey) {
-                if (this.state.shards + this.shardsDelta >= AttackerCost && this.isInSpawningRange(y, x)) {
-                    this.shardsDelta -= AttackerCost;
+                if (this.state.displayShards >= AttackerCost && this.isInSpawningRange(y, x)) {
                     let move = {
                         "action": "spawn",
                         "target": [y, x]
@@ -186,7 +184,7 @@ class Game extends Component {
                     <Map squares={squares} actionQueue={this.actionQueue} cursor={cursor}
                          handleClick={this.onClickBound}/>
 
-                    <ResourceBoard shards={this.state.shards}/>
+                    <ResourceBoard displayShards={this.state.displayShards}/>
                 </div>
             );
         }
@@ -216,13 +214,18 @@ class Game extends Component {
         //     }
         // }
 
+        let displayShards = newState.shards;
+        newState.queue.forEach(move => {
+            if (move.action === "spawn") {
+                displayShards -= AttackerCost;
+            }
+        });
         this.setState({
-            shards: newState.shards,
+            displayShards: displayShards,
             squares: newState.squares,
             playerStatus: newState.playerStatus,
             cursor: newCursor
         });
-        this.shardsDelta = 0;
     }
 
     sendMove(move) {
@@ -231,7 +234,6 @@ class Game extends Component {
                 'event': 'move',
                 'secret': this.state.secret,
                 'move': move,
-                'shardsDelta': this.shardsDelta
             }
         ));
     }
