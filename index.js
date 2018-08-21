@@ -237,11 +237,11 @@ function initState () {
         for (let j = 0; j < 15; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
                 squareStates[i][j] = new SquareState(i, j, SquareType.BASE1, null);
-                squareCounts[i][j] = new SquareCounts([1, 0]);
+                squareCounts[i][j] = new SquareCounts([0, 0]);
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
                 squareStates[i][j] = new SquareState(i, j, SquareType.BASE2, null);
-                squareCounts[i][j] = new SquareCounts([0, 1]);
+                squareCounts[i][j] = new SquareCounts([0, 0]);
             }
             else {
                 squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, null);

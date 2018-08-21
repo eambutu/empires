@@ -28,7 +28,7 @@ class Game extends Component {
     isInSpawningRange(y, x) {
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
-                if (this.isInBound(y + i, x + j)) {
+                if ((i !== 0 || j !== 0) && this.isInBound(y + i, x + j)) {
                     if (this.state.player === 1 && this.state.squares[y + i][x + j].squareType === SquareType.BASE1) {
                         return true;
                     }
