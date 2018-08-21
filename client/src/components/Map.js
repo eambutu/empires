@@ -66,10 +66,8 @@ function Cell(props) {
                     </object>
                   </div>;
     } else if (square.unit) {
-        content = <div className={"square"}>
-                    <object className={"icon"} type={"image/svg+xml"} data={sword}>
-                        Your browser does not support SVG
-                    </object>
+        content = <div className={"square attacker"}>
+                    {square.unit.count}
                   </div>;
     }
     return <td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>{content}</td>;

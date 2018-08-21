@@ -14,7 +14,19 @@
 }
 
 
+.attacker{
+    /*background-image: url("/static/media/sword.0d670775.svg");*/
+    background-image: url("/static/media/sword.76bb79a2.svg");
+}
+
 .square {
+    line-height: 30px;
+    text-align: center;
+    color: white;
+    font-size: 1.5pc;
+    /* margin-top: 10px; */
+    font-weight: 900;
+    font-size: 25px;
     padding: 1px;
     box-sizing: border-box;
     width: 30px;
