@@ -314,10 +314,10 @@ function getState(playerId) {
         wss.clients.forEach(client => {
             if (client.readyState === 1) {
                 if (client.isAlive) {
-                    playerStatus[client.player] = {'name': client.names, 'status': 'playing'};
+                    playerStatus[client.player] = {'name': client.name, 'status': 'playing'};
                 }
                 else {
-                    playerStatus[client.player] = {'name': client.names, 'status': 'afk'};
+                    playerStatus[client.player] = {'name': client.name, 'status': 'afk'};
                 }
             }
         });
