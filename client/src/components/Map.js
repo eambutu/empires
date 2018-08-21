@@ -90,37 +90,34 @@ function Cell(props) {
     let text = "";
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         overlayComponent = (
-            <div className={"overlay-component square"}>
-                <object className={"icon"} type={"image/svg+xml"} data={base}>
-                    Your browser does not support SVG
-                </object>
-            </div>);
+            <div className={"square base"}>
+    </div>
+        );
     } else if (square.unit) {
         overlayComponent = (
-            <div className={"overlay-component square"}>
-                <object className={"icon"} type={"image/svg+xml"} data={sword}>
-                    Your browser does not support SVG
-                </object>
+            <div className={"square attacker count-text"}>
+                {square.unit.count}
             </div>);
-        text = square.unit.count;
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
         if (square.squareType === SquareType.UNKNOWN) {
             divStyle["backgroundColor"] = "#404040";
         }
-        overlayComponent = (<div className="overlay-component square">
-            <object className={"icon"} type={"image/svg+xml"} data={icon}>
-                Your browser does not support SVG
-            </object>
-        </div>);
+    //     overlayComponent = (<div className="overlay-component square">
+    //         <object className={"icon"} type={"image/svg+xml"} data={icon}>
+    //             Your browser does not support SVG
+    //         </object>
+    //     </div>);
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
-        <div className="overlay-wrapper">
+        {/*<div className="overlay-wrapper">*/}
             {overlayComponent}
-            <div className={"square count-text"}>
-                {text}
-            </div>
-        </div>
+            {/*<div className={"square count-text"}>*/}
+                {/*{text}*/}
+            {/*</div>*/}
+        {/*</div>*/}
     </td>);
+
+
 }
