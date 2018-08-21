@@ -13,8 +13,7 @@ const colorMap = {
 };
 
 export default function Map(props) {
-    const {player, squares, cursor, handleClick} = props;
-
+    const {squares, cursor, handleClick} = props;
     return (
         <table className={"map"}>
             <tbody>
@@ -22,7 +21,6 @@ export default function Map(props) {
                 <tr key={y}>
                     {row.map((square, x) => (
                         <Cell
-                            player={player}
                             key={x}
                             square={square}
                             handleClick={handleClick}
@@ -38,13 +36,13 @@ export default function Map(props) {
 }
 
 function Cell(props) {
-    const {player, square, highlighted, handleClick, x, y} = props;
+    const {square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
     let divStyle = {
         "background-color": colorMap[square.squareType]
     };
     if (square.unit){
-        if (player === 1) {
+        if (square.unit.playerId === 1) {
             divStyle = {
                 "background-color": 'red'
             };

@@ -11,9 +11,6 @@ const keyMap = {
     ArrowRight: { dx: 1, dy: 0 }
 };
 
-let player = 0;
-let secret = 0;
-
 class Game extends Component {
     isInBound(y, x) {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
@@ -22,6 +19,8 @@ class Game extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            player: null,
+            secret: null,
             squares: null,
             playerStatus: null,
             width: 0,
@@ -75,8 +74,10 @@ class Game extends Component {
         this.ws.addEventListener('message',  event => {
             var json = JSON.parse(event.data);
             if (json.event === 'connected') {
-                player = json.player;
-                secret = json.secret;
+                this.setState({
+                    player: json.player,
+                    secret: json.secret
+                });
             }
             else if (json.event === 'init') {
                 console.log("initializing")
@@ -123,7 +124,7 @@ class Game extends Component {
             if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
                 return (
                     <div id="game-page">
-                        <Map player={player} squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                        <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
 
                         <EndGame status={this.state.playerStatus}/>
                     </div>
@@ -134,7 +135,7 @@ class Game extends Component {
                 <div id="game-page">
                     <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
                     {JSON.stringify(this.state.playerStatus)}
-                    You are Player {player}
+                    You are Player {this.state.player}
                 </div>
             );
         }
@@ -149,7 +150,7 @@ class Game extends Component {
         // check for valid queue
         let isPlayer = newState.squares.map(row => {
             return row.map(cell => {
-                return cell.unit && cell.unit.playerId === player;
+                return cell.unit && cell.unit.playerId === this.state.player;
             });
         });
 
@@ -172,12 +173,12 @@ class Game extends Component {
 
     onUpdateRequest() {
         if (this.actionQueue.length < 1){
-            this.ws.send(JSON.stringify({'secret': secret, 'action': {action:null, source:null, target:null}}));
+            this.ws.send(JSON.stringify({'secret': this.state.secret, 'action': {action:null, source:null, target:null}}));
         }
         else {
             let returnedAction = this.actionQueue[0];
             this.actionQueue.shift();
-            this.ws.send(JSON.stringify({'secret': secret, 'action': returnedAction}));
+            this.ws.send(JSON.stringify({'secret': this.state.secret, 'action': returnedAction}));
         }
     }
 }
