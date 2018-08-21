@@ -411,8 +411,10 @@ function updateState() {
 
         // Execute the action
         if (move && move.action && move.action.includes('move') && move.source && move.target) {
-            squareCounts[move.target[0]][move.target[1]].counts[player] += squareCounts[move.source[0]][move.source[1]].counts[player];
-            squareCounts[move.source[0]][move.source[1]].counts[player] = 0;
+            if (!(playerBases[player][0] === move.target[0] && playerBases[player][1] === move.target[1])) {
+                squareCounts[move.target[0]][move.target[1]].counts[player] += squareCounts[move.source[0]][move.source[1]].counts[player];
+                squareCounts[move.source[0]][move.source[1]].counts[player] = 0;
+            }
         }
         else if (move && move.action && move.action === 'spawn' && move.target) {
             spawnUnit(move.target[0], move.target[1], move.player);
