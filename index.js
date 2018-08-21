@@ -17,6 +17,7 @@ Vision = {
 ts = 1000 / 4;
 full = false;
 gameInterval = null;
+heartbeatInterval = null;
 maxPlayers = 2;
 width = 15;
 height = 15;
@@ -53,6 +54,12 @@ app.ws('/', function (ws, req) {
         }
     });
 
+    ws.on('pong', heartbeat);
+
+    ws.on('close', function () {
+        console.log('Client disconnected')
+    });
+
     if (!full && (wss.clients.size <= maxPlayers)) {
         ws.isAlive = true;
         ws.player = wss.clients.size;
@@ -80,10 +87,6 @@ app.ws('/', function (ws, req) {
         }));
         ws.close();
     }
-
-    ws.on('close', function () {
-        console.log('Client disconnected')
-    });
 });
 
 app.listen(5000, function () {
@@ -153,6 +156,17 @@ class Unit {
     }
 }
 
+function heartbeat() {
+    this.isAlive = true;
+}
+
+function pingPlayers() {
+    wss.clients.forEach(client => {
+        client.isAlive = false;
+        client.ping();
+    });
+}
+
 function runGame() {
     full = true;
     broadcastStarting();
@@ -161,6 +175,10 @@ function runGame() {
     gameInterval = setInterval(
         performOneTurn,
         ts
+    );
+    heartbeatInterval = setInterval(
+        pingPlayers,
+        5000
     );
 }
 
@@ -180,6 +198,7 @@ function resetIfEmpty() {
 function resetGame() {
     console.log('RESTART GAME');
     clearInterval(gameInterval);
+    clearInterval(heartbeatInterval);
     setTimeout(function () {
         full = false;
     }, 1000);
