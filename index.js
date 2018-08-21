@@ -244,6 +244,7 @@ function initState () {
     cache.put('squareStates', squareStates);
     cache.put('squareCounts', squareCounts);
     cache.put('moves', []);
+    cache.put('shards', [0, 0]);
     cache.put('gameWonStatus', null);
     console.log('State initialized');
 }
@@ -289,9 +290,9 @@ function maskForPlayer(squares, playerId) {
 
 
 function getState(playerId) {
-    //TODO: logic to decide what to sends over
     const squares = cache.get('squareStates');
     const gameWonStatus = cache.get('gameWonStatus');
+    const shards = cache.get('shards');
     const playerStatus = {};
     if (gameWonStatus) {
         wss.clients.forEach(client => {
@@ -309,7 +310,7 @@ function getState(playerId) {
         });
     };
 
-    state = {'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus};
+    const state = {'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus, 'shards': shards};
     return state
 }
 
@@ -317,7 +318,12 @@ function updateState () {
     let squareStates = cache.get('squareStates');
     let squareCounts = cache.get('squareCounts');
     let playerBases = cache.get('playerBases');
+    let shards = cache.get('shards');
     let moves = cache.get('moves');
+
+    for (let i = 0; i < shards.length; i++) {
+        shards[i]++;
+    }
 
     moves.forEach(function (move) {
         let action = move.action;
@@ -363,5 +369,6 @@ function updateState () {
 
     cache.put('squareStates', squareStates);
     cache.put('squareCounts', squareCounts);
+    cache.put('shards', shards);
     cache.put('moves', []);
 }
