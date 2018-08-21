@@ -7,7 +7,8 @@ const {SquareType, AttackerCost} = require('./config');
 
 Vision = {
     UNIT: 1,
-    BASE: 3
+    BASE: 3,
+    WATCHTOWER: 4,
 };
 
 ts = 1000 / 4;
@@ -238,6 +239,10 @@ function initState() {
         [14, 0]
     ]
 
+    let watchTowers = [
+        [7, 7]
+    ]
+
     for (let i = 0; i < height; i++) {
         squareStates[i] = [];
         squareCounts[i] = [];
@@ -255,6 +260,11 @@ function initState() {
                 towers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
                         squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, null);
+                    }
+                })
+                watchTowers.forEach(function(tower) {
+                    if (i === tower[0] && j === tower[1]) {
+                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, null);
                     }
                 })
                 squareCounts[i][j] = new SquareCounts([0, 0]);
@@ -292,6 +302,8 @@ function maskForPlayer(squares, playerId) {
                 range = Vision.BASE;
             } else if (playerId === 2 && cell.squareType === SquareType.BASE2) {
                 range = Vision.BASE;
+            } else if (cell.squareType === SquareType.WATCHTOWER && cell.unit && cell.unit.playerId === playerId) {
+                range = Vision.WATCHTOWER;
             } else if (cell.unit && cell.unit.playerId === playerId) {
                 range = Vision.UNIT;
             } else {

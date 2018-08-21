@@ -4,7 +4,8 @@ module.exports = {
         REGULAR: 1,
         BASE1: 2,
         BASE2: 3,
-        TOWER: 4
+        TOWER: 4,
+        WATCHTOWER: 5
     },
     AttackerCost: 25,
     Action: {
