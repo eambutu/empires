@@ -6,8 +6,10 @@ export default function ResourceBoard(props) {
 
 
     return(
-        <div>
-            {shards}
+        <div className={"resource-info"}>
+            <div className={"shard-count"}>
+                Shards: {shards}
+            </div>
         </div>
     )
 
