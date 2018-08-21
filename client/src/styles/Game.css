@@ -29,6 +29,14 @@
 
 .watchtower {
     background-image: url("/static/media/eye.db6f3f01.svg");
+    height: 17px !important;
+    width: 33px !important;
+}
+
+.shardtower {
+    background-image: url("/static/media/shard.88d7ed0e.svg");
+    height: 33px !important;
+    width: 25px !important;
 }
 
 .square {
