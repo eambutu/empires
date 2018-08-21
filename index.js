@@ -158,9 +158,7 @@ function heartbeat() {
 
 function pingPlayers() {
     wss.clients.forEach(client => {
-        if (!client.ponged) {
-            client.isAlive = false;
-        }
+        client.isAlive = client.ponged;
         client.ping();
         client.ponged = false;
     });
@@ -177,7 +175,7 @@ function runGame() {
     );
     heartbeatInterval = setInterval(
         pingPlayers,
-        5000
+        1000
     );
 }
 
