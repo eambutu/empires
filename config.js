@@ -5,7 +5,8 @@ module.exports = {
         BASE1: 2,
         BASE2: 3,
         TOWER: 4,
-        WATCHTOWER: 5
+        WATCHTOWER: 5,
+        RIVER: 6
     },
     AttackerCost: 25,
     Action: {

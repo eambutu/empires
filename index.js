@@ -253,20 +253,54 @@ function initState() {
     let playerBases = [];
     let queues = {};
 
-    playerBases[0] = [0, 0];
-    playerBases[1] = [14, 14];
+    let corners = [
+        [0, 0],
+        [14, 0],
+        [0, 14],
+        [14, 14]
+    ]
 
     queues[1] = [];
     queues[2] = [];
 
     let towers = [
-        [0, 14],
-        [14, 0]
-    ]
+        [4, 4],
+        [4, 10],
+        [10, 4],
+        [10, 10]
+    ];
 
     let watchTowers = [
         [7, 7]
-    ]
+    ];
+
+    let rivers = [
+        [0, 7],
+        [1, 7],
+        [2, 7],
+        [12, 7],
+        [13, 7],
+        [14, 7],
+        [7, 0],
+        [7, 1],
+        [7, 2],
+        [7, 12],
+        [7, 13],
+        [7, 14]
+    ];
+
+    let randIdxOne = Math.floor(Math.random() * 4);
+    let randIdxTwo = Math.floor(Math.random() * 4);
+    while(randIdxTwo === randIdxOne) {
+        randIdxTwo = Math.floor(Math.random() * 4);
+    }
+    playerBases[0] = corners[randIdxOne];
+    playerBases[1] = corners[randIdxTwo];
+    corners.forEach(function(corner, idx) {
+        if (idx !== randIdxOne && idx !== randIdxTwo) {
+            towers.push(corner);
+        }
+    });
 
     for (let i = 0; i < height; i++) {
         squareStates[i] = [];
@@ -290,6 +324,11 @@ function initState() {
                 watchTowers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
                         squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, null);
+                    }
+                })
+                rivers.forEach(function (river) {
+                    if (i === river[0] && j === river[1]) {
+                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, null);
                     }
                 })
                 squareCounts[i][j] = new SquareCounts([0, 0]);
@@ -426,7 +465,9 @@ function updateState() {
 
         // Execute the action
         if (move && move.action && move.action.includes('move') && move.source && move.target) {
-            if (!(playerBases[playerIndex][0] === move.target[0] && playerBases[playerIndex][1] === move.target[1])) {
+            let moveIntoBase = (playerBases[playerIndex][0] === move.target[0] && playerBases[playerIndex][1] === move.target[1]);
+            let moveIntoRiver = (squareStates[move.target[0]][move.target[1]].squareType === SquareType.RIVER);
+            if (!(moveIntoBase || moveIntoRiver)) {
                 squareCounts[move.target[0]][move.target[1]].counts[playerIndex] += squareCounts[move.source[0]][move.source[1]].counts[playerIndex];
                 squareCounts[move.source[0]][move.source[1]].counts[playerIndex] = 0;
             }
