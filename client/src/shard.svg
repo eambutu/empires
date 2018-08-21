@@ -1,1 +1,14 @@
-<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30.91 40.45"><defs><style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;}</style></defs><title>shards</title><line class="cls-1" x1="0.45" y1="20.22" x2="10.48" y2="0.22"/><line class="cls-1" x1="0.45" y1="20.22" x2="10.48" y2="40.22"/><line class="cls-1" x1="20.46" y1="20.22" x2="10.43" y2="0.22"/><line class="cls-1" x1="20.46" y1="20.22" x2="10.43" y2="40.22"/><line class="cls-1" x1="15.46" y1="10.22" x2="20.48" y2="0.22"/><line class="cls-1" x1="15.45" y1="30.19" x2="20.48" y2="40.22"/><line class="cls-1" x1="30.46" y1="20.22" x2="20.43" y2="0.22"/><line class="cls-1" x1="30.46" y1="20.22" x2="20.43" y2="40.22"/></svg>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30.91 40.45">
+    <defs>
+        <style>.cls-1{fill:#fff;stroke:#000;stroke-miterlimit:10;}</style>
+    </defs>
+    <title>shards</title>
+    <line class="cls-1" x1="0.45" y1="20.22" x2="10.48" y2="0.22"/>
+    <line class="cls-1" x1="0.45" y1="20.22" x2="10.48" y2="40.22"/>
+    <line class="cls-1" x1="20.46" y1="20.22" x2="10.43" y2="0.22"/>
+    <line class="cls-1" x1="20.46" y1="20.22" x2="10.43" y2="40.22"/>
+    <line class="cls-1" x1="15.46" y1="10.22" x2="20.48" y2="0.22"/>
+    <line class="cls-1" x1="15.45" y1="30.19" x2="20.48" y2="40.22"/>
+    <line class="cls-1" x1="30.46" y1="20.22" x2="20.43" y2="0.22"/>
+    <line class="cls-1" x1="30.46" y1="20.22" x2="20.43" y2="40.22"/>
+</svg>

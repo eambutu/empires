@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map, {ActionProp} from "./Map";
@@ -82,7 +82,7 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            if (e.shiftKey) {
+            if (e.ctrlKey || e.metaKey) {
                 if (this.state.shards + this.shardsDelta >= AttackerCost && this.isInSpawningRange(y, x)) {
                     this.shardsDelta -= AttackerCost;
                     let move = {
@@ -116,7 +116,7 @@ class Game extends Component {
             this.ws.send(JSON.stringify({'event': 'exit'}));
         };
 
-        this.ws.addEventListener('message',  event => {
+        this.ws.addEventListener('message', event => {
             var json = JSON.parse(event.data);
             if (json.event === 'connected') {
                 this.setState({
@@ -172,7 +172,8 @@ class Game extends Component {
 
                         <Map squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
-                        <EndGame resetClick={this.onReset} exitClick={this.onExit} status={playerStatus[player]['status']}/>
+                        <EndGame resetClick={this.onReset} exitClick={this.onExit}
+                                 status={playerStatus[player]['status']}/>
                     </div>
 
                 );
@@ -181,7 +182,8 @@ class Game extends Component {
                 <div id="game-page">
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                    <Map squares={squares} actionQueue={this.actionQueue} cursor={cursor} handleClick={this.onClickBound}/>
+                    <Map squares={squares} actionQueue={this.actionQueue} cursor={cursor}
+                         handleClick={this.onClickBound}/>
 
                     <ResourceBoard shards={this.state.shards}/>
                 </div>
@@ -213,19 +215,24 @@ class Game extends Component {
         //     }
         // }
 
-        this.setState({shards: newState.shards, squares: newState.squares, playerStatus: newState.playerStatus, cursor: newCursor});
+        this.setState({
+            shards: newState.shards,
+            squares: newState.squares,
+            playerStatus: newState.playerStatus,
+            cursor: newCursor
+        });
         this.shardsDelta = 0;
     }
 
     sendMove(move) {
-
         this.ws.send(JSON.stringify(
             {
                 'event': 'move',
                 'secret': this.state.secret,
                 'move': move,
                 'shardsDelta': this.shardsDelta
-            }));
+            }
+        ));
     }
 }
 

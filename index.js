@@ -58,6 +58,7 @@ app.ws('/', function (ws, req) {
         ws.name = `player_${ws.player}`;
         ws.secret = Math.floor(Math.random() * 10000);
         ws.shardsDelta = 0;
+
         ws.send(JSON.stringify(
             {
                 'event': 'connected',
@@ -199,7 +200,12 @@ function broadcastInit() {
     let playerBases = cache.get('playerBases');
     wss.clients.forEach(client => {
         if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'init', 'base': playerBases[client.player - 1], 'width': 15, 'height': 15}));
+            client.send(JSON.stringify({
+                'event': 'init',
+                'base': playerBases[client.player - 1],
+                'width': 15,
+                'height': 15
+            }));
         }
     });
     console.log('Sent init');
@@ -207,7 +213,7 @@ function broadcastInit() {
 
 function broadcastState() {
     wss.clients.forEach(client => {
-        if (client.readyState === 1){
+        if (client.readyState === 1) {
             client.send(JSON.stringify({'event': 'update', 'state': getState(client.player)}));
         }
     });
@@ -215,7 +221,7 @@ function broadcastState() {
 }
 
 
-function initState () {
+function initState() {
     let squareStates = [];
     let squareCounts = [];
     let playerBases = [];
@@ -338,12 +344,12 @@ function getState(playerId) {
                 }
             }
         });
-    };
+    }
 
     return {'queue': queues[playerId], 'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus, 'shards': shards[playerId - 1]};
 }
 
-function updateState () {
+function updateState() {
     let squareStates = cache.get('squareStates');
     let squareCounts = cache.get('squareCounts');
     let playerBases = cache.get('playerBases');
