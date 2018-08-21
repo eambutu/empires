@@ -7,13 +7,13 @@ import base from "../base.svg";
 
 
 const colorMap = {
-    [SquareType.REGULAR]: 'white',
+    [SquareType.REGULAR]: 'black',
     [SquareType.BASE1]: 'red',
     [SquareType.BASE2]: 'blue'
 };
 
 export default function Map(props) {
-    const {squares, cursor, handleClick} = props;
+    const {player, squares, cursor, handleClick} = props;
 
     return (
         <table className={"map"}>
@@ -22,6 +22,7 @@ export default function Map(props) {
                 <tr key={y}>
                     {row.map((square, x) => (
                         <Cell
+                            player={player}
                             key={x}
                             square={square}
                             handleClick={handleClick}
@@ -37,15 +38,22 @@ export default function Map(props) {
 }
 
 function Cell(props) {
-    const {square, highlighted, handleClick, x, y} = props;
+    const {player, square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
     let divStyle = {
         "background-color": colorMap[square.squareType]
     };
     if (square.unit){
-        divStyle = {
-            color: 'green'
-        };
+        if (player === 1) {
+            divStyle = {
+                "background-color": 'red'
+            };
+        }
+        else{
+            divStyle = {
+                "background-color": 'blue'
+            };
+        }
     }
     if (highlighted){
         console.log("hi")
