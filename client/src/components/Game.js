@@ -82,13 +82,13 @@ class Game extends Component {
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
             if (e.shiftKey) {
-                if (this.state.shards >= AttackerCost && this.isInSpawningRange(y, x)) {
+                if (this.state.shards + this.shardsDelta >= AttackerCost && this.isInSpawningRange(y, x)) {
+                    this.shardsDelta -= AttackerCost;
                     this.actionQueue.push({
                         "action": "spawn",
                         "target": [y, x]
                     });
                     this.setState({cursor: [y, x]});
-                    this.shardsDelta -= AttackerCost;
                 }
             }
             else if (this.isPlayer[y][x]) {
@@ -242,10 +242,10 @@ class Game extends Component {
         }
 
         this.setState({shards: newState.shards, squares: newState.squares, playerStatus: newState.playerStatus, cursor: newCursor});
+        this.shardsDelta = 0;
     }
 
     onUpdateRequest() {
-        console.log("onupdaterequest, ", this.actionQueue.length);
         if (this.actionQueue.length < 1){
             this.ws.send(JSON.stringify(
                 {
@@ -266,7 +266,6 @@ class Game extends Component {
                     'shards_delta': this.shardsDelta
                 }));
         }
-        this.shardsDelta = 0;
     }
 }
 
