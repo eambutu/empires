@@ -66,13 +66,14 @@ class Game extends Component {
                 let targetX = cursorX + dx;
                 if (this.isInBound(targetY, targetX)) {
                     let target = [targetY, targetX];
-                    this.actionQueue.push({
+                    let move = {
                         action: action,
                         source: this.state.cursor,
                         target: target,
                         id: new Date().toString()
-                    });
+                    };
                     this.setState({cursor: target});
+                    this.sendMove(move);
                 }
             }
         };
@@ -84,11 +85,12 @@ class Game extends Component {
             if (e.shiftKey) {
                 if (this.state.shards + this.shardsDelta >= AttackerCost && this.isInSpawningRange(y, x)) {
                     this.shardsDelta -= AttackerCost;
-                    this.actionQueue.push({
+                    let move = {
                         "action": "spawn",
                         "target": [y, x]
-                    });
+                    };
                     this.setState({cursor: [y, x]});
+                    this.sendMove(move);
                 }
             }
             else if (this.isPlayer[y][x]) {
@@ -127,9 +129,6 @@ class Game extends Component {
                     width: json.width,
                     height: json.height,
                 })
-            }
-            else if (json.event === 'request_action') {
-                this.onUpdateRequest()
             }
             else if (json.event === 'update') {
                 this.updateGame(json.state);
@@ -196,69 +195,37 @@ class Game extends Component {
     }
 
     updateGame(newState) {
-        // check for valid queue
+        this.actionQueue = newState.queue;
+
         let isPlayer = newState.squares.map(row => {
             return row.map(cell => {
                 return cell.unit && cell.unit.playerId === this.state.player;
             });
         });
 
-        this.actionQueue = this.actionQueue.filter(action => {
-            if (action.action.includes("move")) {
-                let [y, x] = action.source;
-                if (isPlayer[y][x]) {
-                    isPlayer[y][x] = false;
-                    let [newY, newX] = action.target;
-                    isPlayer[newY][newX] = true;
-                    return true;
-                }
-            }
-            else if (action.action === "spawn") {
-                let [y, x] = action.target;
-                if (!this.isInSpawningRange(y, x)) {
-                    // Refund the cost for the cancelled spawn action
-                    this.shardsDelta += AttackerCost;
-                    return false;
-                }
-                return true;
-            }
-            return false; // bad queued move
-        });
         this.isPlayer = isPlayer;
 
         let newCursor = this.state.cursor;
-        if (newCursor) {
-            let [y, x] = newCursor;
-            if (!isPlayer[y][x]) {
-                newCursor = null;
-            }
-        }
+        // if (newCursor) {
+        //     let [y, x] = newCursor;
+        //     if (!isPlayer[y][x]) {
+        //         newCursor = null;
+        //     }
+        // }
 
         this.setState({shards: newState.shards, squares: newState.squares, playerStatus: newState.playerStatus, cursor: newCursor});
         this.shardsDelta = 0;
     }
 
-    onUpdateRequest() {
-        if (this.actionQueue.length < 1){
-            this.ws.send(JSON.stringify(
-                {
-                    'event': 'move',
-                    'secret': this.state.secret,
-                    'action': {action:null, source:null, target:null},
-                    'shards_delta': this.shardsDelta
-                }));
-        }
-        else {
-            let returnedAction = this.actionQueue[0];
-            this.actionQueue.shift();
-            this.ws.send(JSON.stringify(
-                {
-                    'event': 'move',
-                    'secret': this.state.secret,
-                    'action': returnedAction,
-                    'shards_delta': this.shardsDelta
-                }));
-        }
+    sendMove(move) {
+
+        this.ws.send(JSON.stringify(
+            {
+                'event': 'move',
+                'secret': this.state.secret,
+                'move': move,
+                'shardsDelta': this.shardsDelta
+            }));
     }
 }
 
