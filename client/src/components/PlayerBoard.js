@@ -1,7 +1,7 @@
 import React from "react";
 import '../styles/PlayerBoard.css';
 
-export default function EndGame(props) {
+export default function PlayerBoard(props) {
     const {playerStatus} = props;
 
 }
