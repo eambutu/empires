@@ -7,50 +7,50 @@
 }
 
 .square-holder {
-    height: 43px;
-    width: 43px;
+    height: 40px;
+    width: 40px;
     border: 0.5px solid #aaaaaa;
     background-color: black;
+    padding: 4px;
 }
 
 .attacker {
     /*background-image: url("/static/media/sword.0d670775.svg");*/
-    background-image: url("/static/media/sword.76bb79a2.svg");
+    background-image: url("/static/media/sword.2d2641b8.svg");
+    height: 33px !important;
+    width: 33px !important;
+}
+
+.base {
+    background-image: url("/static/media/base.6f510e2a.svg");
+    height: 33px !important;
+    width: 33px !important;
+}
+
+.watchtower {
+    background-image: url("/static/media/eye.db6f3f01.svg");
 }
 
 .square {
-    line-height: 36px;
+    line-height: 30px;
     text-align: center;
     color: white;
     font-size: 1.5pc;
     /* margin-top: 10px; */
     font-weight: 900;
     font-size: 25px;
-    padding: 1px;
     box-sizing: border-box;
-    width: 43px;
-    height: 43px;
-    padding: 5px;
     margin: auto;
 }
 
 .highlighted {
-    height: 40px;
-    width: 40px;
+    height: 23px;
+    width: 23px;
     border: 2px solid white;
 }
 
 .count-text{
     z-index: 1;
-    position: absolute;
     color: black;
     font-size: 10px;
 }
-
-/*table {*/
-/*table-layout: fixed;*/
-/*}*/
-/*td {*/
-/*width: 40px;*/
-/*height: 40px;*/
-/*}*/

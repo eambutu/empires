@@ -3,6 +3,8 @@ import logo from '../logo.svg';
 import '../styles/Map.css';
 import sword from '../sword.svg';
 import base from "../base.svg";
+import eye from "../eye.svg"
+import shards from "../shard.svg"
 
 import up_arrow from "../up_arrow.svg";
 import down_arrow from "../down_arrow.svg";
@@ -88,39 +90,51 @@ function Cell(props) {
     let actionVisualEntries = Object.entries(actionVisuals);
     let overlayComponent = null;
     let text = "";
+    if (square.squareType > 2) {
+        console.log(square.squareType)
+    }
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         overlayComponent = (
-            <div className={"overlay-component square"}>
-                <object className={"icon"} type={"image/svg+xml"} data={base}>
-                    Your browser does not support SVG
-                </object>
-            </div>);
-    } else if (square.unit) {
+            <div className={"square base"}>
+    </div>
+        );
+    }
+    else if (square.squareType === SquareType.WATCHTOWER){
         overlayComponent = (
-            <div className={"overlay-component square"}>
-                <object className={"icon"} type={"image/svg+xml"} data={sword}>
-                    Your browser does not support SVG
-                </object>
+        <div className={"square watchtower"}>
+        </div>
+        );
+    }
+    else if (square.squareType === SquareType.TOWER){
+        overlayComponent = 
+        <object className={"icon"} type={"image/svg+xml"} data={shards}>
+        </object>
+    }
+    else if (square.unit) {
+        overlayComponent = (
+            <div className={"square attacker count-text"}>
+                {square.unit.count}
             </div>);
-        text = square.unit.count;
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
         if (square.squareType === SquareType.UNKNOWN) {
             divStyle["backgroundColor"] = "#404040";
         }
-        overlayComponent = (<div className="overlay-component square">
-            <object className={"icon"} type={"image/svg+xml"} data={icon}>
-                Your browser does not support SVG
-            </object>
-        </div>);
+    //     overlayComponent = (<div className="overlay-component square">
+    //         <object className={"icon"} type={"image/svg+xml"} data={icon}>
+    //             Your browser does not support SVG
+    //         </object>
+    //     </div>);
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
-        <div className="overlay-wrapper">
+        {/*<div className="overlay-wrapper">*/}
             {overlayComponent}
-            <div className={"square count-text"}>
-                {text}
-            </div>
-        </div>
+            {/*<div className={"square count-text"}>*/}
+                {/*{text}*/}
+            {/*</div>*/}
+        {/*</div>*/}
     </td>);
+
+
 }
