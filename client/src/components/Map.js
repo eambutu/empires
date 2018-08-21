@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Map.css';
-import attacker from "../attacker.svg";
+import sword from '../sword.svg'
 import base from "../base.svg";
 
 var SquareType = require("./config").SquareType;
@@ -13,8 +13,7 @@ const colorMap = {
 };
 
 export default function Map(props) {
-    const {player, squares, cursor, handleClick} = props;
-
+    const {squares, cursor, handleClick} = props;
     return (
         <table className={"map"}>
             <tbody>
@@ -22,7 +21,6 @@ export default function Map(props) {
                 <tr key={y}>
                     {row.map((square, x) => (
                         <Cell
-                            player={player}
                             key={x}
                             square={square}
                             handleClick={handleClick}
@@ -38,13 +36,13 @@ export default function Map(props) {
 }
 
 function Cell(props) {
-    const {player, square, highlighted, handleClick, x, y} = props;
+    const {square, highlighted, handleClick, x, y} = props;
     let styleClass = "square-holder";
     let divStyle = {
         "background-color": colorMap[square.squareType]
     };
     if (square.unit){
-        if (player === 1) {
+        if (square.unit.playerId === 1) {
             divStyle = {
                 "background-color": 'red'
             };
@@ -69,7 +67,7 @@ function Cell(props) {
                   </div>;
     } else if (square.unit) {
         content = <div className={"square"}>
-                    <object type={"image/svg+xml"} data={attacker}>
+                    <object type={"image/svg+xml"} data={sword}>
                         Your browser does not support SVG
                     </object>
                   </div>;

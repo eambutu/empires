@@ -6,17 +6,16 @@ var expressWs = require('express-ws')(app);
 var path = require('path');
 var wss = expressWs.getWss('/');
 
+
 Vision = {
     UNIT: 1,
     BASE: 3
 };
 
-id1 = 1729;
-id2 = 1618;
 ts = 1000 / 2;
-game = null;
-sockets = {1: null, 2: null};
-names = {1: 'player_1', 2: 'player_2'};
+started = false;
+gameInterval = null;
+maxPlayers = 2;
 moves = [];
 
 
@@ -27,57 +26,51 @@ app.get('/', function (req, res) {
 });
 
 app.ws('/', function (ws, req) {
-    ws.isAlive = true;
     ws.on('message', function (msg) {
-        let moves = cache.get('moves')
         ws.isAlive = true;
+
+        let moves = cache.get('moves')
         data = JSON.parse(msg);
-        if (data.id === id1) {
-            data.player = 1;
+
+        console.log(data);
+
+        if (data.secret === ws.secret) {
+            data.player = ws.player;
             moves.push(data);
-        }
-        else if (data.id === id2) {
-            data.player = 2;
-            moves.push(data);
+            console.log('pushed move');
         }
         cache.put('moves', moves);
     });
 
-    if (game !== 'null') {
-        if (wss.clients.size === 1) {
-            ws.send(JSON.stringify(
-                {
-                    'event': 'connected',
-                    'player': 1,
-                    'id': id1
-                }
-            ));
-            sockets[1] = ws;
-            console.log('Player 1 connected')
-        }
-        else if (wss.clients.size === 2) {
-            ws.send(JSON.stringify(
-                {
-                    'event': 'connected',
-                    'player': 2,
-                    'id': id2
-                }
-            ));
-            sockets[2] = ws;
-            console.log('Player 2 connected')
+    if (!started && (wss.clients.size <= maxPlayers)) {
+        ws.isAlive = true;
+        ws.player = wss.clients.size;
+        ws.name = `player_${ws.player}`;
+        ws.secret = Math.floor(Math.random() * 10000);;
+        ws.send(JSON.stringify(
+            {
+                'event': 'connected',
+                'player': ws.player,
+                'secret': ws.secret
+            }
+        ));
+        console.log(`Player ${ws.player} connected`);
+
+        if (wss.clients.size === maxPlayers) {
             runGame();
         }
     }
     else {
         ws.send(JSON.stringify({
-            'event': 'full'
+            'event': 'full',
+            'text': 'Lobby is full'
         }));
         ws.close();
     }
 
     ws.on('close', function () {
-        console.log('Client disconnected')
         ws.isAlive = false;
+        console.log('Client disconnected')
     });
 });
 
@@ -149,10 +142,11 @@ class Unit {
 }
 
 function runGame() {
-    gameStarted = true;
+    started = true;
+    broadcastStarting();
     initState();
     broadcastInit();
-    game = setInterval(
+    gameInterval = setInterval(
         performOneTurn,
         ts
     );
@@ -170,43 +164,48 @@ function performOneTurn() {
 }
 
 function maybeEndGame() {
-    allDead = true;
-    Object.keys(sockets).forEach(function(key) {
-        if (sockets[key].isAlive) {
-            allDead = false;
-        }
-    });
-    if (allDead){
+    if (wss.clients.size === 0) {
         console.log('RESTART GAME');
-        clearInterval(game);
+        clearInterval(gameInterval);
+        started = false;
     }
 }
 
 function requestActions() {
-    Object.keys(sockets).forEach(function(key) {
-        if (sockets[key].isAlive) {
-            sockets[key].send(JSON.stringify({'event': 'request_action'}));
+    wss.clients.forEach(client => {
+        if (client.isAlive) {
+            client.send(JSON.stringify({'event': 'request_action'}));
         }
-        sockets[key].isAlive = false;
+        client.isAlive = false;
     });
+    console.log('Sent request');
+}
+
+function broadcastStarting() {
+    // Things that get broadcast in the beginning of the game
+    wss.clients.forEach(client => {
+        if (client.isAlive) {
+            client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
+        }
+    });
+    console.log('Sent init');
 }
 
 function broadcastInit() {
     // Things that get broadcast in the beginning of the game
     let playerBases = cache.get('playerBases');
-    Object.keys(sockets).forEach(function (key) {
-        console.log(playerBases)
-        if (sockets[key].isAlive) {
-            sockets[key].send(JSON.stringify({'event': 'init', 'base': playerBases[key - 1], 'width': 15, 'height': 15}));
+    wss.clients.forEach(client => {
+        if (client.isAlive) {
+            client.send(JSON.stringify({'event': 'init', 'base': playerBases[client.player - 1], 'width': 15, 'height': 15}));
         }
     });
     console.log('Sent init');
 }
 
 function broadcastState() {
-    Object.keys(sockets).forEach(function (key) {
-        if (sockets[key].isAlive){
-            sockets[key].send(JSON.stringify({'event': 'update', 'state': getState()}));
+    wss.clients.forEach(client => {
+        if (client.isAlive){
+            client.send(JSON.stringify({'event': 'update', 'state': getState()}));
         }
     });
     console.log("Sent state");
@@ -255,31 +254,22 @@ function getState() {
     const gameWonStatus = cache.get('gameWonStatus');
     const playerStatus = {};
     if (gameWonStatus) {
-        Object.entries(sockets).forEach(([id, ws]) => {
-            if (ws.isAlive) {
-                playerStatus[names[id]] = gameWonStatus[id - 1];
-            }
-            else {
-                playerStatus[names[id]] = gameWonStatus[id - 1];
-            }
+        wss.clients.forEach(client => {
+            playerStatus[client.player] = {'name': client.names, 'status': gameWonStatus[client.player - 1]};
         });
     }
     else {
-        Object.entries(sockets).forEach(([id, ws]) => {
-            if (ws.isAlive) {
-                playerStatus[names[id]] = 'playing';
+        wss.clients.forEach(client => {
+            if (client.isAlive) {
+                playerStatus[client.player] = {'name': client.names, 'status': 'playing'};
             }
             else {
-                playerStatus[names[id]] = 'disconnected';
+                playerStatus[client.player] = {'name': client.names, 'status': 'disconnected'};
             }
         });
-    }
-    // const flattenedSquares = squares.reduce(function (prev, cur) {
-    //     return prev.concat(cur);
-    // });
+    };
 
     state = {'squares': squares, 'playerStatus': playerStatus};
-    // console.log(state);
     return state
 }
 
@@ -293,7 +283,6 @@ function updateState () {
         let action = move.action;
         let player = move.player - 1;
         if (action && action.action && action.source && action.target) {
-            console.log(action);
             squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
             squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
         }
