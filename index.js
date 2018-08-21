@@ -37,7 +37,6 @@ app.ws('/', function (ws, req) {
         if (data.secret === ws.secret) {
             data.player = ws.player;
             moves.push(data);
-            console.log('pushed move');
         }
         cache.put('moves', moves);
     });
@@ -321,7 +320,7 @@ function getState(playerId) {
         });
     };
 
-    const state = {'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus, 'shards': shards};
+    const state = {'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus, 'shards': shards[playerId - 1]};
     return state
 }
 
@@ -362,7 +361,6 @@ function updateState () {
     for (let i = 0; i < playerBases.length; i++) {
         let ownIdx = squareCounts[playerBases[i][0]][playerBases[i][1]].nonZeroIdx();
         if (ownIdx !== -1 && ownIdx !== i) {
-            console.log('won');
             winPlayerIdx = ownIdx;
         }
     }
