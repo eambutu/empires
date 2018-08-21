@@ -46,7 +46,7 @@ app.ws('/', function (ws, req) {
         ws.isAlive = true;
         ws.player = wss.clients.size;
         ws.name = `player_${ws.player}`;
-        ws.secret = 11*ws.player + 3;
+        ws.secret = Math.floor(Math.random() * 10000);;
         ws.send(JSON.stringify(
             {
                 'event': 'connected',
@@ -143,6 +143,7 @@ class Unit {
 
 function runGame() {
     started = true;
+    broadcastStarting();
     initState();
     broadcastInit();
     gameInterval = setInterval(
@@ -163,7 +164,7 @@ function performOneTurn() {
 }
 
 function maybeEndGame() {
-    if (wss.clients.size == 0) {
+    if (wss.clients.size === 0) {
         console.log('RESTART GAME');
         clearInterval(gameInterval);
         started = false;
@@ -178,6 +179,16 @@ function requestActions() {
         client.isAlive = false;
     });
     console.log('Sent request');
+}
+
+function broadcastStarting() {
+    // Things that get broadcast in the beginning of the game
+    wss.clients.forEach(client => {
+        if (client.isAlive) {
+            client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
+        }
+    });
+    console.log('Sent init');
 }
 
 function broadcastInit() {

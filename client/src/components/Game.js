@@ -97,6 +97,9 @@ class Game extends Component {
             else if (json.event === 'full') {
                 this.setState({waitingText: json.text})
             }
+            else if (json.event === 'starting') {
+                this.setState({waitingText: json.text})
+            }
             else {
                 console.log("dafuck");
             }
