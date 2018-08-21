@@ -1,23 +1,22 @@
 import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Game.css';
-import Map from "./Map";
+import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
 
-const SquareType = require("./config").SquareType;
-const AttackerCost = require("./config").AttackerCost;
+const {SquareType, AttackerCost, Action} = require("./config");
 
-const keyMap = {
-    ArrowDown: { dx: 0, dy: 1 },
-    ArrowUp: { dx: 0, dy: -1 },
-    ArrowLeft: { dx: -1, dy: 0 },
-    ArrowRight: { dx: 1, dy: 0 },
-    s: { dx: 0, dy: 1 },
-    w: { dx: 0, dy: -1 },
-    a: { dx: -1, dy: 0 },
-    d: { dx: 1, dy: 0 }
+const KeyMap = {
+    ArrowDown: Action.MOVE_DOWN,
+    ArrowUp: Action.MOVE_UP,
+    ArrowLeft: Action.MOVE_LEFT,
+    ArrowRight: Action.MOVE_RIGHT,
+    s: Action.MOVE_DOWN,
+    w: Action.MOVE_UP,
+    a: Action.MOVE_LEFT,
+    d: Action.MOVE_RIGHT
 };
 
 class Game extends Component {
@@ -59,18 +58,19 @@ class Game extends Component {
         this.shardsDelta = 0;
 
         this.keyDownBound = e => {
-            console.log(e.key);
-            const dPos = keyMap[e.key];
-            if (dPos && this.state.cursor) {
+            const action = KeyMap[e.key];
+            if (action && this.state.cursor) {
+                let {dy, dx} = ActionProp[action];
                 let [cursorY, cursorX] = this.state.cursor;
-                let targetY = cursorY + dPos.dy;
-                let targetX = cursorX + dPos.dx;
+                let targetY = cursorY + dy;
+                let targetX = cursorX + dx;
                 if (this.isInBound(targetY, targetX)) {
                     let target = [targetY, targetX];
                     this.actionQueue.push({
-                        "action": "move",
-                        "source": this.state.cursor,
-                        "target": target
+                        action: action,
+                        source: this.state.cursor,
+                        target: target,
+                        id: new Date().toString()
                     });
                     this.setState({cursor: target});
                 }
@@ -101,11 +101,8 @@ class Game extends Component {
         // Call our fetch function below once the component mounts
         // this.callBackendAPI()
         //     .then(res => this.setState({ squares: res.squares }))
-        //     .catch(err => console.log(err));
 
-        console.log('component did mount');
         document.addEventListener("keydown", this.keyDownBound);
-        console.log(window.location.host, window.location);
 
         this.ws = new WebSocket('ws://' + window.location.hostname + ':5000/');
 
@@ -126,12 +123,10 @@ class Game extends Component {
                 });
             }
             else if (json.event === 'init') {
-                console.log("initializing")
                 this.setState({
                     width: json.width,
                     height: json.height,
                 })
-                console.log(json)
             }
             else if (json.event === 'request_action') {
                 this.onUpdateRequest()
@@ -149,7 +144,6 @@ class Game extends Component {
                 window.location.reload()
             }
             else {
-                console.log("dafuck");
             }
         });
     }
@@ -170,15 +164,14 @@ class Game extends Component {
     };
 
     render() {
-        let playerStatus = this.state.playerStatus;
-        let player = this.state.player;
-        if (this.state.squares) {
+        let {squares, playerStatus, player, cursor} = this.state;
+        if (squares) {
             if (playerStatus[player]['status'] === "lost" || playerStatus[player]['status'] === "won") {
                 return (
                     <div id="game-page">
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                        <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                        <Map squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit} status={playerStatus[player]['status']}/>
                     </div>
@@ -189,7 +182,7 @@ class Game extends Component {
                 <div id="game-page">
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                    <Map squares={this.state.squares} cursor={this.state.cursor} handleClick={this.onClickBound}/>
+                    <Map squares={squares} actionQueue={this.actionQueue} cursor={cursor} handleClick={this.onClickBound}/>
 
                     <ResourceBoard shards={this.state.shards}/>
                 </div>
@@ -211,7 +204,7 @@ class Game extends Component {
         });
 
         this.actionQueue = this.actionQueue.filter(action => {
-            if (action.action === "move") {
+            if (action.action.includes("move")) {
                 let [y, x] = action.source;
                 if (isPlayer[y][x]) {
                     isPlayer[y][x] = false;

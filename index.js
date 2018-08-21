@@ -1,4 +1,5 @@
 var SquareType = require('./config').SquareType;
+
 var express = require('express');
 var cache = require('memory-cache');
 var app = express();
@@ -12,8 +13,9 @@ Vision = {
     BASE: 3
 };
 
+
 ts = 1000 / 4;
-started = false;
+full = false;
 gameInterval = null;
 maxPlayers = 2;
 moves = [];
@@ -50,7 +52,7 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    if (!started && (wss.clients.size <= maxPlayers)) {
+    if (!full && (wss.clients.size <= maxPlayers)) {
         ws.isAlive = true;
         ws.player = wss.clients.size;
         ws.name = `player_${ws.player}`;
@@ -149,7 +151,7 @@ class Unit {
 }
 
 function runGame() {
-    started = true;
+    full = true;
     broadcastStarting();
     initState();
     broadcastInit();
@@ -163,7 +165,7 @@ function runGame() {
 function performOneTurn() {
     resetIfEmpty();
     requestActions();
-    setTimeout(function() {
+    setTimeout(function () {
         updateState();
         broadcastState();
     }, (ts / 2));
@@ -179,7 +181,9 @@ function resetIfEmpty() {
 function resetGame() {
     console.log('RESTART GAME');
     clearInterval(gameInterval);
-    started = false;
+    setTimeout(function () {
+        full = false;
+    }, 1000);
 }
 
 function requestActions() {
@@ -363,7 +367,7 @@ function updateState () {
         let player = move.player - 1;
 
         // Execute the action
-        if (action && action.action && action.action === 'move' && action.source && action.target) {
+        if (action && action.action && action.action.includes('move') && action.source && action.target) {
             squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
             squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
         }
