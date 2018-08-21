@@ -289,11 +289,19 @@ function maskForPlayer(squares, playerId) {
 function spawnUnit(y, x, playerId) {
     // Assumes that the square given is a legitimate place to spawn a unit
     let playerStates = cache.get('squareStates');
+    let squareCounts = cache.get('squareCounts');
     if (!playerStates[y][x].unit || playerStates[y][x].unit.playerId !== playerId) {
         playerStates[y][x].unit = new Unit(playerId, 1);
+        if (playerId === 1) {
+            squareCounts[y][x] = new SquareCounts([1, 0]);
+        }
+        else if (playerId === 2) {
+            squareCounts[y][x] = new SquareCounts([0, 1]);
+        }
     }
     else {
         playerStates[y][x].unit.count++;
+        squareCounts[y][x].counts[playerId - 1]++;
     }
     cache.put('squareStates', playerStates);
 }
@@ -341,9 +349,12 @@ function updateState () {
     moves.forEach(function (move) {
         let action = move.action;
         let player = move.player - 1;
-        if (action && action.action && action.source && action.target) {
+        if (action && action.action && action.action === 'move' && action.source && action.target) {
             squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
             squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
+        }
+        else if (action && action.action && action.action === 'spawn' && action.target) {
+            spawnUnit(action.target[0], action.target[1], move.player);
         }
     })
 

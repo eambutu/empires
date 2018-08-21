@@ -57,7 +57,17 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            if (this.isPlayer[y][x]) {
+            console.log('click event');
+            if (e.shiftKey) {
+                console.log('shift click event');
+                this.actionQueue.push({
+                    "action": "spawn",
+                    "target": [y, x]
+                });
+                console.log(this.actionQueue);
+                this.setState({cursor: [y, x]});
+            }
+            else if (this.isPlayer[y][x]) {
                 this.setState({cursor: [y, x]});
             }
         };
@@ -126,7 +136,7 @@ class Game extends Component {
     };
 
     render() {
-        console.log(this.state)
+        //console.log(this.state)
         let playerStatus = this.state.playerStatus;
         let player = this.state.player;
         if (this.state.squares) {
@@ -177,6 +187,9 @@ class Game extends Component {
                     return true;
                 }
             }
+            else if (action.action === "spawn") {
+                return true;
+            }
             return false; // bad queued move
         });
         this.isPlayer = isPlayer;
@@ -184,11 +197,8 @@ class Game extends Component {
         let newCursor = this.state.cursor;
         if (newCursor) {
             let [y, x] = newCursor;
-            if (newCursor) {
-                let [y, x] = newCursor;
-                if (!isPlayer[y][x]) {
-                    newCursor = null;
-                }
+            if (!isPlayer[y][x]) {
+                newCursor = null;
             }
         }
 
@@ -196,6 +206,7 @@ class Game extends Component {
     }
 
     onUpdateRequest() {
+        console.log("onupdaterequest, ", this.actionQueue.length);
         if (this.actionQueue.length < 1){
             this.ws.send(JSON.stringify({'secret': this.state.secret, 'action': {action:null, source:null, target:null}}));
         }

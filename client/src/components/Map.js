@@ -55,7 +55,6 @@ function Cell(props) {
         }
     }
     if (highlighted){
-        console.log("hi")
         styleClass = "square-holder highlighted"
     }
 

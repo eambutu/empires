@@ -11,15 +11,11 @@ class App extends Component {
     };
 
     startGame() {
-        console.log("changed state")
         this.setState({curState: "game"});
-        console.log(this.state)
     }
 
     render() {
         var comp = "wtf happened";
-        console.log("rerender")
-        console.log(this.state.curState)
         switch (this.state.curState) {
             case "home":
                 comp = (
