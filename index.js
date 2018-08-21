@@ -1,4 +1,5 @@
 var SquareType = require('./config').SquareType;
+
 var express = require('express');
 var cache = require('memory-cache');
 var app = express();
@@ -366,7 +367,7 @@ function updateState () {
         let player = move.player - 1;
 
         // Execute the action
-        if (action && action.action && action.action === 'move' && action.source && action.target) {
+        if (action && action.action && action.action.includes('move') && action.source && action.target) {
             squareCounts[action.target[0]][action.target[1]].counts[player] += squareCounts[action.source[0]][action.source[1]].counts[player];
             squareCounts[action.source[0]][action.source[1]].counts[player] = 0;
         }
