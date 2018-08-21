@@ -128,7 +128,6 @@ class Game extends Component {
             else if (json.event === 'init') {
                 console.log("initializing")
                 this.setState({
-                    cursor: json.base,
                     width: json.width,
                     height: json.height,
                 })
