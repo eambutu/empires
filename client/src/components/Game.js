@@ -123,7 +123,7 @@ class Game extends Component {
 
     render() {
         console.log(this.state)
-        if (this.state.squares && this.state.cursor) {
+        if (this.state.squares) {
             if (this.state.playerStatus === "lost" || this.state.playerStatus === "won") {
                 return (
                     <div id="game-page">
@@ -171,7 +171,18 @@ class Game extends Component {
         });
         this.isPlayer = isPlayer;
 
-        this.setState({squares: newState.squares, playerStatus: newState.playerStatus});
+        let newCursor = this.state.cursor;
+        if (newCursor) {
+            let [y, x] = newCursor;
+            if (newCursor) {
+                let [y, x] = newCursor;
+                if (!isPlayer[y][x]) {
+                    newCursor = null;
+                }
+            }
+        }
+
+        this.setState({squares: newState.squares, playerStatus: newState.playerStatus, cursor: newCursor});
     }
 
     onUpdateRequest() {

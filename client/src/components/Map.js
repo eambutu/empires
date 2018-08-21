@@ -7,7 +7,8 @@ import base from "../base.svg";
 var SquareType = require("./config").SquareType;
 
 const colorMap = {
-    [SquareType.REGULAR]: 'black',
+    [SquareType.UNKNOWN]: 'black',
+    [SquareType.REGULAR]: 'gray',
     [SquareType.BASE1]: 'red',
     [SquareType.BASE2]: 'blue'
 };
@@ -25,7 +26,7 @@ export default function Map(props) {
                             square={square}
                             handleClick={handleClick}
                             y={y} x={x}
-                            highlighted={cursor[1] === x && cursor[0] === y}
+                            highlighted={cursor && cursor[1] === x && cursor[0] === y}
                         />
                     ))}
                 </tr>
@@ -41,7 +42,7 @@ function Cell(props) {
     let divStyle = {
         "background-color": colorMap[square.squareType]
     };
-    if (square.unit){
+    if (square.unit) {
         if (square.unit.playerId === 1) {
             divStyle = {
                 "background-color": 'red'

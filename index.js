@@ -205,7 +205,7 @@ function broadcastInit() {
 function broadcastState() {
     wss.clients.forEach(client => {
         if (client.isAlive){
-            client.send(JSON.stringify({'event': 'update', 'state': getState()}));
+            client.send(JSON.stringify({'event': 'update', 'state': getState(client.player)}));
         }
     });
     console.log("Sent state");
@@ -247,7 +247,47 @@ function initState () {
     console.log('State initialized');
 }
 
-function getState() {
+function maskForPlayer(squares, playerId) {
+    let visible = squares.map(() => () => 0);
+    let fill = (y, x, range) => {
+        let yMax = Math.min(squares.length, y + range + 1);
+        let xMax = Math.min(squares[0].length, x + range + 1);
+        for (let iy = Math.max(0, y - range); iy < yMax; iy++) {
+            for (let ix = Math.max(0, x - range); ix < xMax; ix++) {
+                visible[iy][ix] = true;
+            }
+        }
+    };
+
+    squares.forEach((row, y) => {
+        row.forEach((cell, x) => {
+            let range;
+            if (playerId === 1 && cell.squareType === SquareType.BASE1) {
+                range = Vision.BASE;
+            } else if (playerId === 2 && cell.squareType === SquareType.BASE2) {
+                range = Vision.BASE;
+            } else if (cell.unit && cell.unit.playerId === playerId) {
+                range = Vision.UNIT;
+            } else {
+                return;
+            }
+            fill(y, x, range);
+        });
+    });
+
+    return squares.map((row, y) => (
+        row.map((cell, x) => {
+            if (visible[y][x]) {
+                return cell;
+            } else {
+                return new SquareState(y, x, SquareType.UNKNOWN, null);
+            }
+        })
+    ));
+}
+
+
+function getState(playerId) {
     //TODO: logic to decide what to sends over
     const squares = cache.get('squareStates');
     const playerStatus = {};
@@ -263,7 +303,7 @@ function getState() {
     //     return prev.concat(cur);
     // });
 
-    state = {'squares': squares, 'playerStatus': playerStatus};
+    state = {'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus};
     return state
 }
 
