@@ -13,6 +13,7 @@ Vision = {
 
 ts = 1000 / 4;
 full = false;
+gameEnded = false;
 gameInterval = null;
 heartbeatInterval = null;
 maxPlayers = 2;
@@ -167,6 +168,7 @@ function pingPlayers() {
 
 function runGame() {
     full = true;
+    gameEnded = false;
     broadcastStarting();
     initState();
     broadcastInit();
@@ -183,8 +185,10 @@ function runGame() {
 
 function performOneTurn() {
     resetIfEmpty();
-    updateState();
-    broadcastState();
+    if (!gameEnded) {
+        updateState();
+        broadcastState();
+    }
 }
 
 function resetIfEmpty() {
@@ -520,7 +524,7 @@ function updateState() {
             }
         }
         cache.put('gameWonStatus', gameWonStatus);
-        endGame();
+        gameEnded = true;
     }
 
     cache.put('squareStates', squareStates);
