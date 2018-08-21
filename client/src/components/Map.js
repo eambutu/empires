@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import logo from '../logo.svg';
 import '../styles/Map.css';
 import sword from '../sword.svg';
@@ -19,10 +19,10 @@ const SquareColor = {
 };
 
 export const ActionProp = {
-    [Action.MOVE_DOWN]: { dx: 0, dy: 1, visual: {icon: down_arrow} },
-    [Action.MOVE_UP]: { dx: 0, dy: -1, visual: {icon: up_arrow } },
-    [Action.MOVE_LEFT]: { dx: -1, dy: 0, visual: {icon: left_arrow } },
-    [Action.MOVE_RIGHT]: { dx: 1, dy: 0, visual: {icon: right_arrow } }
+    [Action.MOVE_DOWN]: {dx: 0, dy: 1, visual: {icon: down_arrow}},
+    [Action.MOVE_UP]: {dx: 0, dy: -1, visual: {icon: up_arrow}},
+    [Action.MOVE_LEFT]: {dx: -1, dy: 0, visual: {icon: left_arrow}},
+    [Action.MOVE_RIGHT]: {dx: 1, dy: 0, visual: {icon: right_arrow}}
 }
 
 export default function Map(props) {
@@ -75,13 +75,13 @@ function Cell(props) {
                 "backgroundColor": 'red'
             };
         }
-        else{
+        else {
             divStyle = {
                 "backgroundColor": 'blue'
             };
         }
     }
-    if (highlighted){
+    if (highlighted) {
         styleClass = "square-holder highlighted"
     }
     let overlayComponents = Object.entries(actionVisuals).map(([action, id]) => {
@@ -89,11 +89,11 @@ function Cell(props) {
         if (square.squareType === SquareType.UNKNOWN) {
             divStyle["backgroundColor"] = "#404040";
         }
-        return (<div className="overlay-component square" >
-                    <object className={"icon"} key={id} type={"image/svg+xml"} data={icon}>
-                        Your browser does not support SVG
-                    </object>
-                </div>);
+        return (<div className="overlay-component square">
+            <object className={"icon"} key={id} type={"image/svg+xml"} data={icon}>
+                Your browser does not support SVG
+            </object>
+        </div>);
     });
 
     let text = "";
@@ -114,7 +114,7 @@ function Cell(props) {
         text = square.unit.count;
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
-        <div className="overlay-wrapper" >
+        <div className="overlay-wrapper">
             <div className={square}>
                 {text}
             </div>

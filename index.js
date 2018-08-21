@@ -32,7 +32,7 @@ app.ws('/', function (ws, req) {
         ws.isAlive = true;
         data = JSON.parse(msg);
 
-        if (data.event === 'move'){
+        if (data.event === 'move') {
             let moves = cache.get('moves');
             if (data.secret === ws.secret) {
                 data.player = ws.player;
@@ -56,7 +56,8 @@ app.ws('/', function (ws, req) {
         ws.isAlive = true;
         ws.player = wss.clients.size;
         ws.name = `player_${ws.player}`;
-        ws.secret = Math.floor(Math.random() * 10000);;
+        ws.secret = Math.floor(Math.random() * 10000);
+        ;
         ws.send(JSON.stringify(
             {
                 'event': 'connected',
@@ -211,7 +212,12 @@ function broadcastInit() {
     let playerBases = cache.get('playerBases');
     wss.clients.forEach(client => {
         if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'init', 'base': playerBases[client.player - 1], 'width': 15, 'height': 15}));
+            client.send(JSON.stringify({
+                'event': 'init',
+                'base': playerBases[client.player - 1],
+                'width': 15,
+                'height': 15
+            }));
         }
     });
     console.log('Sent init');
@@ -219,7 +225,7 @@ function broadcastInit() {
 
 function broadcastState() {
     wss.clients.forEach(client => {
-        if (client.readyState === 1){
+        if (client.readyState === 1) {
             client.send(JSON.stringify({'event': 'update', 'state': getState(client.player)}));
         }
     });
@@ -227,7 +233,7 @@ function broadcastState() {
 }
 
 
-function initState () {
+function initState() {
     let squareStates = [];
     let squareCounts = [];
     let playerBases = [];
@@ -345,13 +351,18 @@ function getState(playerId) {
                 }
             }
         });
-    };
+    }
+    ;
 
-    const state = {'squares': maskForPlayer(squares, playerId), 'playerStatus': playerStatus, 'shards': shards[playerId - 1]};
+    const state = {
+        'squares': maskForPlayer(squares, playerId),
+        'playerStatus': playerStatus,
+        'shards': shards[playerId - 1]
+    };
     return state
 }
 
-function updateState () {
+function updateState() {
     let squareStates = cache.get('squareStates');
     let squareCounts = cache.get('squareCounts');
     let playerBases = cache.get('playerBases');

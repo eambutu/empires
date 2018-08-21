@@ -4,14 +4,14 @@ import '../styles/PlayerBoard.css';
 export default function PlayerBoard(props) {
     const {playerStatus} = props;
 
-    return(
+    return (
         <div className={"player-table-holder"}>
             <table className={"player-table"}>
                 <tbody>
                 {Object.values(playerStatus).map((player, playerid) => (
-                    <PlayerRow key={playerid} player={player} />
+                    <PlayerRow key={playerid} player={player}/>
 
-                    ))}
+                ))}
                 </tbody>
             </table>
         </div>
@@ -20,7 +20,7 @@ export default function PlayerBoard(props) {
 }
 
 
-function PlayerRow(props){
+function PlayerRow(props) {
     const {player} = props;
     return (
         <tr>

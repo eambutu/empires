@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import logo from '../logo.svg';
 import '../styles/App.css';
 import Homepage from './Homepage.js';
@@ -24,7 +24,7 @@ class App extends Component {
                 break;
             case "game":
                 comp = (
-                    <Game />
+                    <Game/>
                 );
         }
 

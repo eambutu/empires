@@ -1,13 +1,11 @@
 button {
-    width:  100px;
+    width: 100px;
     height: 50px;
     font-size: large;
     background-color: steelblue;
     color: white;
     cursor: pointer;
 }
-
-
 
 .App {
     text-align: center;
@@ -34,6 +32,10 @@ button {
 }
 
 @keyframes App-logo-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

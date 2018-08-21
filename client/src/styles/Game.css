@@ -13,8 +13,7 @@
     background-color: black;
 }
 
-
-.attacker{
+.attacker {
     /*background-image: url("/static/media/sword.0d670775.svg");*/
     background-image: url("/static/media/sword.76bb79a2.svg");
 }
@@ -40,11 +39,10 @@
     border: 2px solid white;
 }
 
-
 /*table {*/
-    /*table-layout: fixed;*/
+/*table-layout: fixed;*/
 /*}*/
 /*td {*/
-    /*width: 40px;*/
-    /*height: 40px;*/
+/*width: 40px;*/
+/*height: 40px;*/
 /*}*/

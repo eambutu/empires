@@ -6,7 +6,7 @@ export default function ResourceBoard(props) {
     const {shards} = props;
 
 
-    return(
+    return (
         <div className={"resource-info"}>
             <div className={"shard-count"}>
                 <span>
