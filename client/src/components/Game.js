@@ -13,7 +13,11 @@ const keyMap = {
     ArrowDown: { dx: 0, dy: 1 },
     ArrowUp: { dx: 0, dy: -1 },
     ArrowLeft: { dx: -1, dy: 0 },
-    ArrowRight: { dx: 1, dy: 0 }
+    ArrowRight: { dx: 1, dy: 0 },
+    s: { dx: 0, dy: 1 },
+    w: { dx: 0, dy: -1 },
+    a: { dx: -1, dy: 0 },
+    d: { dx: 1, dy: 0 }
 };
 
 class Game extends Component {
