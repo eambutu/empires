@@ -3,8 +3,7 @@ import '../styles/ResourceBoard.css';
 import shard from '../shard.svg'
 
 export default function ResourceBoard(props) {
-    const {shards} = props;
-
+    const {displayShards} = props;
 
     return (
         <div className={"resource-info"}>
@@ -13,7 +12,7 @@ export default function ResourceBoard(props) {
                     <object className={"shards-icon"} type={"image/svg+xml"} data={shard}>
                         Your browser does not support SVG
                     </object>
-                    {shards}
+                    {displayShards}
                     </span>
             </div>
         </div>
