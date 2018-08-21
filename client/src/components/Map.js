@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import logo from '../logo.svg';
 import '../styles/Map.css';
-import attacker from "../attacker.svg";
+import sword from '../sword.svg'
 import base from "../base.svg";
 
 var SquareType = require("./config").SquareType;
@@ -67,7 +67,7 @@ function Cell(props) {
                   </div>;
     } else if (square.unit) {
         content = <div className={"square"}>
-                    <object type={"image/svg+xml"} data={attacker}>
+                    <object type={"image/svg+xml"} data={sword}>
                         Your browser does not support SVG
                     </object>
                   </div>;
