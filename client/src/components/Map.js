@@ -62,13 +62,13 @@ function Cell(props) {
     let content = null;
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         content = <div className={"square"}>
-                    <object type={"image/svg+xml"} data={base}>
+                    <object className={"icon"} type={"image/svg+xml"} data={base}>
                         Your browser does not support SVG
                     </object>
                   </div>;
     } else if (square.unit) {
         content = <div className={"square"}>
-                    <object type={"image/svg+xml"} data={sword}>
+                    <object className={"icon"} type={"image/svg+xml"} data={sword}>
                         Your browser does not support SVG
                     </object>
                   </div>;

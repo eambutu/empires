@@ -1,0 +1,15 @@
+.resource-info {
+    position: fixed;
+    text-align: center;
+    width: 200px;
+    height: 26px;
+    background: white;
+    top: 0;
+    right: 0;
+    z-index: 25;
+
+}
+
+.shard-count{
+    line-height: 26px;
+}
