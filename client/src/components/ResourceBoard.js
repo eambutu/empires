@@ -1,5 +1,6 @@
 import React from "react";
 import '../styles/ResourceBoard.css';
+import shard from '../shard.svg'
 
 export default function ResourceBoard(props) {
     const {shards} = props;
@@ -8,7 +9,12 @@ export default function ResourceBoard(props) {
     return(
         <div className={"resource-info"}>
             <div className={"shard-count"}>
-                Shards: {shards}
+                <span>
+                    <object className={"shards-icon"} type={"image/svg+xml"} data={shard}>
+                        Your browser does not support SVG
+                    </object>
+                    {shards}
+                    </span>
             </div>
         </div>
     )
