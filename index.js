@@ -1,46 +1,90 @@
-let express = require('express');
-let cache = require('memory-cache');
-let app = express();
-let wss = require('express-ws')(app).getWss('/');
-let path = require('path');
+const express = require('express');
+const app = express();
+const expressWs = require('express-ws')(app);
+const path = require('path');
 const {SquareType, AttackerCost} = require('./config');
 
-Vision = {
+const Vision = {
     UNIT: 1,
     BASE: 3,
     WATCHTOWER: 4,
 };
 
-ts = 1000 / 4;
-full = false;
-gameEnded = false;
-gameInterval = null;
-heartbeatInterval = null;
-maxPlayers = 2;
-width = 15;
-height = 15;
+const ts = 1000 / 4;
+const maxPlayers = 2;
+const width = 15;
+const height = 15;
+
+var rooms = {};
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-app.get('/', function (req, res) {
+app.get('/room/:roomId', function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-app.ws('/', function (ws, req) {
+function initOrGetRoom(roomId, ws) {
+    if (!(roomId in rooms)) {
+        rooms[roomId] = {
+            id: roomId,
+            clients: [],
+            full: false,
+            gameEnded: false,
+            gameInterval: null,
+            heartbeatInterval: null
+        }
+    }
+    rooms[roomId].clients.push(ws);
+    return rooms[roomId];
+}
+
+function onConnect(room, ws) {
+    if (!room.full && (room.clients.length <= maxPlayers)) {
+        ws.ponged = true;
+        ws.isAlive = true;
+        ws.player = room.clients.length;
+        ws.name = `player_${ws.player}`;
+        ws.secret = Math.floor(Math.random() * 10000);
+
+        ws.send(JSON.stringify({
+            event: 'connected',
+            player: ws.player,
+            secret: ws.secret,
+            text: 'Connected! Waiting for other players to join.'
+        }));
+        console.log(`Player ${ws.player} connected`);
+
+        if (room.clients.length === maxPlayers) {
+            room.full = true;
+            runGame(room);
+        }
+    } else {
+        ws.send(JSON.stringify({
+            event: 'full',
+            text: 'Lobby is full'
+        }));
+        ws.close();
+    }
+}
+
+app.ws('/room/:roomId', function (ws, req) {
+    let roomId = req.params.roomId;
+    let room = initOrGetRoom(roomId, ws);
+
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
             console.log('received', data);
             if (data.secret === ws.secret) {
-                let queues = cache.get('queues');
+                let queues = room.queues;
                 queues[ws.player].push(data.move);
-                cache.put('queues', queues);
+                room.queues = queues;
             }
         }
         else if (data.event === 'reset') {
             console.log(data);
-            resetGame();
-            runGame();
+            resetGame(room);
+            runGame(room);
         }
         else if (data.event === 'exit') {
             console.log(data);
@@ -49,40 +93,14 @@ app.ws('/', function (ws, req) {
         }
     });
 
-    ws.on('pong', heartbeat);
+    ws.on('pong', () => {
+        ws.ponged = true;
+    });
 
     ws.on('close', function () {
         console.log('Client disconnected')
     });
-
-    if (!full && (wss.clients.size <= maxPlayers)) {
-        ws.ponged = true;
-        ws.isAlive = true;
-        ws.player = wss.clients.size;
-        ws.name = `player_${ws.player}`;
-        ws.secret = Math.floor(Math.random() * 10000);
-
-        ws.send(JSON.stringify(
-            {
-                'event': 'connected',
-                'player': ws.player,
-                'secret': ws.secret,
-                'text': 'Connected! Waiting for other players to join.'
-            }
-        ));
-        console.log(`Player ${ws.player} connected`);
-
-        if (wss.clients.size === maxPlayers) {
-            runGame();
-        }
-    }
-    else {
-        ws.send(JSON.stringify({
-            'event': 'full',
-            'text': 'Lobby is full.'
-        }));
-        ws.close();
-    }
+    onConnect(room, ws);
 });
 
 app.listen(5000, function () {
@@ -152,79 +170,81 @@ class Unit {
     }
 }
 
-function heartbeat() {
-    this.ponged = true;
-}
-
-function pingPlayers() {
-    wss.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.isAlive = client.ponged;
-            client.ping();
-            client.ponged = false;
+getPerformOneTurn = targetRoom => {
+    return function performOneTurn() {
+        room = targetRoom;
+        resetIfEmpty(room);
+        if (!room.gameEnded) {
+            updateState(room);
+            broadcastState(room);
         }
-    });
+    };    
+};
+
+getPingPlayers = targetRoom => {
+    return function pingPlayers() {
+        room = targetRoom;
+        room.clients.forEach(client => {
+            if (client.readyState === 1) {
+                client.isAlive = client.ponged;
+                client.ping();
+                client.ponged = false;
+            }
+        });
+    }    
 }
 
-function runGame() {
-    full = true;
-    gameEnded = false;
-    broadcastStarting();
-    initState();
-    broadcastInit();
-    gameInterval = setInterval(
-        performOneTurn,
+function runGame(room) {
+    broadcastStarting(room);
+    initState(room);
+    broadcastInit(room);
+    room.gameInterval = setInterval(
+        getPerformOneTurn(room),
         ts
     );
-    heartbeatInterval = setInterval(
-        pingPlayers,
+    room.heartbeatInterval = setInterval(
+        getPingPlayers(room),
         1000
     );
 }
 
-
-function performOneTurn() {
-    resetIfEmpty();
-    if (!gameEnded) {
-        updateState();
-        broadcastState();
+function resetIfEmpty(room) {
+    room.clients = room.clients.filter(client => (client.readyState !== 3));
+    if (room.clients.length === 0) {
+        resetGame(room);
     }
 }
 
-function resetIfEmpty() {
-    if (wss.clients.size === 0) {
-        resetGame();
-    }
+function endGame(room) {
+    clearInterval(room.gameInterval);
+    clearInterval(room.heartbeatInterval);
 }
 
-function endGame() {
-    clearInterval(gameInterval);
-    clearInterval(heartbeatInterval);
-}
+getSetRoomNotFull = targetRoom => function () {
+    room = targetRoom;
+    room.full = false;
+};
 
-function resetGame() {
+function resetGame(room) {
     console.log('RESTART GAME');
-    endGame();
-    setTimeout(function () {
-        full = false;
-    }, 1000);
+    endGame(room);
+    setTimeout(getSetRoomNotFull(room), 1000);
 }
 
 
-function broadcastStarting() {
-    // Things that get broadcast in the beginning of the game
-    wss.clients.forEach(client => {
+function broadcastStarting(room) {
+    room.clients.forEach(client => {
         if (client.readyState === 1) {
             client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
         }
     });
-    console.log('Sent init');
+    console.log('Sent starting');
 }
 
-function broadcastInit() {
+function broadcastInit(room) {
     // Things that get broadcast in the beginning of the game
-    let playerBases = cache.get('playerBases');
-    wss.clients.forEach(client => {
+    let playerBases = room.playerBases;
+    room.clients.forEach(client => {
         if (client.readyState === 1) {
             client.send(JSON.stringify({
                 'event': 'init',
@@ -237,17 +257,17 @@ function broadcastInit() {
     console.log('Sent init');
 }
 
-function broadcastState() {
-    wss.clients.forEach(client => {
+function broadcastState(room) {
+    room.clients.forEach(client => {
         if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'update', 'state': getState(client.player)}));
+            client.send(JSON.stringify({'event': 'update', 'state': getState(room, client.player)}));
         }
     });
     console.log("Sent state");
 }
 
 
-function initState() {
+function initState(room) {
     let squareStates = [];
     let squareCounts = [];
     let playerBases = [];
@@ -336,14 +356,14 @@ function initState() {
         }
     }
 
-    cache.put('playerBases', playerBases);
-    cache.put('squareStates', squareStates);
-    cache.put('squareCounts', squareCounts);
-    cache.put('queues', queues);
-    cache.put('shards', [0, 0]);
-    cache.put('resourceCenterCounts', [0, 0]);
-    cache.put('towers', towers);
-    cache.put('gameWonStatus', null);
+    room.playerBases = playerBases;
+    room.squareStates = squareStates;
+    room.squareCounts = squareCounts;
+    room.queues = queues;
+    room.shards = [0, 0];
+    room.resourceCenterCounts = [0, 0];
+    room.towers = towers;
+    room.gameWonStatus = null;
     console.log('State initialized');
 }
 
@@ -392,8 +412,8 @@ function isInBound(y, x) {
     return (0 <= y && y < height) && (0 <= x && x < width);
 }
 
-function isInSpawningRange(y, x, playerId) {
-    let squareStates = cache.get('squareStates');
+function isInSpawningRange(room, y, x, playerId) {
+    let squareStates = room.squareStates;
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             if ((i !== 0 || j !== 0) && isInBound(y + i, x + j)) {
@@ -409,21 +429,21 @@ function isInSpawningRange(y, x, playerId) {
     return false;
 }
 
-function getState(playerId) {
-    const squares = cache.get('squareStates');
-    const gameWonStatus = cache.get('gameWonStatus');
-    const shards = cache.get('shards');
-    const queues = cache.get('queues');
+function getState(room, playerId) {
+    const squares = room.squareStates;
+    const gameWonStatus = room.gameWonStatus;
+    const shards = room.shards;
+    const queues = room.queues;
     const playerStatus = {};
     if (gameWonStatus) {
-        wss.clients.forEach(client => {
+        room.clients.forEach(client => {
             if (client.readyState === 1) {
                 playerStatus[client.player] = {'name': client.name, 'status': gameWonStatus[client.player - 1]};
             }
         });
     }
     else {
-        wss.clients.forEach(client => {
+        room.clients.forEach(client => {
             if (client.readyState === 1) {
                 if (client.isAlive) {
                     playerStatus[client.player] = {'name': client.name, 'status': 'playing'};
@@ -438,17 +458,17 @@ function getState(playerId) {
     return {queue: queues[playerId], squares: maskForPlayer(squares, playerId), playerStatus: playerStatus, shards: shards[playerId - 1]};
 }
 
-function updateState() {
-    let squareStates = cache.get('squareStates');
-    let squareCounts = cache.get('squareCounts');
-    let playerBases = cache.get('playerBases');
-    let shards = cache.get('shards');
-    let resourceCenterCounts = cache.get('resourceCenterCounts');
-    let towers = cache.get('towers');
-    let queues = cache.get('queues');
+function updateState(room) {
+    let squareStates = room.squareStates;
+    let squareCounts = room.squareCounts;
+    let playerBases = room.playerBases;
+    let shards = room.shards;
+    let resourceCenterCounts = room.resourceCenterCounts;
+    let towers = room.towers;
+    let queues = room.queues;
     let moves = [];
 
-    wss.clients.forEach(client => {
+    room.clients.forEach(client => {
         if ((client.readyState === 1) && (queues[client.player].length > 0)) {
             let move = queues[client.player].shift();
             move.player = client.player;
@@ -528,7 +548,7 @@ function updateState() {
             }
             else if (move.action === "spawn") {
                 let [y, x] = move.target;
-                if (!isInSpawningRange(y, x, playerId)) {
+                if (!isInSpawningRange(room, y, x, playerId)) {
                     return false;
                 } else if (currShards - AttackerCost < 0) {
                     return false;
@@ -564,13 +584,13 @@ function updateState() {
                 gameWonStatus[i] = 'won';
             }
         }
-        cache.put('gameWonStatus', gameWonStatus);
-        gameEnded = true;
+        room.gameWonStatus = gameWonStatus;
+        room.gameEnded = true;
     }
 
-    cache.put('squareStates', squareStates);
-    cache.put('squareCounts', squareCounts);
-    cache.put('shards', shards);
-    cache.put('resourceCenterCounts', resourceCenterCounts);
-    cache.put('queues', queues);
+    room.squareStates = squareStates;
+    room.squareCounts = squareCounts;
+    room.shards = shards;
+    room.resourceCenterCounts = resourceCenterCounts;
+    room.queues = queues;
 }
