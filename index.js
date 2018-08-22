@@ -374,7 +374,7 @@ function initState(room) {
     room.squareStates = squareStates;
     room.squareCounts = squareCounts;
     room.queues = queues;
-    room.shards = [0, 0];
+    room.shards = [23, 23];
     room.resourceCenterCounts = [0, 0];
     room.towers = towers;
     room.gameWonStatus = null;
@@ -503,21 +503,24 @@ function updateState(room) {
             }
         }
         else if (move && move.action && move.action === 'spawn' && move.target) {
-            let [y, x] = move.target;
+            // If for some reason the server was given a spawn command when there were not enough shads, no-op.
+            if (!(shards[playerIndex] < AttackerCost)) {
+                let [y, x] = move.target;
 
-            if (!squareStates[y][x].unit || squareStates[y][x].unit.playerId !== move.player) {
-                squareStates[y][x].unit = new Unit(move.player, 1);
-                if (move.player === 1) {
-                    squareCounts[y][x] = new SquareCounts([1, 0]);
+                if (!squareStates[y][x].unit || squareStates[y][x].unit.playerId !== move.player) {
+                    squareStates[y][x].unit = new Unit(move.player, 1);
+                    if (move.player === 1) {
+                        squareCounts[y][x] = new SquareCounts([1, 0]);
+                    }
+                    else if (move.player === 2) {
+                        squareCounts[y][x] = new SquareCounts([0, 1]);
+                    }
+                } else {
+                    squareStates[y][x].unit.count++;
+                    squareCounts[y][x].counts[playerIndex]++;
                 }
-                else if (move.player === 2) {
-                    squareCounts[y][x] = new SquareCounts([0, 1]);
-                }
-            } else {
-                squareStates[y][x].unit.count++;
-                squareCounts[y][x].counts[playerIndex]++;
+                shards[playerIndex] -= AttackerCost;
             }
-            shards[playerIndex] -= AttackerCost;
         }
     });
 
@@ -560,7 +563,6 @@ function updateState(room) {
                 } else if (currShards - AttackerCost < 0) {
                     return false;
                 }
-                currShards -= AttackerCost;
                 return true;
             }
             return false; // bad queued move

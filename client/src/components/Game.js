@@ -85,6 +85,7 @@ class Game extends Component {
                         "action": "spawn",
                         "target": [y, x]
                     };
+                    this.state.displayShards -= AttackerCost;
                     this.setState({cursor: [y, x]});
                     this.sendMove(move);
                 }
