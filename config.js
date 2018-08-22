@@ -2,11 +2,10 @@ module.exports = {
     SquareType: {
         UNKNOWN: 0,
         REGULAR: 1,
-        BASE1: 2,
-        BASE2: 3,
-        TOWER: 4,
-        WATCHTOWER: 5,
-        RIVER: 6
+        BASE: 2,
+        TOWER: 3,
+        WATCHTOWER: 4,
+        RIVER: 5
     },
     AttackerCost: 25,
     Action: {

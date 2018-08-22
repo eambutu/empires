@@ -28,10 +28,8 @@ class Game extends Component {
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
                 if ((i !== 0 || j !== 0) && this.isInBound(y + i, x + j)) {
-                    if (this.state.player === 1 && this.state.squares[y + i][x + j].squareType === SquareType.BASE1) {
-                        return true;
-                    }
-                    if (this.state.player === 2 && this.state.squares[y + i][x + j].squareType === SquareType.BASE2) {
+                    let square = this.state.squares[y + i][x + j];
+                    if (square.squareType === SquareType.BASE && square.playerId === this.state.player) {
                         return true;
                     }
                 }

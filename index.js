@@ -337,11 +337,15 @@ function initState(room) {
         squareCounts[i] = [];
         for (let j = 0; j < width; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                squareStates[i][j] = new SquareState(i, j, SquareType.BASE1, null);
+                let squareState = new SquareState(i, j, SquareType.BASE, null);
+                squareState.playerId = 1;
+                squareStates[i][j] = squareState;
                 squareCounts[i][j] = new SquareCounts([0, 0]);
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                squareStates[i][j] = new SquareState(i, j, SquareType.BASE2, null);
+                let squareState = new SquareState(i, j, SquareType.BASE, null);
+                squareState.playerId = 2;
+                squareStates[i][j] = squareState;
                 squareCounts[i][j] = new SquareCounts([0, 0]);
             }
             else {
@@ -392,9 +396,7 @@ function maskForPlayer(squares, playerId) {
     squares.forEach((row, y) => {
         row.forEach((cell, x) => {
             let range;
-            if (playerId === 1 && cell.squareType === SquareType.BASE1) {
-                range = Vision.BASE;
-            } else if (playerId === 2 && cell.squareType === SquareType.BASE2) {
+            if (cell.squareType === SquareType.BASE && playerId === cell.playerId) {
                 range = Vision.BASE;
             } else if (cell.squareType === SquareType.WATCHTOWER && cell.unit && cell.unit.playerId === playerId) {
                 range = Vision.WATCHTOWER;
@@ -427,10 +429,8 @@ function isInSpawningRange(room, y, x, playerId) {
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             if ((i !== 0 || j !== 0) && isInBound(y + i, x + j)) {
-                if (playerId === 1 && squareStates[y + i][x + j].squareType === SquareType.BASE1) {
-                    return true;
-                }
-                if (playerId === 2 && squareStates[y + i][x + j].squareType === SquareType.BASE2) {
+                let square = squareStates[y + i][x + j];
+                if (square.squareType === SquareType.BASE && playerId === square.playerId) {
                     return true;
                 }
             }

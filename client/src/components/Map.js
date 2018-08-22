@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import logo from '../logo.svg';
 import '../styles/Map.css';
-import sword from '../sword.svg';
+
+import sword from "../sword.svg";
 import base from "../base.svg";
 import eye from "../eye.svg"
 import shards from "../shard.svg"
@@ -16,11 +16,9 @@ const {SquareType, Action} = require("./config");
 const SquareColor = {
     [SquareType.UNKNOWN]: 'black',
     [SquareType.REGULAR]: 'gray',
-    [SquareType.BASE1]: 'red',
-    [SquareType.BASE2]: 'blue',
     [SquareType.TOWER]: 'gray',
     [SquareType.WATCHTOWER]: 'gray',
-    [SquareType.RIVER]: 'white',
+    [SquareType.RIVER]: 'white'
 };
 
 export const ActionProp = {
@@ -85,6 +83,16 @@ function Cell(props) {
                 "backgroundColor": 'blue'
             };
         }
+    } else if (square.squareType === SquareType.BASE) {
+        if (square.playerId === 1) {
+            divStyle = {
+                "backgroundColor": 'red'
+            };
+        } else {
+            divStyle = {
+                "backgroundColor": 'blue'
+            };
+        }
     }
     if (highlighted) {
         styleClass = "square-holder highlighted"
@@ -101,14 +109,14 @@ function Cell(props) {
                     {square.unit.count}
                 </div>);
     }
-    if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
+    if (square.squareType === SquareType.BASE) {
         overlayComponent = (
             <div className={"square base"} style={{backgroundImage: `url(${base})`}} >
                 {countComponent}
     </div>
         );
     }
-    else if (square.squareType === SquareType.WATCHTOWER){
+    else if (square.squareType === SquareType.WATCHTOWER) {
         overlayComponent = (
         <div className={"square watchtower"} style={{backgroundImage: `url(${eye})`}} >
             {countComponent}
