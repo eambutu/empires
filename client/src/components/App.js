@@ -1,38 +1,26 @@
 import React, {Component} from 'react';
+import { Route, Switch } from 'react-router-dom';
 import logo from '../logo.svg';
 import '../styles/App.css';
 import Homepage from './Homepage.js';
 import Game from './Game.js';
 
 class App extends Component {
-
-    state = {
-        curState: "game",
-    };
-
-    startGame() {
-        this.setState({curState: "game"});
-    }
-
     render() {
-        var comp = "wtf happened";
-        switch (this.state.curState) {
-            case "home":
-                comp = (
-                    <Homepage startGame={() => this.startGame()}/>
-                )
-                break;
-            case "game":
-                comp = (
-                    <Game/>
-                );
-        }
-
-        return (
+        const App = () => (
             <div>
-                {comp}
+                <Switch>
+                    <Route exact path="/" component={Homepage}/>
+                    <Route exact path="/room/:number" component={Game}/>
+                </Switch>
             </div>
         )
+
+        return (
+            <Switch>
+                <App/>
+            </Switch>
+        );
     }
 }
 
