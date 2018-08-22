@@ -52,7 +52,7 @@ function onConnect(room, ws) {
             secret: ws.secret,
             text: 'Connected! Waiting for other players to join.'
         }));
-        console.log(`Player ${ws.player} connected`);
+        console.log(`player ${ws.player} connected to ${room.id}`);
 
         if (room.clients.length === maxPlayers) {
             room.full = true;
@@ -74,7 +74,7 @@ app.ws('/room/:roomId', function (ws, req) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
-            console.log('received', data);
+            // console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = room.queues;
                 queues[ws.player].push(data.move);
@@ -83,7 +83,7 @@ app.ws('/room/:roomId', function (ws, req) {
         }
         else if (data.event === 'reset') {
             console.log(data);
-            resetGame(room);
+            endGame(room);
             runGame(room);
         }
         else if (data.event === 'exit') {
@@ -98,7 +98,13 @@ app.ws('/room/:roomId', function (ws, req) {
     });
 
     ws.on('close', function () {
-        console.log('Client disconnected')
+        room.clients = room.clients.filter(client => (client.readyState === 1));
+        if (ws.player) {
+            console.log(`player ${ws.player} disconnected from ${room.id}`);
+        }
+        else {
+            console.log(`client attempted connect to ${room.id}`);
+        }
     });
     onConnect(room, ws);
 });
@@ -195,6 +201,7 @@ getPingPlayers = targetRoom => {
 }
 
 function runGame(room) {
+    room.gameEnded = false;
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
@@ -209,7 +216,7 @@ function runGame(room) {
 }
 
 function resetIfEmpty(room) {
-    room.clients = room.clients.filter(client => (client.readyState !== 3));
+    room.clients = room.clients.filter(client => (client.readyState === 1));
     if (room.clients.length === 0) {
         resetGame(room);
     }
@@ -220,15 +227,18 @@ function endGame(room) {
     clearInterval(room.heartbeatInterval);
 }
 
-getSetRoomNotFull = targetRoom => function () {
-    room = targetRoom;
-    room.full = false;
-};
+// getSetRoomNotFull = targetRoom => function () {
+//     room = targetRoom;
+//     room.full = false;
+// };
 
 function resetGame(room) {
     console.log('RESTART GAME');
     endGame(room);
-    setTimeout(getSetRoomNotFull(room), 1000);
+    setTimeout(
+        function () {room.full = false;},
+        1000
+    );
 }
 
 
@@ -238,7 +248,7 @@ function broadcastStarting(room) {
             client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
         }
     });
-    console.log('Sent starting');
+    console.log(`sent starting to ${room.id}`);
 }
 
 function broadcastInit(room) {
@@ -254,7 +264,7 @@ function broadcastInit(room) {
             }));
         }
     });
-    console.log('Sent init');
+    console.log(`sent init to ${room.id}`);
 }
 
 function broadcastState(room) {
@@ -263,7 +273,7 @@ function broadcastState(room) {
             client.send(JSON.stringify({'event': 'update', 'state': getState(room, client.player)}));
         }
     });
-    console.log("Sent state");
+    // console.log("Sent state");
 }
 
 
@@ -364,7 +374,7 @@ function initState(room) {
     room.resourceCenterCounts = [0, 0];
     room.towers = towers;
     room.gameWonStatus = null;
-    console.log('State initialized');
+    console.log(`state initialized for ${room.id}`);
 }
 
 function maskForPlayer(squares, playerId) {
@@ -541,9 +551,6 @@ function updateState(room) {
                     let [newY, newX] = move.target;
                     isPlayer[newY][newX] = true;
                     return true;
-                }
-                else {
-                    console.log("removed move from queue");
                 }
             }
             else if (move.action === "spawn") {
