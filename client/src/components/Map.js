@@ -92,33 +92,46 @@ function Cell(props) {
 
     let actionVisualEntries = Object.entries(actionVisuals);
     let overlayComponent = null;
+    let countComponent = null;
     let text = "";
+
+    if (square.unit) {
+        countComponent = (
+                <div className={"count-text"}>
+                    {square.unit.count}
+                </div>);
+    }
     if (square.squareType > 2) {
         console.log(square.squareType)
     }
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         overlayComponent = (
             <div className={"square base"}>
+                {countComponent}
     </div>
         );
     }
     else if (square.squareType === SquareType.WATCHTOWER){
         overlayComponent = (
         <div className={"square watchtower"}>
+            {countComponent}
         </div>
         );
     }
     else if (square.squareType === SquareType.TOWER){
         overlayComponent =
             <div className={"square shardtower"}>
-        {/*<object className={"icon"} type={"image/svg+xml"} data={eye}>*/}
+                {countComponent}
+        {/*<object className={"icon"} type={"image/svg+xml"} data={shards}>*/}
         {/*</object>*/}
             </div>
     }
     else if (square.unit) {
         overlayComponent = (
             <div className={"square attacker count-text"}>
+                <div className={"count-text"}>
                 {square.unit.count}
+                </div>
             </div>);
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];

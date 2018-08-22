@@ -1,6 +1,6 @@
 import React from "react";
 import '../styles/ResourceBoard.css';
-import shard from '../shard.svg'
+import shard from '../shard_icon.svg'
 
 export default function ResourceBoard(props) {
     const {displayShards} = props;
