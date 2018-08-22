@@ -380,6 +380,7 @@ function initState(room) {
     room.shards = [23, 23];
     room.towers = towers;
     room.gameWonStatus = null;
+    room.lastPlayerMoves = Array(maxPlayers).fill(null);
     console.log(`state initialized for ${room.id}`);
 }
 
@@ -467,7 +468,13 @@ function getState(room, playerId) {
         });
     }
 
-    return {queue: queues[playerId], squares: maskForPlayer(squares, playerId), playerStatus: playerStatus, shards: shards[playerId - 1]};
+    return {
+        queue: queues[playerId],
+        squares: maskForPlayer(squares, playerId),
+        playerStatus: playerStatus,
+        shards: shards[playerId - 1],
+        lastMove: room.lastPlayerMoves[playerId - 1]
+    };
 }
 
 function updateState(room) {
@@ -477,6 +484,7 @@ function updateState(room) {
     let shards = room.shards;
     let towers = room.towers;
     let queues = room.queues;
+    let lastPlayerMoves = room.lastPlayerMoves;
 
     let moves = [];
     room.clients.forEach(client => {
@@ -516,6 +524,7 @@ function updateState(room) {
                 shards[playerIndex] -= AttackerCost;
             }
         }
+        lastPlayerMoves[playerIndex] = move;
     });
 
     let comp = ([_1, count1], [_2, count2]) => (count1 - count2);
@@ -562,6 +571,7 @@ function updateState(room) {
                 } else if (currShards - AttackerCost < 0) {
                     return false;
                 }
+                isPlayer[y][x] = true;
                 return true;
             }
             return false; // bad queued move

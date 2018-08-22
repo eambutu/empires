@@ -65,7 +65,7 @@ class Game extends Component {
                     let target = [targetY, targetX];
                     let move = {
                         action: action,
-                        source: this.state.cursor,
+                        source: [cursorY, cursorX],
                         target: target,
                         id: new Date().toString()
                     };
@@ -187,16 +187,36 @@ class Game extends Component {
                 return cell.unit && cell.unit.playerId === this.state.player;
             });
         });
+        newState.queue.forEach(move => {
+            if (move.action.includes("move")) {
+                let [y, x] = move.source;
+                if (isPlayer[y][x]) {
+                    isPlayer[y][x] = false;
+                    let [newY, newX] = move.target;
+                    isPlayer[newY][newX] = true;
+                }
+            }
+            else if (move.action === "spawn") {
+                let [newY, newX] = move.target;
+                isPlayer[newY][newX] = true;
+            }
+        });
 
         this.isPlayer = isPlayer;
 
-        let newCursor = this.state.cursor;
-        // if (newCursor) {
-        //     let [y, x] = newCursor;
-        //     if (!isPlayer[y][x]) {
-        //         newCursor = null;
-        //     }
-        // }
+        let newCursor = null;
+        if (this.state.cursor) {
+            let [y, x] = this.state.cursor;
+            if (this.isPlayer[y][x]) {
+                newCursor = this.state.cursor;
+            } else if (newState.queue.length > 0) {
+                newCursor = newState.queue[newState.queue.length - 1].target;
+            } else if (newState.lastMove) {
+                if (newState.lastMove.action.includes("move")) {
+                    newCursor = newState.lastMove.source;
+                }
+            }
+        }
 
         let displayShards = newState.shards;
         newState.queue.forEach(move => {
