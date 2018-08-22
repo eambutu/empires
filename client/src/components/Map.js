@@ -101,9 +101,6 @@ function Cell(props) {
                     {square.unit.count}
                 </div>);
     }
-    if (square.squareType > 2) {
-        console.log(square.squareType)
-    }
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         overlayComponent = (
             <div className={"square base"}>

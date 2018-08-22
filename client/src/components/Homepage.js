@@ -26,10 +26,12 @@ class Homepage extends Component {
             <div className="App">
                 <header className="App-header">
                     <img src={attacker} className="App-logo" alt="logo"/>
-                    <h1 className="App-title">Control Towers</h1>
+                    <h1 className="App-title">empires.io</h1>
                 </header>
-                {/*<p className="App-intro">{this.state.data}</p>*/}
-                <button className="play-button" onClick={this.props.startGame}>Play</button>
+                <div className="App-text">
+                    Room ID: <input type="text" id="room_id"/> <br/>
+                    <button className="play-button" onClick={() => {window.location = "/room/" + document.getElementById("room_id").value}}>Play!</button>
+                </div>
             </div>
         );
     }

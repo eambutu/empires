@@ -98,13 +98,9 @@ class Game extends Component {
     }
 
     componentDidMount() {
-        // Call our fetch function below once the component mounts
-        // this.callBackendAPI()
-        //     .then(res => this.setState({ squares: res.squares }))
-
         document.addEventListener("keydown", this.keyDownBound);
 
-        this.ws = new WebSocket('ws://' + window.location.hostname + ':5000/');
+        this.ws = new WebSocket('ws://' + window.location.hostname + ':5000' + window.location.pathname);
 
         this.onReset = e => {
             this.ws.send(JSON.stringify({'event': 'reset'}));
@@ -127,7 +123,7 @@ class Game extends Component {
                 this.setState({
                     width: json.width,
                     height: json.height,
-                })
+                });
             }
             else if (json.event === 'update') {
                 this.updateGame(json.state);
@@ -149,17 +145,6 @@ class Game extends Component {
     componentWillUnmount() {
         document.removeEventListener("keydown", this.keyDownBound);
     }
-
-    // Fetches our GET route from the Express server. (Note the route we are fetching matches the GET route from server.js
-    callBackendAPI = async () => {
-        const response = await fetch('/game_state');
-        const body = await response.json();
-
-        if (response.status !== 200) {
-            throw Error(body.message)
-        }
-        return body;
-    };
 
     render() {
         let {squares, playerStatus, player, cursor} = this.state;
