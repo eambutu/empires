@@ -15,28 +15,22 @@
 }
 
 .attacker {
-    /*background-image: url("/static/media/sword.0d670775.svg");*/
-    background-image: url("/static/media/sword.2d2641b8.svg");
     height: 33px !important;
     width: 33px !important;
 }
 
 .base {
-    background-image: url("/static/media/base.6f510e2a.svg");
     height: 33px !important;
     width: 33px !important;
 }
 
 .watchtower {
-    background-image: url("/static/media/eye.1f20a2b4.svg");
     height: 17px !important;
     width: 33px !important;
     line-height: 14px !important;
 }
 
 .shardtower {
-    /*background-image: url("/static/media/shard.88d7ed0e.svg");*/
-    background-image: url("/static/media/shard.2ab80bea.svg");
     height: 33px !important;
     width: 25px !important;
 }

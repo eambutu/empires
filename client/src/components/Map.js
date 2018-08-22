@@ -103,21 +103,21 @@ function Cell(props) {
     }
     if (square.squareType === SquareType.BASE1 || square.squareType === SquareType.BASE2) {
         overlayComponent = (
-            <div className={"square base"}>
+            <div className={"square base"} style={{backgroundImage: `url(${base})`}} >
                 {countComponent}
     </div>
         );
     }
     else if (square.squareType === SquareType.WATCHTOWER){
         overlayComponent = (
-        <div className={"square watchtower"}>
+        <div className={"square watchtower"} style={{backgroundImage: `url(${eye})`}} >
             {countComponent}
         </div>
         );
     }
     else if (square.squareType === SquareType.TOWER){
         overlayComponent =
-            <div className={"square shardtower"}>
+            <div className={"square shardtower"} style={{backgroundImage: `url(${shards})`}} >
                 {countComponent}
         {/*<object className={"icon"} type={"image/svg+xml"} data={shards}>*/}
         {/*</object>*/}
@@ -125,7 +125,7 @@ function Cell(props) {
     }
     else if (square.unit) {
         overlayComponent = (
-            <div className={"square attacker count-text"}>
+            <div className={"square attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >
                 <div className={"count-text"}>
                 {square.unit.count}
                 </div>
