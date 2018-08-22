@@ -13,6 +13,7 @@ Vision = {
 
 ts = 1000 / 4;
 full = false;
+gameEnded = false;
 gameInterval = null;
 heartbeatInterval = null;
 maxPlayers = 2;
@@ -65,7 +66,8 @@ app.ws('/', function (ws, req) {
             {
                 'event': 'connected',
                 'player': ws.player,
-                'secret': ws.secret
+                'secret': ws.secret,
+                'text': 'Connected! Waiting for other players to join.'
             }
         ));
         console.log(`Player ${ws.player} connected`);
@@ -77,7 +79,7 @@ app.ws('/', function (ws, req) {
     else {
         ws.send(JSON.stringify({
             'event': 'full',
-            'text': 'Lobby is full'
+            'text': 'Lobby is full.'
         }));
         ws.close();
     }
@@ -166,6 +168,7 @@ function pingPlayers() {
 
 function runGame() {
     full = true;
+    gameEnded = false;
     broadcastStarting();
     initState();
     broadcastInit();
@@ -182,8 +185,10 @@ function runGame() {
 
 function performOneTurn() {
     resetIfEmpty();
-    updateState();
-    broadcastState();
+    if (!gameEnded) {
+        updateState();
+        broadcastState();
+    }
 }
 
 function resetIfEmpty() {
@@ -560,7 +565,7 @@ function updateState() {
             }
         }
         cache.put('gameWonStatus', gameWonStatus);
-        endGame();
+        gameEnded = true;
     }
 
     cache.put('squareStates', squareStates);
