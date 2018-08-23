@@ -591,19 +591,21 @@ function updateState(room) {
         });
 
     });
-    
-    // increment everyone's shard per turn
-    Object.keys(shards).forEach((playerId) => {
-        shards[playerId]++;
-    });
 
-    // increment shard if owned tower from previous turn
-    towers.forEach(([y, x]) => {
-        let unit = squareStates[y][x].getUnit();
-        if (unit) {
-            shards[unit.playerId]++;
-        }
-    });
+    if (frameCounter === 0) {
+        // increment everyone's shard per turn
+        Object.keys(shards).forEach((playerId) => {
+            shards[playerId]++;
+        });
+
+        // increment shard if owned tower from previous turn
+        towers.forEach(([y, x]) => {
+            let unit = squareStates[y][x].getUnit();
+            if (unit) {
+                shards[unit.playerId]++;
+            }
+        });
+    }
 
     spawns.forEach(spawn => {
         let {playerId, target, type} = spawn;
