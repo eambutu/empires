@@ -10,8 +10,8 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-const ts = 1000 / 20;
-const framesPerTurn = 10;
+const ts = 1000 / 8;
+const framesPerTurn = 4;
 const maxPlayers = 2;
 const width = 15;
 const height = 15;
@@ -76,7 +76,7 @@ app.ws('/room/:roomId', function (ws, req) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
-            console.log('received', data);
+            // console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = room.queues;
                 data.move.playerId = ws.playerId;
@@ -91,12 +91,12 @@ app.ws('/room/:roomId', function (ws, req) {
             }
         }
         else if (data.event === 'reset') {
-            console.log(data);
+            // console.log(data);
             resetGame(room);
             runGame(room);
         }
         else if (data.event === 'exit') {
-            console.log(data);
+            // console.log(data);
             ws.send(JSON.stringify({'event': 'redirect'}));
             room.clients.forEach(client => {
                 client.send(JSON.stringify({'event': 'noPlayAgain'}))
