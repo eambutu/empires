@@ -62,7 +62,7 @@ class Game extends Component {
             canPlayAgain: true
         };
         this.actionQueue = [];
-        this.isPlayer = null;
+        this.unitSquareMap = null;
 
         this.keyDownBound = e => {
             const action = KeyMap[e.key];
@@ -151,9 +151,8 @@ class Game extends Component {
                     this.sendMove(move);
                 }
             }
-            else if (this.isPlayer[y][x]) {
-                let unitId = this.state.squares[y][x].unit.id;
-                this.setState({cursor: [y, x, unitId]});
+            else if (this.unitSquareMap[y][x]) {
+                this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
             }
         };
     }
@@ -254,27 +253,27 @@ class Game extends Component {
 
         this.actionQueue = flattenedPlayerQueue;
 
-        let isPlayer = newState.squares.map(row => {
+        let unitSquareMap = newState.squares.map(row => {
             return row.map(cell => {
-                return cell.unit && cell.unit.type !== UnitType.DEFENDER && cell.unit.playerId === this.state.playerId;
+                if (cell.unit && cell.unit.type !== UnitType.DEFENDER && cell.unit.playerId === this.state.playerId) {
+                    return cell.unit.id;
+                }
+                return null;
             });
         });
         flattenedPlayerQueue.forEach(move => {
+            // Spawns are instantaneous, so we should only have actions in the flattened queue anyway
             if (move.action.includes("move")) {
                 let [y, x] = move.source;
-                if (isPlayer[y][x]) {
-                    isPlayer[y][x] = false;
+                if (unitSquareMap[y][x]) {
                     let [newY, newX] = move.target;
-                    isPlayer[newY][newX] = true;
+                    unitSquareMap[newY][newX] = unitSquareMap[y][x];
+                    unitSquareMap[y][x] = null;
                 }
-            }
-            else if (move.action === "spawn") {
-                let [newY, newX] = move.target;
-                isPlayer[newY][newX] = true;
             }
         });
 
-        this.isPlayer = isPlayer;
+        this.unitSquareMap = unitSquareMap;
 
         let displayShards = newState.shards;
         flattenedPlayerQueue.forEach(move => {
