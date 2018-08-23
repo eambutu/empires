@@ -260,10 +260,12 @@ function broadcastInit(room) {
     // Things that get broadcast in the beginning of the game
     let playerBases = room.playerBases;
     let spawnSquares = room.spawnSquares;
+    let playerIds = room.playerIds;
     room.clients.forEach(client => {
         if (client.readyState === 1) {
             client.send(JSON.stringify({
                 'event': 'init',
+                'playerIds': room.playerIds,
                 'base': playerBases[client.playerId],
                 'spawn': spawnSquares[client.playerId],
                 'width': width,
@@ -285,10 +287,11 @@ function broadcastState(room) {
 
 
 function initState(room) {
-    let squareStates = [];
+    let playerIds = room.clients.map(client => client.playerId);
     let playerBases = {};
     let spawnSquares = {};
     let queues = {};
+    let shards = {};
 
     let corners = [
         [0, 0],
@@ -303,9 +306,6 @@ function initState(room) {
         [1, 13],
         [13, 13]
     ];
-
-    queues[room.clients[0].playerId] = {'spawn': []};
-    queues[room.clients[1].playerId] = {'spawn': []};
 
     let towers = [
         [4, 4],
@@ -338,56 +338,49 @@ function initState(room) {
     while(randIdxTwo === randIdxOne) {
         randIdxTwo = Math.floor(Math.random() * 4);
     }
-    playerBases[room.clients[0].playerId] = corners[randIdxOne];
-    playerBases[room.clients[1].playerId] = corners[randIdxTwo];
-    spawnSquares[room.clients[0].playerId] = spawnChoices[randIdxOne];
-    spawnSquares[room.clients[1].playerId] = spawnChoices[randIdxTwo];
-    corners.forEach(function(corner, idx) {
+    let rand = {
+        [playerIds[0]]: randIdxOne,
+        [playerIds[1]]: randIdxTwo
+    };
+    playerIds.forEach(playerId => {
+        // Initialize queue
+        queues[playerId] = {
+            spawn: []
+        };
+        playerBases[playerId] = corners[rand[playerId]];
+        spawnSquares[playerId] = spawnChoices[rand[playerId]];
+        shards[playerId] = 23;
+    });
+    corners.forEach((corner, idx) => {
         if (idx !== randIdxOne && idx !== randIdxTwo) {
             towers.push(corner);
         }
     });
 
-    for (let i = 0; i < height; i++) {
-        squareStates[i] = [];
-        for (let j = 0; j < width; j++) {
-            if (i === playerBases[room.clients[0].playerId][0] && j === playerBases[room.clients[0].playerId][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[0].playerId, 5);
-                squareStates[i][j] = squareState;
-            }
-            else if (i === playerBases[room.clients[1].playerId][0] && j === playerBases[room.clients[1].playerId][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[1].playerId, 5);
-                squareStates[i][j] = squareState;
-            }
-            else {
-                squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, [], null, 0);
-                towers.forEach(function(tower) {
-                    if (i === tower[0] && j === tower[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, [], null, 0);
-                    }
-                })
-                watchTowers.forEach(function(tower) {
-                    if (i === tower[0] && j === tower[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, [], null, 0);
-                    }
-                })
-                rivers.forEach(function (river) {
-                    if (i === river[0] && j === river[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, [], null, 0);
-                    }
-                })
-            }
-        }
-    }
+    let squareStates = [...Array(height)].map(y => {
+        return [...Array(width)].map(x => {
+            return new SquareState(y, x, SquareType.REGULAR, [], null, 0);
+        });
+    });
+    Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
+        squareStates[y][x] = new SquareState(y, x, SquareType.BASE, [], playerId, 5);
+    });
+    towers.forEach(([y, x]) => {
+        squareStates[y][x] = new SquareState(y, x, SquareType.TOWER, [], null, 0);
+    });
+    watchTowers.forEach(([y, x]) => {
+        squareStates[y][x] = new SquareState(y, x, SquareType.WATCHTOWER, [], null, 0);
+    });
+    rivers.forEach(([y, x]) => {
+        squareStates[y][x] = new SquareState(y, x, SquareType.RIVER, [], null, 0);
+    });
 
+    room.playerIds = playerIds;
     room.playerBases = playerBases;
     room.spawnSquares = spawnSquares;
     room.squareStates = squareStates;
     room.queues = queues;
-    room.shards = {
-        [room.clients[0].playerId]: 23,
-        [room.clients[1].playerId]: 23
-    };
+    room.shards = shards;
     room.towers = towers;
     room.gameWonStatus = null;
     room.frameCounter = 0;
