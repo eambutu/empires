@@ -22,21 +22,26 @@
     /*width: 33px !important;*/
     background-position: center;
     background-repeat: no-repeat;
+    background-size: 25px 25px;
 }
 
 .base {
     background-position: center;
     background-repeat: no-repeat;
+    background-size: 25px 25px;
 }
 
 .watchtower {
     background-position: center;
     background-repeat: no-repeat;
+    background-size: 25px 25px;
+
 }
 
 .shardtower {
     background-position: center;
     background-repeat: no-repeat;
+    background-size: 25px 25px;
 }
 
 .square {

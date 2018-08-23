@@ -116,11 +116,11 @@ function Cell(props) {
     if (square.squareType === SquareType.BASE) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " base"
-            divStyle["backgroundImage"] = `url(${base})`;
+            divStyle["backgroundImage"] = `url(${defendedbase})`;
         }
         else {
             styleClass = styleClass + " count-text attacker base"
-            divStyle["backgroundImage"] = `url(${defendedbase})`;
+            divStyle["backgroundImage"] = `url(${base})`;
         }
         overlayComponent = countComponent;
 
@@ -128,11 +128,11 @@ function Cell(props) {
     else if (square.squareType === SquareType.WATCHTOWER) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " watchtower"
-            divStyle["backgroundImage"] = `url(${base})`;
+            divStyle["backgroundImage"] = `url(${defendedeye})`;
         }
         else {
             styleClass = styleClass + " count-text attacker base"
-            divStyle["backgroundImage"] = `url(${defendedbase})`;
+            divStyle["backgroundImage"] = `url(${eye})`;
         }
         overlayComponent = countComponent;
         // overlayComponent = (
@@ -145,16 +145,17 @@ function Cell(props) {
 
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " watchtower"
-            divStyle["backgroundImage"] = `url(${base})`;
+            divStyle["backgroundImage"] = `url(${defendedshard})`;
         }
         else {
             styleClass = styleClass + " count-text attacker base"
-            divStyle["backgroundImage"] = `url(${defendedbase})`;
+            divStyle["backgroundImage"] = `url(${shards})`;
         }
         overlayComponent = countComponent;
     }
     else if (square.unit) {
-
+        console.log(square.unit)
+        console.log(square.unit.type)
         if (square.unit.type === UnitType.DEFENDER){
             divStyle["backgroundImage"] = `url(${shield})`;
         }

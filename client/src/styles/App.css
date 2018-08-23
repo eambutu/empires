@@ -1,12 +1,3 @@
-button {
-    width: 100px;
-    height: 50px;
-    font-size: large;
-    background-color: steelblue;
-    color: white;
-    cursor: pointer;
-}
-
 body {
     margin: 30px;
 }

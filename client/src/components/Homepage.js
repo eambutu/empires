@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import attacker from '../attacker.svg';
+import sword from '../sword.svg';
 import '../styles/Homepage.css';
 
 class Homepage extends Component {
@@ -23,14 +23,21 @@ class Homepage extends Component {
 
     render() {
         return (
-            <div className="App">
-                <header className="App-header">
-                    <img src={attacker} className="App-logo" alt="logo"/>
-                    <h1 className="App-title">empires.io</h1>
-                </header>
-                <div className="App-text">
-                    Room ID: <input type="text" id="room_id"/> <br/>
-                    <button className="play-button" onClick={() => {window.location = "/room/" + document.getElementById("room_id").value}}>Play!</button>
+            <div>
+                <div className="center">
+                    <img src={sword} className="App-logo" alt="logo"/>
+                    <div className="title">squarecraft.io</div>
+                    <div className="App-text">
+                        Create or join a room: <br/><input type="text" id="room_id"/> <br/>
+                        <div className="button-area">
+                            <button className="homepage-button" onClick={() => {window.location = "/room/" + document.getElementById("room_id").value}}>Play!</button>
+                            <br/>
+                            <button className="homepage-button" onClick={() => {window.location = "/tutorial/"}}>Tutorial</button>
+                        </div>
+                    </div>
+                </div>
+                <div className="footer">
+                    {<a href={"contact@squarecraft.io"}>Contact Us!</a>}
                 </div>
             </div>
         );
