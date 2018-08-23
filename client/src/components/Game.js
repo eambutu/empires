@@ -6,6 +6,7 @@ import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
 import Lobby from "./Lobby";
+import Tutorial from "./Tutorial";
 
 const {SquareType, Costs, UnitType, Action} = require("./config");
 
@@ -247,19 +248,26 @@ class Game extends Component {
 
     render() {
         let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain} = this.state;
-        console.log(squares);
+        console.log(this.state.isTutorial);
+        if (this.state.isTutorial && squares){
+
+            return (
+                <div id="game-page">
+                    <Tutorial playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={[]} cursor={cursor} handleClick={this.onClickBound}/>
+                </div>
+
+            );
+        }
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
-
                         <Map playerIds={playerIds} squares={squares} queue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit}
                                  status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
                     </div>
-
                 );
             }
             return (
