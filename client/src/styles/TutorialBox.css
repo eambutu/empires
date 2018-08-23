@@ -1,8 +1,8 @@
 
 .tutorial-box{
     position: absolute;
-    top: 40%;
-    left: 20%;
+    top: 50%;
+    left: 82%;
     transform: translateY(-50%) translateX(-50%);
     text-align: center;
     color: white;
@@ -54,4 +54,36 @@
 .tutorial-text {
     margin-bottom: 10px;
     color: black;
+}
+
+.expanded {
+    animation-name: expand;
+    animation-duration: 2s;
+    animation-iteration-count: 30;
+
+}
+
+.flashing {
+    border-style: solid;
+    border-width: 3px;
+    animation-name: flash;
+    animation-duration: 1s;
+    animation-iteration-count: 30;
+}
+
+@keyframes flash {
+    50% { border-color: #00ff00; }
+}
+
+
+@keyframes expand {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.5);
+    }
+    100%{
+        transform: scale(1);
+    }
 }

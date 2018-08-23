@@ -204,8 +204,6 @@ class Cell extends Component {
                     </div>);
             }
         } else if (square.unit) {
-            console.log(square.unit)
-            console.log(square.unit.type)
             if (square.unit.type === UnitType.DEFENDER){
                 divStyle["backgroundImage"] = `url(${shield})`;
             }
