@@ -13,7 +13,11 @@ module.exports = {
     },
     Costs: {
         ATTACKER: 25,
-        DEFENDER: 200,
+        DEFENDER: 100,
+    },
+    HP: {
+        ATTACKER: 1,
+        DEFENDER: 5,
     },
     Action: {
         MOVE_DOWN: "move_down",
