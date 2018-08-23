@@ -147,11 +147,6 @@ function Cell(props) {
                     {count + square.baseHP}
                 </div>);
         }
-        // overlayComponent = (
-        // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
-        //     {countComponent}
-        // </div>
-        // );
     }
     else if (square.type === SquareType.TOWER){
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
@@ -182,9 +177,12 @@ function Cell(props) {
         }
         overlayComponent = (square.unit.count);
         styleClass = styleClass + " square-content count-text";
-            {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
-            {/*{square.unit.count}*/}
-            {/*</div>);*/}
+    } else if (actionVisualEntries.length > 0) {
+        let [action, id] = actionVisualEntries[0];
+        let {icon} = ActionProp[action].visual;
+        if (square.type !== SquareType.RIVER) {
+            divStyle["backgroundColor"] = "#505050";
+        }
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
             {overlayComponent}
