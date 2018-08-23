@@ -62,6 +62,8 @@ class Game extends Component {
             insufficientShards: false
         };
         this.unitSquareMap = null;
+        this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
+        this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
 
         this.keyDownBound = e => {
             if (e.key === "="){
@@ -365,12 +367,24 @@ class Game extends Component {
                 }
             }
         });
+
+        let iShards = false;
+        if (this.state.insufficientShards) {
+            this.turnsInsufficientShards++;
+            if (this.turnsInsufficientShards === this.maxTurnsInsufficientShards) {
+                this.turnsInsufficientShards = 0;
+            }
+            else {
+                iShards = true;
+            }
+        }
+
         this.setState({
             queue: flattenedPlayerQueue,
             displayShards: displayShards,
             squares: newState.squares,
             playerStatus: newState.playerStatus,
-            insufficientShards: false
+            insufficientShards: iShards
         });
     }
 
