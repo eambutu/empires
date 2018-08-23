@@ -9,7 +9,7 @@ import Lobby from "./Lobby";
 
 const {SquareType, Costs, UnitType, Action} = require("./config");
 
-const KeyMap = {
+const MoveKeyMap = {
     ArrowDown: Action.MOVE_DOWN,
     ArrowUp: Action.MOVE_UP,
     ArrowLeft: Action.MOVE_LEFT,
@@ -43,6 +43,7 @@ class Game extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            playerIds: [],
             playerId: null,
             secret: null,
             squares: null,
@@ -59,7 +60,6 @@ class Game extends Component {
         this.unitSquareMap = null;
 
         this.keyDownBound = e => {
-            const action = KeyMap[e.key];
             if (e.key === "="){
                 let all = document.getElementsByClassName('square');
                 backsize = Math.min(backsize + 5, 45);
@@ -90,7 +90,8 @@ class Game extends Component {
                 }
 
             }
-            if (action && this.state.cursor) {
+            if (e.key in MoveKeyMap && this.state.cursor) {
+                const action = MoveKeyMap[e.key];
                 let {dy, dx} = ActionProp[action];
                 let [cursorY, cursorX, unitId] = this.state.cursor;
                 if (unitId === null) {
@@ -126,6 +127,11 @@ class Game extends Component {
                     });
                     this.sendMove(move);
                 }
+            } else if (e.key === "c") {
+                let move = {
+                    action: "cancelQueue"
+                };
+                this.sendMove(move);
             }
         };
 
@@ -167,34 +173,35 @@ class Game extends Component {
         };
 
         this.ws.addEventListener('message', event => {
-            var json = JSON.parse(event.data);
-            if (json.event === 'connected') {
+            var data = JSON.parse(event.data);
+            if (data.event === 'connected') {
                 this.setState({
-                    playerId: json.playerId,
-                    secret: json.secret,
-                    waitingText: json.text
+                    playerId: data.playerId,
+                    secret: data.secret,
+                    waitingText: data.text
                 });
             }
-            else if (json.event === 'init') {
+            else if (data.event === 'init') {
                 this.setState({
-                    width: json.width,
-                    height: json.height,
-                    spawnSquare: json.spawn
+                    width: data.width,
+                    height: data.height,
+                    playerIds: data.playerIds,
+                    spawnSquare: data.spawn
                 });
             }
-            else if (json.event === 'update') {
-                this.updateGame(json.state);
+            else if (data.event === 'update') {
+                this.updateGame(data.state);
             }
-            else if (json.event === 'full') {
-                this.setState({waitingText: json.text})
+            else if (data.event === 'full') {
+                this.setState({waitingText: data.text})
             }
-            else if (json.event === 'starting') {
-                this.setState({waitingText: json.text})
+            else if (data.event === 'starting') {
+                this.setState({waitingText: data.text})
             }
-            else if (json.event === 'redirect') {
+            else if (data.event === 'redirect') {
                 window.location.replace('/')
             }
-            else if (json.event === 'noPlayAgain') {
+            else if (data.event === 'noPlayAgain') {
                 this.setState({canPlayAgain: false})
             }
             else {
@@ -207,7 +214,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, playerStatus, playerId, cursor, canPlayAgain} = this.state;
+        let {squares, playerStatus, playerId, playerIds, cursor, canPlayAgain} = this.state;
         console.log(squares);
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
@@ -215,7 +222,7 @@ class Game extends Component {
                     <div id="game-page">
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                        <Map squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
+                        <Map playerIds={playerIds} squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit}
                                  status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
@@ -227,7 +234,7 @@ class Game extends Component {
                 <div id="game-page">
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                    <Map squares={squares} actionQueue={this.actionQueue} cursor={cursor}
+                    <Map playerIds={playerIds} squares={squares} actionQueue={this.actionQueue} cursor={cursor}
                          handleClick={this.onClickBound}/>
 
                     <ResourceBoard displayShards={this.state.displayShards}/>

@@ -25,6 +25,8 @@ const SquareColor = {
     [SquareType.RIVER]: 'white'
 };
 
+const playerSquareColors = ['red', 'blue'];
+
 export const ActionProp = {
     [Action.MOVE_DOWN]: {dx: 0, dy: 1, visual: {icon: down_arrow}},
     [Action.MOVE_UP]: {dx: 0, dy: -1, visual: {icon: up_arrow}},
@@ -33,7 +35,7 @@ export const ActionProp = {
 }
 
 export default function Map(props) {
-    const {squares, actionQueue, cursor, handleClick} = props;
+    const {playerIds, squares, actionQueue, cursor, handleClick} = props;
     var actionVisuals = {};
     actionQueue.forEach((action, index) => {
         if (action.action.includes("move")) {
@@ -55,6 +57,7 @@ export default function Map(props) {
                 <tr key={y}>
                     {row.map((square, x) => (
                         <Cell
+                            playerIds={playerIds}
                             key={x}
                             square={square}
                             handleClick={handleClick}
@@ -71,32 +74,23 @@ export default function Map(props) {
 }
 
 function Cell(props) {
-    const {square, highlighted, handleClick, x, y, actionVisuals} = props;
+    const {playerIds, square, highlighted, handleClick, x, y, actionVisuals} = props;
     let styleClass = "square";
     let divStyle = {
         "backgroundColor": SquareColor[square.type]
     };
     if (square.unit) {
-        if (square.unit.playerId === '1') {
-            divStyle = {
-                "backgroundColor": 'red'
-            };
-        }
-        else {
-            divStyle = {
-                "backgroundColor": 'blue'
-            };
-        }
+        playerIds.forEach((playerId, index) => {
+            if (square.unit.playerId === playerId) {
+                divStyle["backgroundColor"] = playerSquareColors[index];
+            }
+        });
     } else if (square.type === SquareType.BASE) {
-        if (square.baseId === '1') {
-            divStyle = {
-                "backgroundColor": 'red'
-            };
-        } else {
-            divStyle = {
-                "backgroundColor": 'blue'
-            };
-        }
+        playerIds.forEach((playerId, index) => {
+            if (square.baseId === playerId) {
+                divStyle["backgroundColor"] = playerSquareColors[index];
+            }
+        });
     }
     if (highlighted) {
         styleClass = styleClass + " highlighted"
@@ -105,13 +99,14 @@ function Cell(props) {
     let actionVisualEntries = Object.entries(actionVisuals);
     let overlayComponent = null;
     let countComponent = null;
-    let text = "";
+    let count = 0;
 
     if (square.unit) {
+        count = count + square.unit.count;
         countComponent = (
-                <div className={"count-text"}>
-                    {square.unit.count}
-                </div>);
+            <div className={"count-text"}>
+                {square.unit.count + square.baseHP}
+            </div>);
     }
     if (square.type === SquareType.BASE) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
@@ -123,6 +118,12 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${base})`;
         }
         overlayComponent = countComponent;
+        if (square.baseHP > 0){
+            overlayComponent = (
+                <div className={"count-text"}>
+                    {count + square.baseHP}
+                </div>);
+        }
 
     }
     else if (square.type === SquareType.WATCHTOWER) {
@@ -135,6 +136,12 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${eye})`;
         }
         overlayComponent = countComponent;
+        if (square.baseHP > 0){
+            overlayComponent = (
+                <div className={"count-text"}>
+                    {count + square.baseHP}
+                </div>);
+        }
         // overlayComponent = (
         // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
         //     {countComponent}
@@ -151,6 +158,12 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${shards})`;
         }
         overlayComponent = countComponent;
+        if (square.baseHP > 0){
+            overlayComponent = (
+                <div className={"count-text"}>
+                    {count + square.baseHP}
+                </div>);
+        }
     }
     else if (square.unit) {
         console.log(square.unit)
@@ -177,6 +190,4 @@ function Cell(props) {
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
             {overlayComponent}
     </td>);
-
-
 }
