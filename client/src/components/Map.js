@@ -99,13 +99,14 @@ function Cell(props) {
     let actionVisualEntries = Object.entries(actionVisuals);
     let overlayComponent = null;
     let countComponent = null;
-    let text = "";
+    let count = 0;
 
     if (square.unit) {
+        count = count + square.unit.count;
         countComponent = (
-                <div className={"count-text"}>
-                    {square.unit.count}
-                </div>);
+            <div className={"count-text"}>
+                {square.unit.count + square.baseHP}
+            </div>);
     }
     if (square.type === SquareType.BASE) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
@@ -117,6 +118,12 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${base})`;
         }
         overlayComponent = countComponent;
+        if (square.baseHP > 0){
+            overlayComponent = (
+                <div className={"count-text"}>
+                    {count + square.baseHP}
+                </div>);
+        }
 
     }
     else if (square.type === SquareType.WATCHTOWER) {
@@ -129,6 +136,12 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${eye})`;
         }
         overlayComponent = countComponent;
+        if (square.baseHP > 0){
+            overlayComponent = (
+                <div className={"count-text"}>
+                    {count + square.baseHP}
+                </div>);
+        }
         // overlayComponent = (
         // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
         //     {countComponent}
@@ -145,6 +158,12 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${shards})`;
         }
         overlayComponent = countComponent;
+        if (square.baseHP > 0){
+            overlayComponent = (
+                <div className={"count-text"}>
+                    {count + square.baseHP}
+                </div>);
+        }
     }
     else if (square.unit) {
         console.log(square.unit)
