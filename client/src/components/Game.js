@@ -63,7 +63,10 @@ class Game extends Component {
             const action = KeyMap[e.key];
             if (action && this.state.cursor) {
                 let {dy, dx} = ActionProp[action];
-                let [cursorY, cursorX] = this.state.cursor;
+                let [cursorY, cursorX, unitId] = this.state.cursor;
+                if (unitId == null) {
+                    unitId = this.state.squares[cursorY][cursorX].unit.id;
+                }
                 let targetY = cursorY + dy;
                 let targetX = cursorX + dx;
                 if (this.isInBound(targetY, targetX)) {
@@ -72,9 +75,10 @@ class Game extends Component {
                         action: action,
                         source: [cursorY, cursorX],
                         target: target,
+                        unitId: unitId,
                         id: new Date().toString()
                     };
-                    this.setState({cursor: target});
+                    this.setState({cursor: [targetY, targetX, unitId]});
                     this.sendMove(move);
                 }
             }
@@ -93,7 +97,7 @@ class Game extends Component {
                         "type": UnitType.ATTACKER
                     };
                     this.setState({
-                        cursor: [y, x],
+                        cursor: [y, x, null],
                         displayShards: this.state.displayShards - Costs.ATTACKER
                     });
                     this.sendMove(move);
@@ -107,14 +111,15 @@ class Game extends Component {
                         "type": UnitType.DEFENDER
                     };
                     this.setState({
-                        cursor: [y, x],
+                        cursor: [y, x, null],
                         displayShards: this.state.displayShards - Costs.DEFENDER
                     });
                     this.sendMove(move);
                 }
             }
             else if (this.isPlayer[y][x]) {
-                this.setState({cursor: [y, x]});
+                let unitId = this.state.squares[y][x].unit.id;
+                this.setState({cursor: [y, x, unitId]});
             }
         };
     }
@@ -204,14 +209,20 @@ class Game extends Component {
     }
 
     updateGame(newState) {
-        this.actionQueue = newState.queue;
+        // Flattening for now
+        let flattenedPlayerQueue = [];
+        Object.entries(newState.queues).forEach(([unitId, queue]) => {
+            flattenedPlayerQueue.push.apply(flattenedPlayerQueue, queue);
+        });
+
+        this.actionQueue = flattenedPlayerQueue;
 
         let isPlayer = newState.squares.map(row => {
             return row.map(cell => {
                 return cell.unit && cell.unit.playerId === this.state.player;
             });
         });
-        newState.queue.forEach(move => {
+        flattenedPlayerQueue.forEach(move => {
             if (move.action.includes("move")) {
                 let [y, x] = move.source;
                 if (isPlayer[y][x]) {
@@ -229,7 +240,7 @@ class Game extends Component {
         this.isPlayer = isPlayer;
 
         let displayShards = newState.shards;
-        newState.queue.forEach(move => {
+        flattenedPlayerQueue.forEach(move => {
             if (move.action === "spawn") {
                 if (move.type === UnitType.ATTACKER) {
                     displayShards -= Costs.ATTACKER;
