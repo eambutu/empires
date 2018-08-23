@@ -393,6 +393,9 @@ function maskForPlayer(squares, playerId) {
             } else if (cell.currentOwner() && cell.currentOwner() === playerId) {
                 range = Vision.UNIT;
             } else {
+                if (cell.type === SquareType.RIVER) {
+                    visible[y][x] = true;
+                }
                 return;
             }
             fill(y, x, range);
