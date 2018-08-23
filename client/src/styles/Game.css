@@ -7,12 +7,12 @@
 }
 
 .square-holder {
-    width: 32px;
-    height: 32px;
-    max-width: 32px;
-    max-height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 52px;
+    height: 52px;
+    max-width: 52px;
+    max-height: 52px;
+    min-width: 52px;
+    min-height: 52px;
     border: 0.5px solid #aaaaaa;
     background-color: black;
 }
@@ -22,35 +22,41 @@
     /*width: 33px !important;*/
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 25px 25px;
+    background-size: 42px 42px;
 }
 
 .base {
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 25px 25px;
+    background-size: 42px 42px;
 }
 
 .watchtower {
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 25px 25px;
+    background-size: 42px 42px;
 
 }
 
 .shardtower {
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 25px 25px;
+    background-size: 42px 42px;
+}
+
+.square-content {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 42px 42px;
 }
 
 .square {
-    width: 32px;
-    height: 32px;
-    max-width: 32px;
-    max-height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 52px;
+    height: 52px;
+    max-width: 52px;
+    max-height: 52px;
+    min-width: 52px;
+    min-height: 52px;
     border: 0.5px solid #aaaaaa;
     background-color: black;
     text-align: center;
@@ -70,5 +76,5 @@
 .count-text{
     z-index: 1;
     color: black;
-    font-size: 10px;
+    font-size: 15px;
 }

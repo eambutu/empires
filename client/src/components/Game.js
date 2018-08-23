@@ -20,6 +20,9 @@ const KeyMap = {
     d: Action.MOVE_RIGHT
 };
 
+let backsize = 42;
+let squaresize = 52;
+
 class Game extends Component {
     isInBound(y, x) {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
@@ -62,6 +65,36 @@ class Game extends Component {
 
         this.keyDownBound = e => {
             const action = KeyMap[e.key];
+            if (e.key === "="){
+                let all = document.getElementsByClassName('square');
+                backsize = Math.min(backsize + 5, 45);
+                squaresize = Math.min(squaresize + 5, 55);
+                for (let i = 0; i < all.length; i++) {
+                    all[i].style.backgroundSize = backsize.toString() + "px " + backsize.toString() + "px";
+                    all[i].style.width = squaresize.toString() + "px";
+                    all[i].style.height = squaresize.toString() + "px";
+                    all[i].style.maxWidth = squaresize.toString() + "px";
+                    all[i].style.minWidth = squaresize.toString() + "px";
+                    all[i].style.maxHeight = squaresize.toString() + "px";
+                    all[i].style.minHeight = squaresize.toString() + "px";
+
+                }
+            }
+            else if (e.key === "-"){
+                let all = document.getElementsByClassName('square');
+                backsize = Math.max(backsize - 5, 25);
+                squaresize = Math.max(squaresize - 5, 35);
+                for (let i = 0; i < all.length; i++) {
+                    all[i].style.backgroundSize = backsize.toString() + "px " + backsize.toString() + "px";
+                    all[i].style.width = squaresize.toString() + "px";
+                    all[i].style.height = squaresize.toString() + "px";
+                    all[i].style.maxWidth = squaresize.toString() + "px";
+                    all[i].style.minWidth = squaresize.toString() + "px";
+                    all[i].style.maxHeight = squaresize.toString() + "px";
+                    all[i].style.minHeight = squaresize.toString() + "px";
+                }
+
+            }
             if (action && this.state.cursor) {
                 let {dy, dx} = ActionProp[action];
                 let [cursorY, cursorX] = this.state.cursor;
@@ -199,7 +232,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby playerStatus={this.state.playerStatus}/ >
+                <Lobby playerStatus={this.state.playerStatus} />
             )
         }
     }

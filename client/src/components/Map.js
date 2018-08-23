@@ -115,11 +115,11 @@ function Cell(props) {
     }
     if (square.squareType === SquareType.BASE) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
-            styleClass = styleClass + " base"
+            styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedbase})`;
         }
         else {
-            styleClass = styleClass + " count-text attacker base"
+            styleClass = styleClass + " count-text square-content"
             divStyle["backgroundImage"] = `url(${base})`;
         }
         overlayComponent = countComponent;
@@ -127,11 +127,11 @@ function Cell(props) {
     }
     else if (square.squareType === SquareType.WATCHTOWER) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
-            styleClass = styleClass + " watchtower"
+            styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedeye})`;
         }
         else {
-            styleClass = styleClass + " count-text attacker base"
+            styleClass = styleClass + " count-text square-content"
             divStyle["backgroundImage"] = `url(${eye})`;
         }
         overlayComponent = countComponent;
@@ -144,11 +144,11 @@ function Cell(props) {
     else if (square.squareType === SquareType.TOWER){
 
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
-            styleClass = styleClass + " watchtower"
+            styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedshard})`;
         }
         else {
-            styleClass = styleClass + " count-text attacker base"
+            styleClass = styleClass + " count-text square-content"
             divStyle["backgroundImage"] = `url(${shards})`;
         }
         overlayComponent = countComponent;
@@ -164,7 +164,7 @@ function Cell(props) {
             divStyle["backgroundImage"] = `url(${sword})`;
         }
         overlayComponent = (square.unit.count);
-        styleClass = styleClass + " attacker count-text";
+        styleClass = styleClass + " square-content count-text";
             {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
             {/*{square.unit.count}*/}
             {/*</div>);*/}
