@@ -23,6 +23,10 @@ app.get('/room/:roomId', function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
+app.get('/tutorial', function (req, res) {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
 function initOrGetRoom(roomId, ws, maxPlayers, isTutorial) {
     if (!(roomId in rooms)) {
         rooms[roomId] = {
