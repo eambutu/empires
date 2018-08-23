@@ -75,8 +75,7 @@ class Game extends Component {
                     all[i].style.minHeight = squaresize.toString() + "px";
 
                 }
-            }
-            else if (e.key === "-"){
+            } else if (e.key === "-"){
                 let all = document.getElementsByClassName('square');
                 backsize = Math.max(backsize - 5, 25);
                 squaresize = Math.max(squaresize - 5, 35);

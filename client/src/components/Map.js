@@ -117,8 +117,7 @@ function Cell(props) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedbase})`;
-        }
-        else {
+        } else {
             styleClass = styleClass + " count-text square-content"
             divStyle["backgroundImage"] = `url(${base})`;
         }
@@ -130,13 +129,11 @@ function Cell(props) {
                 </div>);
         }
 
-    }
-    else if (square.type === SquareType.WATCHTOWER) {
+    } else if (square.type === SquareType.WATCHTOWER) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedeye})`;
-        }
-        else {
+        } else {
             styleClass = styleClass + " count-text square-content"
             divStyle["backgroundImage"] = `url(${eye})`;
         }
@@ -152,13 +149,11 @@ function Cell(props) {
         //     {countComponent}
         // </div>
         // );
-    }
-    else if (square.type === SquareType.TOWER){
+    } else if (square.type === SquareType.TOWER){
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedshard})`;
-        }
-        else {
+        } else {
             styleClass = styleClass + " count-text square-content"
             divStyle["backgroundImage"] = `url(${shards})`;
         }
@@ -169,14 +164,12 @@ function Cell(props) {
                     {count + square.baseHP}
                 </div>);
         }
-    }
-    else if (square.unit) {
+    } else if (square.unit) {
         console.log(square.unit)
         console.log(square.unit.type)
         if (square.unit.type === UnitType.DEFENDER){
             divStyle["backgroundImage"] = `url(${shield})`;
-        }
-        else if (square.unit.type === UnitType.ATTACKER)
+        } else if (square.unit.type === UnitType.ATTACKER)
         {
             divStyle["backgroundImage"] = `url(${sword})`;
         }
