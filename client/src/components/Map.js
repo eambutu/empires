@@ -74,10 +74,10 @@ function Cell(props) {
     const {square, highlighted, handleClick, x, y, actionVisuals} = props;
     let styleClass = "square";
     let divStyle = {
-        "backgroundColor": SquareColor[square.squareType]
+        "backgroundColor": SquareColor[square.type]
     };
     if (square.unit) {
-        if (square.unit.playerId === 1) {
+        if (square.unit.playerId === '1') {
             divStyle = {
                 "backgroundColor": 'red'
             };
@@ -87,8 +87,8 @@ function Cell(props) {
                 "backgroundColor": 'blue'
             };
         }
-    } else if (square.squareType === SquareType.BASE) {
-        if (square.baseId === 1) {
+    } else if (square.type === SquareType.BASE) {
+        if (square.baseId === '1') {
             divStyle = {
                 "backgroundColor": 'red'
             };
@@ -113,7 +113,7 @@ function Cell(props) {
                     {square.unit.count}
                 </div>);
     }
-    if (square.squareType === SquareType.BASE) {
+    if (square.type === SquareType.BASE) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedbase})`;
@@ -125,7 +125,7 @@ function Cell(props) {
         overlayComponent = countComponent;
 
     }
-    else if (square.squareType === SquareType.WATCHTOWER) {
+    else if (square.type === SquareType.WATCHTOWER) {
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedeye})`;
@@ -141,8 +141,7 @@ function Cell(props) {
         // </div>
         // );
     }
-    else if (square.squareType === SquareType.TOWER){
-
+    else if (square.type === SquareType.TOWER){
         if (square.unit && square.unit.type === UnitType.DEFENDER) {
             styleClass = styleClass + " square-content"
             divStyle["backgroundImage"] = `url(${defendedshard})`;
@@ -171,7 +170,7 @@ function Cell(props) {
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
-        if (square.squareType === SquareType.UNKNOWN) {
+        if (square.type === SquareType.UNKNOWN) {
             divStyle["backgroundColor"] = "#404040";
         }
     }

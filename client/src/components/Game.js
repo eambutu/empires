@@ -33,12 +33,12 @@ class Game extends Component {
             for (let j = -1; j <= 1; j++) {
                 if ((i !== 0 || j !== 0) && this.isInBound(y + i, x + j)) {
                     let square = this.state.squares[y + i][x + j];
-                    if (type === UnitType.ATTACKER && square.squareType === SquareType.BASE && square.baseId === this.state.player) {
+                    if (type === UnitType.ATTACKER && square.type === SquareType.BASE && square.baseId === this.state.playerId) {
                         return true;
                     }
                     // Defender square has to have vision and cannot have existing units on it except defenders of your sort
-                    if (type === UnitType.DEFENDER && !(square.squareType === SquareType.UNKNOWN) &&
-                        (!square.unit || (this.state.player === square.unit.playerId && square.unit.type === UnitType.DEFENDER))) {
+                    if (type === UnitType.DEFENDER && !(square.type === SquareType.UNKNOWN) &&
+                        (!square.unit || (this.state.playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER))) {
                         return true;
                     }
                 }
@@ -50,7 +50,7 @@ class Game extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            player: null,
+            playerId: null,
             secret: null,
             squares: null,
             displayShards: 0,
@@ -97,7 +97,11 @@ class Game extends Component {
             }
             if (action && this.state.cursor) {
                 let {dy, dx} = ActionProp[action];
-                let [cursorY, cursorX] = this.state.cursor;
+                let [cursorY, cursorX, unitId] = this.state.cursor;
+                if (unitId === null) {
+                    const sq = this.state.squares[cursorY][cursorX];
+                    unitId = sq.unit ? sq.unit.id : null;
+                }
                 let targetY = cursorY + dy;
                 let targetX = cursorX + dx;
                 if (this.isInBound(targetY, targetX)) {
@@ -106,9 +110,9 @@ class Game extends Component {
                         action: action,
                         source: [cursorY, cursorX],
                         target: target,
-                        id: new Date().toString()
+                        unitId: unitId
                     };
-                    this.setState({cursor: target});
+                    this.setState({cursor: [targetY, targetX, unitId]});
                     this.sendMove(move);
                 }
             }
@@ -118,7 +122,6 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            console.log(e.altKey);
             if (e.ctrlKey || e.metaKey) {
                 if (this.state.displayShards >= Costs.ATTACKER && this.isInSpawningRange(y, x, UnitType.ATTACKER)) {
                     let move = {
@@ -127,7 +130,7 @@ class Game extends Component {
                         "type": UnitType.ATTACKER
                     };
                     this.setState({
-                        cursor: [y, x],
+                        cursor: [y, x, null],
                         displayShards: this.state.displayShards - Costs.ATTACKER
                     });
                     this.sendMove(move);
@@ -141,14 +144,15 @@ class Game extends Component {
                         "type": UnitType.DEFENDER
                     };
                     this.setState({
-                        cursor: [y, x],
+                        cursor: [y, x, null],
                         displayShards: this.state.displayShards - Costs.DEFENDER
                     });
                     this.sendMove(move);
                 }
             }
             else if (this.isPlayer[y][x]) {
-                this.setState({cursor: [y, x]});
+                let unitId = this.state.squares[y][x].unit.id;
+                this.setState({cursor: [y, x, unitId]});
             }
         };
     }
@@ -170,7 +174,7 @@ class Game extends Component {
             var json = JSON.parse(event.data);
             if (json.event === 'connected') {
                 this.setState({
-                    player: json.player,
+                    playerId: json.playerId,
                     secret: json.secret,
                     waitingText: json.text
                 });
@@ -203,10 +207,10 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, playerStatus, player, cursor} = this.state;
+        let {squares, playerStatus, playerId, cursor} = this.state;
         console.log(squares);
         if (squares) {
-            if (playerStatus[player]['status'] === "lost" || playerStatus[player]['status'] === "won") {
+            if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
@@ -214,7 +218,7 @@ class Game extends Component {
                         <Map squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit}
-                                 status={playerStatus[player]['status']}/>
+                                 status={playerStatus[playerId]['status']}/>
                     </div>
 
                 );
@@ -238,14 +242,20 @@ class Game extends Component {
     }
 
     updateGame(newState) {
-        this.actionQueue = newState.queue;
+        // Flattening for now
+        let flattenedPlayerQueue = [];
+        Object.entries(newState.queues).forEach(([unitId, queue]) => {
+            flattenedPlayerQueue.push.apply(flattenedPlayerQueue, queue);
+        });
+
+        this.actionQueue = flattenedPlayerQueue;
 
         let isPlayer = newState.squares.map(row => {
             return row.map(cell => {
-                return cell.unit && cell.unit.playerId === this.state.player;
+                return cell.unit && cell.unit.playerId === this.state.playerId;
             });
         });
-        newState.queue.forEach(move => {
+        flattenedPlayerQueue.forEach(move => {
             if (move.action.includes("move")) {
                 let [y, x] = move.source;
                 if (isPlayer[y][x]) {
@@ -263,7 +273,7 @@ class Game extends Component {
         this.isPlayer = isPlayer;
 
         let displayShards = newState.shards;
-        newState.queue.forEach(move => {
+        flattenedPlayerQueue.forEach(move => {
             if (move.action === "spawn") {
                 if (move.type === UnitType.ATTACKER) {
                     displayShards -= Costs.ATTACKER;
@@ -281,6 +291,7 @@ class Game extends Component {
     }
 
     sendMove(move) {
+        console.log("Sent move", move);
         this.ws.send(JSON.stringify(
             {
                 'event': 'move',

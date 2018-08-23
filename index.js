@@ -42,17 +42,17 @@ function onConnect(room, ws) {
     if (!room.full && (room.clients.length <= maxPlayers)) {
         ws.ponged = true;
         ws.isAlive = true;
-        ws.player = room.clients.length;
-        ws.name = `player_${ws.player}`;
+        ws.playerId = room.clients.length.toString();
+        ws.name = `player_${ws.playerId}`;
         ws.secret = Math.floor(Math.random() * 10000);
 
         ws.send(JSON.stringify({
             event: 'connected',
-            player: ws.player,
+            playerId: ws.playerId,
             secret: ws.secret,
             text: 'Connected! Waiting for other players to join.'
         }));
-        console.log(`player ${ws.player} connected to ${room.id}`);
+        console.log(`player ${ws.playerId} connected to ${room.id}`);
 
         if (room.clients.length === maxPlayers) {
             room.full = true;
@@ -74,15 +74,23 @@ app.ws('/room/:roomId', function (ws, req) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
-            // console.log('received', data);
+            console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = room.queues;
-                queues[ws.player].push(data.move);
+                data.move.playerId = ws.playerId;
+                if (data.move.action === "spawn") {
+                    queues[ws.playerId]["spawn"].push(data.move);
+                }
+                else {
+                    if (data.move.unitId) {
+                        queues[ws.playerId][data.move.unitId].push(data.move);
+                    }
+                }
             }
         }
         else if (data.event === 'reset') {
             console.log(data);
-            endGame(room);
+            resetGame(room);
             runGame(room);
         }
         else if (data.event === 'exit') {
@@ -98,8 +106,8 @@ app.ws('/room/:roomId', function (ws, req) {
 
     ws.on('close', function () {
         room.clients = room.clients.filter(client => (client.readyState === 1));
-        if (ws.player) {
-            console.log(`player ${ws.player} disconnected from ${room.id}`);
+        if (ws.playerId) {
+            console.log(`player ${ws.playerId} disconnected from ${room.id}`);
         }
         else {
             console.log(`client attempted connect to ${room.id}`);
@@ -113,27 +121,41 @@ app.listen(5000, function () {
 });
 
 class SquareState {
-    constructor(y, x, squareType, unit, baseId) {
+    constructor(y, x, type, units, baseId) {
         this.pos = [y, x];
-        this.squareType = squareType;
-        this.unit = unit;
+        this.type = type;
+        this.units = units;
         this.baseId = baseId;
     }
-}
 
-class SquareCount {
-    constructor(counts, type) {
-        this.counts = counts;
-        this.type = type
+    currentOwner() {
+        // function assumes that only units of one player are on the square
+        if (this.units.length === 0) {
+            return null;
+        }
+        return this.units[0].playerId;
     }
-}
 
-function compareSquareCounts(squareCount1, squareCount2) {
-    return squareCount1.counts - squareCount2.counts;
+    getUnit() {
+        // function assumes only one unit is in the units array
+        return this.units.length > 0 ? this.units[0] : null;
+    }
+
+    popUnitById(id) {
+        for (let idx = 0; idx < this.units.length; idx++) {
+            if (this.units[idx].id === id) {
+                let temp = this.units[idx];
+                this.units.splice(idx, 1);
+                return temp;
+            }
+        }
+        return null;
+    }
 }
 
 class Unit {
-    constructor(playerId, type, count) {
+    constructor(id, playerId, type, count) {
+        this.id = id;
         this.playerId = playerId;
         this.type = type;
         this.count = count;
@@ -157,15 +179,14 @@ getPingPlayers = targetRoom => {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
                 client.isAlive = client.ponged;
-                client.ping();
                 client.ponged = false;
+                client.ping();
             }
         });
     }    
 }
 
 function runGame(room) {
-    room.gameEnded = false;
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
@@ -182,13 +203,14 @@ function runGame(room) {
 function resetIfEmpty(room) {
     room.clients = room.clients.filter(client => (client.readyState === 1));
     if (room.clients.length === 0) {
-        resetGame(room);
+        openRoom(room);
     }
 }
 
-function endGame(room) {
+function resetGame(room) {
     clearInterval(room.gameInterval);
     clearInterval(room.heartbeatInterval);
+    room.gameEnded = false;
 }
 
 // getSetRoomNotFull = targetRoom => function () {
@@ -196,9 +218,9 @@ function endGame(room) {
 //     room.full = false;
 // };
 
-function resetGame(room) {
+function openRoom(room) {
     console.log('RESTART GAME');
-    endGame(room);
+    resetGame(room);
     setTimeout(
         function () {room.full = false;},
         1000
@@ -222,7 +244,7 @@ function broadcastInit(room) {
         if (client.readyState === 1) {
             client.send(JSON.stringify({
                 'event': 'init',
-                'base': playerBases[client.player - 1],
+                'base': playerBases[client.playerId],
                 'width': width,
                 'height': height,
             }));
@@ -234,8 +256,7 @@ function broadcastInit(room) {
 function broadcastState(room) {
     room.clients.forEach(client => {
         if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'update', 'state': getState(room, client.player)}));
-            let squareCounts = room.squareCounts;
+            client.send(JSON.stringify({'event': 'update', 'state': getState(room, client.playerId)}));
         }
     });
     // console.log("Sent state");
@@ -244,7 +265,7 @@ function broadcastState(room) {
 
 function initState(room) {
     let squareStates = [];
-    let playerBases = [];
+    let playerBases = {};
     let queues = {};
 
     let corners = [
@@ -254,14 +275,14 @@ function initState(room) {
         [14, 14]
     ]
 
-    queues[1] = [];
-    queues[2] = [];
+    queues[room.clients[0].playerId] = {'spawn': []};
+    queues[room.clients[1].playerId] = {'spawn': []};
 
     let towers = [
         [4, 4],
         [4, 10],
         [10, 4],
-        [10, 1]
+        [10, 10]
     ];
 
     let watchTowers = [
@@ -288,8 +309,8 @@ function initState(room) {
     while(randIdxTwo === randIdxOne) {
         randIdxTwo = Math.floor(Math.random() * 4);
     }
-    playerBases[0] = corners[randIdxOne];
-    playerBases[1] = corners[randIdxTwo];
+    playerBases[room.clients[0].playerId] = corners[randIdxOne];
+    playerBases[room.clients[1].playerId] = corners[randIdxTwo];
     corners.forEach(function(corner, idx) {
         if (idx !== randIdxOne && idx !== randIdxTwo) {
             towers.push(corner);
@@ -299,56 +320,44 @@ function initState(room) {
     for (let i = 0; i < height; i++) {
         squareStates[i] = [];
         for (let j = 0; j < width; j++) {
-            if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, null, 1);
+            if (i === playerBases[room.clients[0].playerId][0] && j === playerBases[room.clients[0].playerId][1]) {
+                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[0].playerId);
                 squareStates[i][j] = squareState;
             }
-            else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, null, 2);
+            else if (i === playerBases[room.clients[1].playerId][0] && j === playerBases[room.clients[1].playerId][1]) {
+                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[1].playerId);
                 squareStates[i][j] = squareState;
             }
             else {
-                squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, null);
+                squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, [], null);
                 towers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, null);
+                        squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, [], null);
                     }
                 })
                 watchTowers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, null);
+                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, [], null);
                     }
                 })
                 rivers.forEach(function (river) {
                     if (i === river[0] && j === river[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, null);
+                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, [], null);
                     }
                 })
             }
         }
     }
-    let squareCounts = squareStates.map(row => row.map(cell => {
-        // if you do this with Array fill, the whole array will refer to the same object
-        // (dont spend 30 minutes debugging this like me)
-        let counts = [];
-        for (let idx = 0; idx < maxPlayers; idx++) {
-            counts[idx] = new SquareCount(0, null);
-        }
-        if (cell.unit) {
-            let {playerId, type, count} = cell.unit;
-            counts[playerId - 1] = SquareCount(count, type);
-        }
-        return counts;
-    }));
 
     room.playerBases = playerBases;
     room.squareStates = squareStates;
-    room.squareCounts = squareCounts;
     room.queues = queues;
-    room.shards = [23, 23];
+    room.shards = {
+        [room.clients[0].playerId]: 23,
+        [room.clients[1].playerId]: 23
+    };
     room.towers = towers;
     room.gameWonStatus = null;
-    room.lastPlayerMoves = Array(maxPlayers).fill(null);
     console.log(`state initialized for ${room.id}`);
 }
 
@@ -367,11 +376,11 @@ function maskForPlayer(squares, playerId) {
     squares.forEach((row, y) => {
         row.forEach((cell, x) => {
             let range;
-            if (cell.squareType === SquareType.BASE && playerId === cell.baseId) {
+            if (cell.type === SquareType.BASE && playerId === cell.baseId) {
                 range = Vision.BASE;
-            } else if (cell.squareType === SquareType.WATCHTOWER && cell.unit && cell.unit.playerId === playerId) {
+            } else if (cell.type === SquareType.WATCHTOWER && cell.currentOwner() === playerId) {
                 range = Vision.WATCHTOWER;
-            } else if (cell.unit && cell.unit.playerId === playerId) {
+            } else if (cell.currentOwner() && cell.currentOwner() === playerId) {
                 range = Vision.UNIT;
             } else {
                 return;
@@ -385,7 +394,7 @@ function maskForPlayer(squares, playerId) {
             if (visible[y][x]) {
                 return cell;
             } else {
-                return new SquareState(y, x, SquareType.UNKNOWN, null);
+                return new SquareState(y, x, SquareType.UNKNOWN, [], null);
             }
         })
     ));
@@ -403,12 +412,12 @@ function isInSpawningRange(room, y, x, playerId, type) {
             if ((i !== 0 || j !== 0) && isInBound(y + i, x + j)) {
                 let square = squareStates[y + i][x + j];
                 let squareVision = squareVisions[y + i][x + j];
-                if (type === UnitType.ATTACKER && square.squareType === SquareType.BASE && playerId === square.baseId) {
+                if (type === UnitType.ATTACKER && square.type === SquareType.BASE && playerId === square.baseId) {
                     return true;
                 }
                 // Defender square has to have vision and cannot have existing units on it except defenders of your sort
                 if (type === UnitType.DEFENDER && !(squareVision.type === SquareType.UNKNOWN) &&
-                    (!square.unit || (playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER))) {
+                    (!square.getUnit() || (playerId === square.currentOwner() && square.getUnit().type === UnitType.DEFENDER))) {
                     return true;
                 }
             }
@@ -426,7 +435,7 @@ function getState(room, playerId) {
     if (gameWonStatus) {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
-                playerStatus[client.player] = {'name': client.name, 'status': gameWonStatus[client.player - 1]};
+                playerStatus[client.playerId] = {'name': client.name, 'status': gameWonStatus[client.playerId]};
             }
         });
     }
@@ -434,149 +443,224 @@ function getState(room, playerId) {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
                 if (client.isAlive) {
-                    playerStatus[client.player] = {'name': client.name, 'status': 'playing'};
+                    playerStatus[client.playerId] = {'name': client.name, 'status': 'playing'};
                 }
                 else {
-                    playerStatus[client.player] = {'name': client.name, 'status': 'afk'};
+                    playerStatus[client.playerId] = {'name': client.name, 'status': 'afk'};
                 }
             }
         });
     }
 
+    let maskedSquares = maskForPlayer(squares, playerId);
+    maskedSquares.forEach(row => {
+        row.forEach(square => {
+            // The client expects the field in terms of "unit"
+            square.unit = square.getUnit();
+        });
+    });
+
     return {
-        queue: queues[playerId],
-        squares: maskForPlayer(squares, playerId),
+        queues: queues[playerId],
+        squares: maskedSquares,
         playerStatus: playerStatus,
-        shards: shards[playerId - 1],
-        lastMove: room.lastPlayerMoves[playerId - 1]
+        shards: shards[playerId],
     };
+}
+
+function validateQueues(room) {
+    let queues = room.queues;
+    let squareStates = room.squareStates;
+    Object.entries(queues).forEach(([playerId, unitQueues]) => {
+        Object.entries(unitQueues).forEach(([unitId, queue]) => {
+            // Don't need to clear shard queue, because they're always cleared
+            if (unitId === "spawn") {
+                return;
+            }
+
+            let isPlayerAndUnit = squareStates.map(row => {
+                return row.map(cell => {
+                    let unit = cell.getUnit();
+                    return unit && (unit.playerId === playerId) && (unit.id === unitId);
+                });
+            });
+
+            unitQueues[unitId] = queue.filter(move => {
+                if (move.action.includes("move")) {
+                    let [y, x] = move.source;
+                    if (isPlayerAndUnit[y][x]) {
+                        isPlayerAndUnit[y][x] = false;
+                        let [newY, newX] = move.target;
+                        isPlayerAndUnit[newY][newX] = true;
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+        });
+    });
 }
 
 function updateState(room) {
     let squareStates = room.squareStates;
-    let squareCounts = room.squareCounts;
     let playerBases = room.playerBases;
     let shards = room.shards;
     let towers = room.towers;
     let queues = room.queues;
-    let lastPlayerMoves = room.lastPlayerMoves;
 
+    let spawns = [];
     let moves = [];
+
+    validateQueues(room);
     room.clients.forEach(client => {
-        if ((client.readyState === 1) && (queues[client.player].length > 0)) {
-            let move = queues[client.player].shift();
-            move.player = client.player;
-            moves.push(move);
-        }
+        Object.entries(queues[client.playerId]).forEach(([unitId, unitQueue]) => {
+            if (unitId === 'spawn') {
+                spawns.push.apply(spawns, unitQueue);
+                unitQueue.length = 0;
+            }
+            else if (unitQueue.length > 0) {
+                let move = unitQueue.shift();
+                moves.push(move);
+            }
+        });
+
     });
     
     // increment everyone's shard per turn
-    for (let i = 0; i < shards.length; i++) {
-        shards[i]++;
-    }
+    Object.keys(shards).forEach((playerId) => {
+        shards[playerId]++;
+    });
 
     // increment shard if owned tower from previous turn
     towers.forEach(([y, x]) => {
-        let unit = squareStates[y][x].unit;
+        let unit = squareStates[y][x].getUnit();
         if (unit) {
-            shards[parseInt(unit.playerId) - 1]++;
+            shards[unit.playerId]++;
         }
     });
 
-    // update the counts with the moves
-    moves.forEach(move => {
-        let {action, player, target, type} = move;
-        let playerIndex = player - 1;
+    spawns.forEach(spawn => {
+        let {playerId, target, type} = spawn;
         let [tY, tX] = target;
-        if (squareStates[tY][tX].squareType !== SquareType.RIVER) {
-            if (action.includes("move")) {
-                let [sY, sX] = move.source;
-                squareCounts[tY][tX][playerIndex].counts += squareCounts[sY][sX][playerIndex].counts;
-                squareCounts[sY][sX][playerIndex].counts = 0;
-            } else if (action === "spawn") {
-                console.log(moves);
-                let [tY, tX] = target;
-                if (type === UnitType.ATTACKER) {
-                    squareCounts[tY][tX][playerIndex].counts++;
-                    squareCounts[tY][tX][playerIndex].type = UnitType.ATTACKER;
-                    shards[playerIndex] -= Costs.ATTACKER;
+        if (squareStates[tY][tX].type !== SquareType.RIVER && isInSpawningRange(room, tY, tX, playerId, type)) {
+            if (!squareStates[tY][tX].getUnit()) {
+                let unitId = Math.floor(10000000*Math.random()).toString();
+                squareStates[tY][tX].units.push(new Unit(unitId, playerId, type, 0));
+                queues[playerId][unitId] = [];
+            }
+            let unit = squareStates[tY][tX].getUnit();
+            if (type === UnitType.ATTACKER) {
+                unit.count++;
+                shards[playerId] -= Costs.ATTACKER;
+            }
+            else if (type === UnitType.DEFENDER) {
+                unit.count += 10;
+                shards[playerId] -= Costs.DEFENDER;
+            }
+        }
+    });
+
+    // update the units arrays with move
+    moves.forEach(move => {
+        let {unitId, playerId, target} = move;
+        let [sY, sX] = move.source;
+        let [tY, tX] = target;
+        if (squareStates[tY][tX].type !== SquareType.RIVER) {
+            let unit = squareStates[sY][sX].popUnitById(unitId);
+            if (unit) {
+                if (unit.playerId !== playerId) {
+                    squareStates[sY][sX].units.push(unit);
                 }
-                else if (type === UnitType.DEFENDER) {
-                    squareCounts[tY][tX][playerIndex].counts += 10;
-                    squareCounts[tY][tX][playerIndex].type = UnitType.DEFENDER;
-                    shards[playerIndex] -= Costs.DEFENDER;
+                else {
+                    squareStates[tY][tX].units.push(unit);
                 }
             }
         }
-        lastPlayerMoves[playerIndex] = move;
     });
 
-    let comp = ([_1, count1], [_2, count2]) => (compareSquareCounts(count1, count2));
-    // update squareStates with squareCounts
-    squareCounts.forEach((row, y) => {
-        row.forEach((counts, x) => {
-            let countTuples = counts.map((count, index) => [index, count]);
-            countTuples = countTuples.sort(comp).reverse(); // sort largest to smallest
-            let [bestPlayerIndex, firstCount] = countTuples[0];
-            let bestPlayerId = bestPlayerIndex + 1;
-            let secondCount = countTuples[1][1];
-            let finalCount = firstCount.counts - secondCount.counts;
-            // don't use fill here, because array fill doesnt work well with objects
-            for (let idx = 0; idx < maxPlayers; idx++) {
-                squareCounts[y][x][idx] = new SquareCount(0, null)
-            }
-            if (finalCount > 0) {
-                squareStates[y][x].unit = new Unit(bestPlayerId, firstCount.type, finalCount);
-                squareCounts[y][x][bestPlayerIndex] = new SquareCount(finalCount, firstCount.type);
-            } else {
-                squareStates[y][x].unit = null;
-            }
-        });
-    });
-
-    console.log(squareCounts[1][0]);
-
-    Object.entries(queues).forEach(([playerIdStr, queue]) => {
-        let playerId = parseInt(playerIdStr);
-        let isPlayer = squareStates.map(row => {
-            return row.map(cell => {
-                return cell.unit && cell.unit.playerId === playerId;
-            });
-        });
-        let currShards = shards[playerId - 1];
-
-        queues[playerId] = queue.filter(move => {
-            if (move.action.includes("move")) {
-                let [y, x] = move.source;
-                if (isPlayer[y][x]) {
-                    isPlayer[y][x] = false;
-                    let [newY, newX] = move.target;
-                    isPlayer[newY][newX] = true;
-                    return true;
+    squareStates.forEach((row) => {
+        row.forEach((square) => {
+            if (square.units.length > 1) {
+                // Gets the total counts for each player
+                let playerCounts = {};
+                square.units.forEach((unit) => {
+                    if (unit.playerId in playerCounts) {
+                        playerCounts[unit.playerId] += unit.count;
+                    }
+                    else {
+                        playerCounts[unit.playerId] = unit.count;
+                    }
+                });
+                // Finds player ID of winning player
+                let maxCount = 0;
+                let maxPlayerId = 0;
+                let secondMaxCount = 0;
+                Object.entries(playerCounts).forEach(([playerId, count]) => {
+                    if (count > maxCount) {
+                        maxPlayerId = playerId;
+                        secondMaxCount = maxCount;
+                        maxCount = count;
+                    }
+                    else if (count > secondMaxCount) {
+                        secondMaxCount = count;
+                    }
+                });
+                // If equal number of units, remove everything and return
+                if (maxCount === secondMaxCount) {
+                    square.units = [];
+                    return;
                 }
-            }
-            else if (move.action === "spawn") {
-                let [y, x] = move.target;
-                if (!isInSpawningRange(room, y, x, playerId, move.type)) {
-                    return false;
-                } else if (move.type === UnitType.ATTACKER && currShards - Costs.ATTACKER < 0) {
-                    return false;
-                } else if (move.type === UnitType.DEFENDER && currShards - Costs.DEFENDER < 0) {
-                    return false;
+                // Removes units that are not from wining player
+                square.units = square.units.filter(unit => {
+                    return unit.playerId === maxPlayerId;
+                });
+                // Merge winning player's
+                let unit = square.getUnit();
+                if (square.units.length > 1) {
+                    let numUnitsMoving = 0;
+                    let movingUnit = null;
+                    let wasMovingUnit = null;
+
+                    square.units.forEach((unit) =>{
+                        if (queues[unit.playerId][unit.id].length > 0) {
+                            numUnitsMoving++;
+                            movingUnit = unit;
+                        }
+                        moves.forEach(move => {
+                            if (move.unitId === unit.id) {
+                                wasMovingUnit = unit;
+                            }
+                        });
+                    });
+
+                    if (numUnitsMoving === 0){
+                        unit = wasMovingUnit;
+                    }
+                    else if (numUnitsMoving === 1) {
+                        unit = movingUnit;
+                    }
+                    else {
+                        // let newUnitId = Math.floor(10000000*Math.random()).toString();
+                        queues[unit.playerId][movingUnit.id].length = 0;
+                        unit = movingUnit;
+                    }
                 }
-                isPlayer[y][x] = true;
-                return true;
+
+                square.units = [new Unit(unit.id, unit.playerId, unit.type, maxCount - secondMaxCount)];
+
             }
-            return false; // bad queued move
-        });
+        })
     });
 
-    playerBases.forEach(([y, x], playerIndex) => {
-        let unit = squareStates[y][x].unit;
-        if (unit && (unit.playerId !== playerIndex + 1)) {
-            let gameWonStatus = [null, null];
-            gameWonStatus[playerIndex] = "lost";
-            gameWonStatus[unit.playerId - 1] = "won";
+    validateQueues(room);
+
+    Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
+        let unit = squareStates[y][x].getUnit();
+        if (unit && (unit.playerId !== playerId)) {
+            let gameWonStatus = {};
+            gameWonStatus[playerId] = "lost";
+            gameWonStatus[unit.playerId] = "won";
             room.gameWonStatus = gameWonStatus;
             room.gameEnded = true;
         }
