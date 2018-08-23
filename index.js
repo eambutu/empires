@@ -62,7 +62,8 @@ function onConnect(room, ws) {
             event: 'connected',
             playerId: ws.playerId,
             secret: ws.secret,
-            text: connectedText
+            text: connectedText,
+            isTutorial: room.isTutorial
         }));
         console.log(`player ${ws.playerId} connected to ${room.id}`);
 

@@ -79,6 +79,13 @@ function Cell(props) {
     let divStyle = {
         "backgroundColor": SquareColor[square.type]
     };
+    // Background color of squares
+    let actionVisualEntries = Object.entries(actionVisuals);
+    if (actionVisualEntries.length > 0 && square.type !== SquareType.RIVER) {
+        let [action, id] = actionVisualEntries[0];
+        let {icon} = ActionProp[action].visual;
+        divStyle["backgroundColor"] = "#505050";
+    }
     if (square.unit) {
         playerIds.forEach((playerId, index) => {
             if (square.unit.playerId === playerId) {
@@ -96,11 +103,9 @@ function Cell(props) {
         styleClass = styleClass + " highlighted"
     }
 
-    let actionVisualEntries = Object.entries(actionVisuals);
     let overlayComponent = null;
     let countComponent = null;
     let count = 0;
-
     if (square.unit) {
         count = count + square.unit.count;
         countComponent = (
@@ -180,12 +185,6 @@ function Cell(props) {
             {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
             {/*{square.unit.count}*/}
             {/*</div>);*/}
-    } else if (actionVisualEntries.length > 0) {
-        let [action, id] = actionVisualEntries[0];
-        let {icon} = ActionProp[action].visual;
-        if (square.type !== SquareType.RIVER) {
-            divStyle["backgroundColor"] = "#505050";
-        }
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
             {overlayComponent}

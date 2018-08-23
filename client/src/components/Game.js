@@ -54,7 +54,8 @@ class Game extends Component {
             cursor: null,
             waitingText: '',
             canPlayAgain: true,
-            spawnSquare: null
+            spawnSquare: null,
+            isTutorial: false
         };
         this.actionQueue = [];
         this.unitSquareMap = null;
@@ -178,7 +179,8 @@ class Game extends Component {
                 this.setState({
                     playerId: data.playerId,
                     secret: data.secret,
-                    waitingText: data.text
+                    waitingText: data.text,
+                    isTutorial: data.isTutorial
                 });
             }
             else if (data.event === 'init') {
