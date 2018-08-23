@@ -220,6 +220,10 @@ class Game extends Component {
             this.ws.send(JSON.stringify({'event': 'exit'}));
         };
 
+        this.onVeil = () => {
+            this.ws.send(JSON.stringify({'event': 'veil'}));
+        }
+
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
             if (data.event === 'connected') {
@@ -276,7 +280,7 @@ class Game extends Component {
 
             return (
                 <div id="game-page">
-                    <Tutorial playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={queue} cursor={cursor} handleClick={this.onClickBound}/>
+                    <Tutorial displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards} onVeil={this.onVeil} exitClick={this.onExit} playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={queue} cursor={cursor} handleClick={this.onClickBound}/>
                 </div>
 
             );

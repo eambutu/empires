@@ -128,13 +128,12 @@ class Cell extends Component {
         if (renderSpawnDefender) {
             divStyle["opacity"] = "0.5";
             divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(playerId)];
+            divStyle["backgroundImage"] = `url(${shield})`;
+            styleClass += " square-content";
         }
 
         if (highlighted) {
             styleClass = styleClass + " highlighted"
-        }
-        if (renderSpawnDefender) {
-            divStyle["backgroundImage"] = `url(${shield})`;
         }
 
         let overlayComponent = null;
@@ -204,8 +203,6 @@ class Cell extends Component {
                     </div>);
             }
         } else if (square.unit) {
-            console.log(square.unit)
-            console.log(square.unit.type)
             if (square.unit.type === UnitType.DEFENDER){
                 divStyle["backgroundImage"] = `url(${shield})`;
             }
