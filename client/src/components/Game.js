@@ -100,7 +100,7 @@ class Game extends Component {
                 let [cursorY, cursorX, unitId] = this.state.cursor;
                 if (unitId === null) {
                     const sq = this.state.squares[cursorY][cursorX];
-                    unitId = sq.unit ? sq.unit.id : null;
+                    unitId = (sq.unit && sq.unit.type !== UnitType.DEFENDER) ? sq.unit.id : null;
                 }
                 let targetY = cursorY + dy;
                 let targetX = cursorX + dx;
@@ -252,7 +252,7 @@ class Game extends Component {
 
         let isPlayer = newState.squares.map(row => {
             return row.map(cell => {
-                return cell.unit && cell.unit.playerId === this.state.playerId;
+                return cell.unit && cell.unit.type !== UnitType.DEFENDER && cell.unit.playerId === this.state.playerId;
             });
         });
         flattenedPlayerQueue.forEach(move => {

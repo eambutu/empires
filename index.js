@@ -151,6 +151,15 @@ class SquareState {
         }
         return null;
     }
+
+    hasDefenderId(playerId) {
+        for (let idx = 0; idx < this.units.length; idx++) {
+            if (this.units[idx].playerId === playerId) {
+                return this.units[idx].type === UnitType.DEFENDER;
+            }
+        }
+        return false;
+    }
 }
 
 class Unit {
@@ -550,13 +559,15 @@ function updateState(room) {
                 queues[playerId][unitId] = [];
             }
             let unit = squareStates[tY][tX].getUnit();
-            if (type === UnitType.ATTACKER) {
-                unit.count++;
-                shards[playerId] -= Costs.ATTACKER;
-            }
-            else if (type === UnitType.DEFENDER) {
-                unit.count += 10;
-                shards[playerId] -= Costs.DEFENDER;
+            if (unit.type === type) {
+                if (type === UnitType.ATTACKER) {
+                    unit.count++;
+                    shards[playerId] -= Costs.ATTACKER;
+                }
+                else if (type === UnitType.DEFENDER) {
+                    unit.count += 10;
+                    shards[playerId] -= Costs.DEFENDER;
+                }
             }
         }
     });
@@ -566,7 +577,7 @@ function updateState(room) {
         let {unitId, playerId, target} = move;
         let [sY, sX] = move.source;
         let [tY, tX] = target;
-        if (squareStates[tY][tX].type !== SquareType.RIVER) {
+        if (squareStates[tY][tX].type !== SquareType.RIVER && !squareStates[tY][tX].hasDefenderId(playerId)) {
             let unit = squareStates[sY][sX].popUnitById(unitId);
             if (unit) {
                 if (unit.playerId !== playerId) {
