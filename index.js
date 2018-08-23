@@ -74,11 +74,18 @@ app.ws('/room/:roomId', function (ws, req) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
-            // console.log('received', data);
+            console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = room.queues;
                 data.move.playerId = ws.playerId;
-                queues[ws.playerId].push(data.move);
+                if (data.move.action === "spawn") {
+                    queues[ws.playerId]["spawn"].push(data.move);
+                }
+                else {
+                    if (data.move.unitId) {
+                        queues[ws.playerId][data.move.unitId].push(data.move);
+                    }
+                }
             }
         }
         else if (data.event === 'reset') {
@@ -136,9 +143,10 @@ class SquareState {
 
     popUnitById(id) {
         for (let idx = 0; idx < this.units.length; idx++) {
-            if (this.units[idx] === id) {
+            if (this.units[idx].id === id) {
+                let temp = this.units[idx];
                 this.units.splice(idx, 1);
-                return this.units[idx];
+                return temp;
             }
         }
         return null;
@@ -460,6 +468,40 @@ function getState(room, playerId) {
     };
 }
 
+function validateQueues(room) {
+    let queues = room.queues;
+    let squareStates = room.squareStates;
+    Object.entries(queues).forEach(([playerId, unitQueues]) => {
+        Object.entries(unitQueues).forEach(([unitId, queue]) => {
+            // Don't need to clear shard queue, because they're always cleared
+            if (unitId === "spawn") {
+                return;
+            }
+
+            let isPlayerAndUnit = squareStates.map(row => {
+                return row.map(cell => {
+                    let unit = cell.getUnit();
+                    return unit && (unit.playerId === playerId) && (unit.id === unitId);
+                });
+            });
+
+            unitQueues[unitId] = queue.filter(move => {
+                if (move.action.includes("move")) {
+                    let [y, x] = move.source;
+                    if (isPlayerAndUnit[y][x]) {
+                        isPlayerAndUnit[y][x] = false;
+                        let [newY, newX] = move.target;
+                        isPlayerAndUnit[newY][newX] = true;
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+        });
+    });
+}
+
 function updateState(room) {
     let squareStates = room.squareStates;
     let playerBases = room.playerBases;
@@ -469,6 +511,8 @@ function updateState(room) {
 
     let spawns = [];
     let moves = [];
+
+    validateQueues(room);
     room.clients.forEach(client => {
         Object.entries(queues[client.playerId]).forEach(([unitId, unitQueue]) => {
             if (unitId === 'spawn') {
@@ -501,7 +545,9 @@ function updateState(room) {
         let [tY, tX] = target;
         if (squareStates[tY][tX].type !== SquareType.RIVER && isInSpawningRange(room, tY, tX, playerId, type)) {
             if (!squareStates[tY][tX].getUnit()) {
-                squareStates[tY][tX].units.push(new Unit(new Date().toString(), playerId, type, 0));
+                let unitId = Math.floor(10000000*Math.random()).toString();
+                squareStates[tY][tX].units.push(new Unit(unitId, playerId, type, 0));
+                queues[playerId][unitId] = [];
             }
             let unit = squareStates[tY][tX].getUnit();
             if (type === UnitType.ATTACKER) {
@@ -513,9 +559,9 @@ function updateState(room) {
                 shards[playerId] -= Costs.DEFENDER;
             }
         }
-    })
+    });
 
-    // update the counts with the moves
+    // update the units arrays with move
     moves.forEach(move => {
         let {unitId, playerId, target} = move;
         let [sY, sX] = move.source;
@@ -569,46 +615,45 @@ function updateState(room) {
                 square.units = square.units.filter(unit => {
                     return unit.playerId === maxPlayerId;
                 });
-                // Merge winning player's units
+                // Merge winning player's
                 let unit = square.getUnit();
-                let unitId = unit.id;
                 if (square.units.length > 1) {
-                    unitId = new Date().toString();
-                }
-                square.units = [new Unit(unitId, unit.playerId, unit.type, maxCount - secondMaxCount)];
-            }
-        })
-    })
+                    let numUnitsMoving = 0;
+                    let movingUnit = null;
+                    let wasMovingUnit = null;
 
-    Object.entries(queues).forEach(([playerId, unitQueues]) => {
-        Object.entries(unitQueues).forEach(([unitId, queue]) => {
-            // Don't need to clear shard queue, because they're always cleared
-            if (unitId === "spawn") {
-                return;
-            }
+                    square.units.forEach((unit) =>{
+                        if (queues[unit.playerId][unit.id].length > 0) {
+                            numUnitsMoving++;
+                            movingUnit = unit;
+                        }
+                        moves.forEach(move => {
+                            if (move.unitId === unit.id) {
+                                wasMovingUnit = unit;
+                            }
+                        });
+                    });
 
-            let isPlayerAndUnit = squareStates.map(row => {
-                return row.map(cell => {
-                    let unit = cell.getUnit();
-                    return unit && (unit.playerId === playerId) && (unit.id === unitId);
-                });
-            });
-
-            unitQueues[unitId] = queue.filter(move => {
-                if (move.action.includes("move")) {
-                    let [y, x] = move.source;
-                    if (isPlayerAndUnit[y][x]) {
-                        isPlayerAndUnit[y][x] = false;
-                        let [newY, newX] = move.target;
-                        isPlayerAndUnit[newY][newX] = true;
-                        return true;
+                    if (numUnitsMoving === 0){
+                        unit = wasMovingUnit;
+                    }
+                    else if (numUnitsMoving === 1) {
+                        unit = movingUnit;
+                    }
+                    else {
+                        // let newUnitId = Math.floor(10000000*Math.random()).toString();
+                        queues[unit.playerId][movingUnit.id].length = 0;
+                        unit = movingUnit;
                     }
                 }
 
-                return false;
-            });
-        });
+                square.units = [new Unit(unit.id, unit.playerId, unit.type, maxCount - secondMaxCount)];
+
+            }
+        })
     });
+
+    validateQueues(room);
 
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
         let unit = squareStates[y][x].getUnit();
