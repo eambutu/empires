@@ -84,6 +84,9 @@ function onClose(room, ws) {
         room.clients = room.clients.filter(client => (client.readyState === 1));
         if (ws.playerId) {
             console.log(`player ${ws.playerId} disconnected from ${room.id}`);
+            room.clients.forEach(client => {
+                client.send(JSON.stringify({'event': 'noPlayAgain'}))
+            });
         } else {
             console.log(`client attempted connect to ${room.id}`);
         }
