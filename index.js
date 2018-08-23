@@ -23,6 +23,10 @@ app.get('/room/:roomId', function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
+app.get('/tutorial', function (req, res) {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
 function initOrGetRoom(roomId, ws, maxPlayers, isTutorial) {
     if (!(roomId in rooms)) {
         rooms[roomId] = {
@@ -49,20 +53,10 @@ function onConnect(room, ws) {
         ws.name = `player_${ws.playerId}`;
         ws.secret = Math.floor(Math.random() * 10000);
 
-        if (room.isTutorial) {
-            connectedText = 'Connected! Welcome to the tutorial.'
-            fullText = 'This tutorial is full.'
-        }
-        else {
-            connectedText = 'Connected! Waiting for other players to join.'
-            fullText = 'Lobby is full.'
-        }
-
         ws.send(JSON.stringify({
             event: 'connected',
             playerId: ws.playerId,
             secret: ws.secret,
-            text: connectedText,
             isTutorial: room.isTutorial
         }));
         console.log(`player ${ws.playerId} connected to ${room.id}`);
@@ -74,7 +68,6 @@ function onConnect(room, ws) {
     } else {
         ws.send(JSON.stringify({
             event: 'full',
-            text: fullText
         }));
         ws.close();
     }
@@ -91,8 +84,7 @@ function onClose(room, ws) {
         room.clients = room.clients.filter(client => (client.readyState === 1));
         if (ws.playerId) {
             console.log(`player ${ws.playerId} disconnected from ${room.id}`);
-        }
-        else {
+        } else {
             console.log(`client attempted connect to ${room.id}`);
         }
     });
@@ -112,20 +104,20 @@ function onMessage(room, ws) {
                     if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
                     }
-                } else if (data.move.action === "cancelQueue") {
-                    let playerQueues = queues[ws.playerId];
-                    Object.keys(playerQueues).forEach(key => {
-                        playerQueues[key] = [];
+                } else if (data.move.action === "cancelUnitQueue") {
+                    queues[ws.playerId][data.move.unitId] = [];
+                } else if (data.move.action === "cancelPlayerQueues") {
+                    let unitQueues = queues[ws.playerId];
+                    Object.keys(unitQueues).forEach(key => {
+                        unitQueues[key] = [];
                     });
                 }
             }
-        }
-        else if (data.event === 'reset') {
+        } else if (data.event === 'reset') {
             // console.log(data);
             resetGame(room);
             runGame(room);
-        }
-        else if (data.event === 'exit') {
+        } else if (data.event === 'exit') {
             // console.log(data);
             ws.send(JSON.stringify({'event': 'redirect'}));
             room.clients.forEach(client => {
@@ -277,7 +269,7 @@ function openRoom(room) {
 function broadcastStarting(room) {
     room.clients.forEach(client => {
         if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
+            client.send(JSON.stringify({'event': 'starting'}));
         }
     });
     console.log(`sent starting to ${room.id}`);
@@ -466,8 +458,7 @@ function isInSpawningRange(room, y, x, playerId, type) {
     let isSpawnSquare = (y === spawnSquares[playerId][0] && x === spawnSquares[playerId][1]);
     if (type === UnitType.ATTACKER) {
         return isSpawnSquare;
-    }
-    else if (type === UnitType.DEFENDER) {
+    } else if (type === UnitType.DEFENDER) {
         // Defender square has to have vision and cannot have existing units on it except defenders of your sort
         // Also, cannot be your own spawn square
         let squareVisions = maskForPlayer(squareStates, playerId);
@@ -493,14 +484,12 @@ function getState(room, playerId) {
                 playerStatus[client.playerId] = {'name': client.name, 'status': gameWonStatus[client.playerId]};
             }
         });
-    }
-    else {
+    } else {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
                 if (client.isAlive) {
                     playerStatus[client.playerId] = {'name': client.name, 'status': 'playing'};
-                }
-                else {
+                } else {
                     playerStatus[client.playerId] = {'name': client.name, 'status': 'afk'};
                 }
             }
@@ -578,8 +567,7 @@ function updateState(room) {
             if (unitId === 'spawn') {
                 spawns.push.apply(spawns, unitQueue);
                 unitQueue.length = 0;
-            }
-            else if (unitQueue.length > 0 && (frameCounter === 0)) {
+            } else if (unitQueue.length > 0 && (frameCounter === 0)) {
                 let move = unitQueue.shift();
                 moves.push(move);
             }
@@ -608,8 +596,7 @@ function updateState(room) {
             if (type === UnitType.ATTACKER) {
                 count = 1;
                 shards[playerId] -= Costs.ATTACKER;
-            }
-            else if (type === UnitType.DEFENDER) {
+            } else if (type === UnitType.DEFENDER) {
                 count = 10;
                 shards[playerId] -= Costs.DEFENDER;
             }
@@ -629,8 +616,7 @@ function updateState(room) {
             if (unit) {
                 if (unit.playerId !== playerId) {
                     squareStates[sY][sX].units.push(unit);
-                }
-                else {
+                } else {
                     squareStates[tY][tX].units.push(unit);
                 }
             }
@@ -646,8 +632,7 @@ function updateState(room) {
                 square.units.forEach((unit) => {
                     if (unit.playerId in playerCounts) {
                         playerCounts[unit.playerId] += unit.count;
-                    }
-                    else {
+                    } else {
                         playerCounts[unit.playerId] = unit.count;
                     }
                 });
@@ -660,8 +645,7 @@ function updateState(room) {
                         maxPlayerId = playerId;
                         secondMaxCount = maxCount;
                         maxCount = count;
-                    }
-                    else if (count > secondMaxCount) {
+                    } else if (count > secondMaxCount) {
                         secondMaxCount = count;
                     }
                 });
@@ -693,10 +677,11 @@ function updateState(room) {
                         });
                     });
 
-                    if (numUnitsMoving === 1) {
+                    if (numUnitsMoving === 0) {
+                        unit = wasMovingUnit;
+                    } else if (numUnitsMoving === 1) {
                         unit = movingUnit;
-                    }
-                    else if (numUnitsMoving > 1) {
+                    } else if (numUnitsMoving > 1) {
                         queues[unit.playerId][movingUnit.id].length = 0;
                         unit = movingUnit;
                     }
@@ -719,8 +704,7 @@ function updateState(room) {
                 gameWonStatus[unit.playerId] = "won";
                 room.gameWonStatus = gameWonStatus;
                 room.gameEnded = true;
-            }
-            else {
+            } else {
                 squareStates[y][x].baseHP -= unit.count;
                 squareStates[y][x].units.length = 0;
             }
