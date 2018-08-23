@@ -10,7 +10,8 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-const ts = 1000 / 4;
+const ts = 1000 / 20;
+const framesPerTurn = 10;
 const maxPlayers = 2;
 const width = 15;
 const height = 15;
@@ -31,7 +32,8 @@ function initOrGetRoom(roomId, ws) {
             full: false,
             gameEnded: false,
             gameInterval: null,
-            heartbeatInterval: null
+            heartbeatInterval: null,
+            frameCounter: 0
         }
     }
     rooms[roomId].clients.push(ws);
@@ -95,7 +97,10 @@ app.ws('/room/:roomId', function (ws, req) {
         }
         else if (data.event === 'exit') {
             console.log(data);
-            ws.send(JSON.stringify({'event': 'refresh'}));
+            ws.send(JSON.stringify({'event': 'redirect'}));
+            room.clients.forEach(client => {
+                client.send(JSON.stringify({'event': 'noPlayAgain'}))
+            })
             ws.close();
         }
     });
@@ -358,6 +363,7 @@ function initState(room) {
     };
     room.towers = towers;
     room.gameWonStatus = null;
+    room.frameCounter = 0;
     console.log(`state initialized for ${room.id}`);
 }
 
@@ -508,6 +514,7 @@ function updateState(room) {
     let shards = room.shards;
     let towers = room.towers;
     let queues = room.queues;
+    let frameCounter = room.frameCounter;
 
     let spawns = [];
     let moves = [];
@@ -519,7 +526,7 @@ function updateState(room) {
                 spawns.push.apply(spawns, unitQueue);
                 unitQueue.length = 0;
             }
-            else if (unitQueue.length > 0) {
+            else if (unitQueue.length > 0 && (frameCounter === 0)) {
                 let move = unitQueue.shift();
                 moves.push(move);
             }
@@ -578,6 +585,7 @@ function updateState(room) {
             }
         }
     });
+
 
     squareStates.forEach((row) => {
         row.forEach((square) => {
@@ -665,4 +673,6 @@ function updateState(room) {
             room.gameEnded = true;
         }
     });
+
+    room.frameCounter = (frameCounter + 1) % framesPerTurn;
 }

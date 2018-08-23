@@ -58,7 +58,8 @@ class Game extends Component {
             width: 0,
             height: 0,
             cursor: null,
-            waitingText: ''
+            waitingText: '',
+            canPlayAgain: true
         };
         this.actionQueue = [];
         this.isPlayer = null;
@@ -194,8 +195,11 @@ class Game extends Component {
             else if (json.event === 'starting') {
                 this.setState({waitingText: json.text})
             }
-            else if (json.event === 'refresh') {
-                window.location.reload()
+            else if (json.event === 'redirect') {
+                window.location.replace('/')
+            }
+            else if (json.event === 'noPlayAgain') {
+                this.setState({canPlayAgain: false})
             }
             else {
             }
@@ -207,7 +211,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, playerStatus, playerId, cursor} = this.state;
+        let {squares, playerStatus, playerId, cursor, canPlayAgain} = this.state;
         console.log(squares);
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
@@ -218,7 +222,7 @@ class Game extends Component {
                         <Map squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit}
-                                 status={playerStatus[playerId]['status']}/>
+                                 status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
                     </div>
 
                 );
@@ -236,7 +240,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby playerStatus={this.state.playerStatus} />
+                <Lobby playerStatus={this.state.playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }
