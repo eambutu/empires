@@ -104,7 +104,8 @@ function onMessage(room, ws) {
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
                 } else if (data.move.action.includes("move")) {
-                    if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
+                    data.move.unitId = data.move.unitId ? data.move.unitId : "unknown";
+                    if (data.move.unitId in queues[ws.playerId]) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
                     }
                 } else if (data.move.action === "cancelUnitQueue") {
@@ -378,7 +379,8 @@ function initState(room) {
     playerIds.forEach(playerId => {
         // Initialize queue
         queues[playerId] = {
-            spawn: []
+            spawn: [],
+            unknown: []
         };
         playerBases[playerId] = corners[rand[playerId]];
         spawnSquares[playerId] = spawnChoices[rand[playerId]];
@@ -554,7 +556,7 @@ function validateQueues(room) {
     Object.entries(queues).forEach(([playerId, unitQueues]) => {
         Object.entries(unitQueues).forEach(([unitId, queue]) => {
             // Don't need to clear shard queue, because they're always cleared
-            if (unitId === "spawn") {
+            if ((unitId === "spawn") || (unitId === "unknown")) {
                 return;
             }
 
@@ -584,6 +586,7 @@ function validateQueues(room) {
 
 function updateState(room) {
     let squareStates = room.squareStates;
+    let spawnSquares = room.spawnSquares;
     let playerBases = room.playerBases;
     let shards = room.shards;
     let towers = room.towers;
@@ -596,7 +599,7 @@ function updateState(room) {
     validateQueues(room);
     room.clients.forEach(client => {
         Object.entries(queues[client.playerId]).forEach(([unitId, unitQueue]) => {
-            if (unitId === 'spawn') {
+            if (unitId === "spawn") {
                 spawns.push.apply(spawns, unitQueue);
                 unitQueue.length = 0;
             } else if (unitQueue.length > 0 && (frameCounter === 0)) {
@@ -645,6 +648,12 @@ function updateState(room) {
         let {unitId, playerId, target} = move;
         let [sY, sX] = move.source;
         let [tY, tX] = target;
+        let [spawnY, spawnX] = spawnSquares[playerId]
+
+        if ((move.unitId === "unknown") && (sY === spawnY) && (sX === spawnX)){
+            let [spawnY, spawnX] = spawnSquares[playerId];
+            unitId = squareStates[spawnY][spawnX].getUnit().id;
+        }
         if (squareStates[tY][tX].type !== SquareType.RIVER && !squareStates[tY][tX].hasDefenderId(playerId)) {
             let unit = squareStates[sY][sX].popUnitById(unitId);
             if (unit) {
