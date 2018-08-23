@@ -99,7 +99,7 @@ class Cell extends Component {
     render () {
         const {playerId, playerIds, square, highlighted, handleClick, x, y, actionVisuals, isSpawnDefender, isInSpawningRange} = this.props;
         let styleClass = "square";
-        let renderSpawnDefender = this.state.isHover && isSpawnDefender && isInSpawningRange(y, x);
+        let renderSpawnDefender = this.state.isHover && isSpawnDefender && isInSpawningRange(y, x) && !square.isFog;
 
         // background color
         let divStyle = {
