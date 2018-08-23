@@ -308,7 +308,7 @@ function initState(room) {
     let playerIds = room.clients.map(client => client.playerId);
 
     if (room.isTutorial) {
-        playerIds.push('cpu')
+        playerIds.push("cpu".toString())
     }
 
     let playerBases = {};
@@ -361,6 +361,12 @@ function initState(room) {
     while(randIdxTwo === randIdxOne) {
         randIdxTwo = Math.floor(Math.random() * 4);
     }
+
+    if (room.isTutorial) {
+        randIdxOne = 2;
+        randIdxTwo = 0;
+    } 
+
     let rand = {
         [playerIds[0]]: randIdxOne,
         [playerIds[1]]: randIdxTwo
@@ -397,6 +403,17 @@ function initState(room) {
     rivers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState(y, x, SquareType.RIVER, [], null, 0);
     });
+
+    console.log(queues);
+    // if (room.isTutorial) {
+    //     queues['1']['spawn'].push(
+    //         {
+    //             "action": "spawn",
+    //             "target": [3, 3],
+    //             "type": UnitType.ATTACKER
+    //         }
+    //     );
+    // }
 
     room.playerIds = playerIds;
     room.playerBases = playerBases;
@@ -661,29 +678,34 @@ function updateState(room) {
                 // Merge winning player's
                 let unit = square.getUnit();
                 if (square.units.length > 1) {
-                    let numUnitsMoving = 0;
-                    let movingUnit = null;
+                    let numUnitsGoingToMove = 0;
+                    let goingToMoveUnit = null;
+
+                    let numUnitsWasMoving = 0;
                     let wasMovingUnit = null;
 
                     square.units.forEach((unit) =>{
                         if (queues[unit.playerId][unit.id].length > 0) {
-                            numUnitsMoving++;
-                            movingUnit = unit;
+                            numUnitsGoingToMove++;
+                            goingToMoveUnit = unit;
                         }
                         moves.forEach(move => {
                             if (move.action.includes("move") && move.unitId === unit.id) {
+                                numUnitsWasMoving++;
                                 wasMovingUnit = unit;
                             }
                         });
                     });
 
-                    if (numUnitsMoving === 0) {
-                        unit = wasMovingUnit;
-                    } else if (numUnitsMoving === 1) {
-                        unit = movingUnit;
-                    } else if (numUnitsMoving > 1) {
-                        queues[unit.playerId][movingUnit.id].length = 0;
-                        unit = movingUnit;
+                    if (numUnitsGoingToMove === 0) {
+                        if (numUnitsWasMoving !== 0) {
+                            unit = wasMovingUnit;
+                        }
+                    } else if (numUnitsGoingToMove === 1) {
+                        unit = goingToMoveUnit;
+                    } else if (numUnitsGoingToMove > 1) {
+                        queues[unit.playerId][goingToMoveUnit.id].length = 0;
+                        unit = goingToMoveUnit;
                     }
                 }
 
