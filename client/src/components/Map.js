@@ -5,13 +5,17 @@ import sword from "../sword.svg";
 import base from "../base.svg";
 import eye from "../eye.svg"
 import shards from "../shard.svg"
+import shield from "../shield.svg";
+import defendedshard from "../defendedshard.svg";
+import defendedeye from "../defendedeye.svg";
+import defendedbase from "../defendedbase.svg";
 
 import up_arrow from "../up_arrow.svg";
 import down_arrow from "../down_arrow.svg";
 import left_arrow from "../left_arrow.svg";
 import right_arrow from "../right_arrow.svg";
 
-const {SquareType, Action} = require("./config");
+const {SquareType, Action, UnitType} = require("./config");
 
 const SquareColor = {
     [SquareType.UNKNOWN]: 'black',
@@ -110,19 +114,26 @@ function Cell(props) {
                 </div>);
     }
     if (square.squareType === SquareType.BASE) {
-        styleClass = styleClass + " base"
-        divStyle["backgroundImage"] = `url(${base})`;
+        if (square.unit && square.unit.type === UnitType.DEFENDER) {
+            styleClass = styleClass + " base"
+            divStyle["backgroundImage"] = `url(${base})`;
+        }
+        else {
+            styleClass = styleClass + " count-text attacker base"
+            divStyle["backgroundImage"] = `url(${defendedbase})`;
+        }
         overlayComponent = countComponent;
 
-    //         (
-    //         <div className={styleClass + "base"} style={{backgroundImage: `url(${base})`}} >
-    //             {countComponent}
-    // </div>
-    //     );
     }
     else if (square.squareType === SquareType.WATCHTOWER) {
-        styleClass = styleClass + " watchtower"
-        divStyle["backgroundImage"] = `url(${eye})`;
+        if (square.unit && square.unit.type === UnitType.DEFENDER) {
+            styleClass = styleClass + " watchtower"
+            divStyle["backgroundImage"] = `url(${base})`;
+        }
+        else {
+            styleClass = styleClass + " count-text attacker base"
+            divStyle["backgroundImage"] = `url(${defendedbase})`;
+        }
         overlayComponent = countComponent;
         // overlayComponent = (
         // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
@@ -132,24 +143,30 @@ function Cell(props) {
     }
     else if (square.squareType === SquareType.TOWER){
 
-        styleClass = styleClass + " shardtower"
-        divStyle["backgroundImage"] = `url(${shards})`;
+        if (square.unit && square.unit.type === UnitType.DEFENDER) {
+            styleClass = styleClass + " watchtower"
+            divStyle["backgroundImage"] = `url(${base})`;
+        }
+        else {
+            styleClass = styleClass + " count-text attacker base"
+            divStyle["backgroundImage"] = `url(${defendedbase})`;
+        }
         overlayComponent = countComponent;
-        // overlayComponent =
-        //     <div className={"square shardtower"} style={{backgroundImage: `url(${shards})`}} >
-        //         {countComponent}
-        // {/*<object className={"icon"} type={"image/svg+xml"} data={shards}>*/}
-        // {/*</object>*/}
-        //     </div>
     }
     else if (square.unit) {
+
+        if (square.unit.type === UnitType.DEFENDER){
+            divStyle["backgroundImage"] = `url(${shield})`;
+        }
+        else if (square.unit.type === UnitType.ATTACKER)
+        {
+            divStyle["backgroundImage"] = `url(${sword})`;
+        }
         overlayComponent = (square.unit.count);
         styleClass = styleClass + " attacker count-text";
-        divStyle["backgroundImage"] = `url(${sword})`;
             {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
             {/*{square.unit.count}*/}
             {/*</div>);*/}
-
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
@@ -158,12 +175,7 @@ function Cell(props) {
         }
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
-        {/*<div className="overlay-wrapper">*/}
             {overlayComponent}
-            {/*<div className={"square count-text"}>*/}
-                {/*{text}*/}
-            {/*</div>*/}
-        {/*</div>*/}
     </td>);
 
 
