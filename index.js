@@ -49,20 +49,10 @@ function onConnect(room, ws) {
         ws.name = `player_${ws.playerId}`;
         ws.secret = Math.floor(Math.random() * 10000);
 
-        if (room.isTutorial) {
-            connectedText = 'Connected! Welcome to the tutorial.'
-            fullText = 'This tutorial is full.'
-        }
-        else {
-            connectedText = 'Connected! Waiting for other players to join.'
-            fullText = 'Lobby is full.'
-        }
-
         ws.send(JSON.stringify({
             event: 'connected',
             playerId: ws.playerId,
             secret: ws.secret,
-            text: connectedText,
             isTutorial: room.isTutorial
         }));
         console.log(`player ${ws.playerId} connected to ${room.id}`);
@@ -74,7 +64,6 @@ function onConnect(room, ws) {
     } else {
         ws.send(JSON.stringify({
             event: 'full',
-            text: fullText
         }));
         ws.close();
     }
@@ -277,7 +266,7 @@ function openRoom(room) {
 function broadcastStarting(room) {
     room.clients.forEach(client => {
         if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'starting', 'text': 'Starting game...'}));
+            client.send(JSON.stringify({'event': 'starting'}));
         }
     });
     console.log(`sent starting to ${room.id}`);

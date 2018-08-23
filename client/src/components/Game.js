@@ -176,10 +176,16 @@ class Game extends Component {
         this.ws.addEventListener('message', event => {
             var data = JSON.parse(event.data);
             if (data.event === 'connected') {
+
+                let connectedText = 'Connected! Waiting for other players to join.'
+                if (data.isTutorial) {
+                    connectedText = 'Connected! Welcome to the tutorial.'
+                }
+
                 this.setState({
                     playerId: data.playerId,
                     secret: data.secret,
-                    waitingText: data.text,
+                    waitingText: connectedText,
                     isTutorial: data.isTutorial
                 });
             }
@@ -195,10 +201,18 @@ class Game extends Component {
                 this.updateGame(data.state);
             }
             else if (data.event === 'full') {
-                this.setState({waitingText: data.text})
+                let fullText = 'Lobby is full. Check back again later.'
+                if (this.state.isTutorial) {
+                    fullText = 'This tutorial is full. Refresh and try again.'
+                }
+                this.setState({waitingText: fullText})
             }
             else if (data.event === 'starting') {
-                this.setState({waitingText: data.text})
+                let startingText = 'Starting game...'
+                if (this.state.isTutorial) {
+                    startingText = 'Starting tutorial...'
+                }
+                this.setState({waitingText: startingText})
             }
             else if (data.event === 'redirect') {
                 window.location.replace('/')
