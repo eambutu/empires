@@ -82,11 +82,15 @@ app.ws('/room/:roomId', function (ws, req) {
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
-                }
-                else {
+                } else if (data.move.action.includes("move")) {
                     if (data.move.unitId) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
                     }
+                } else if (data.move.action === "cancelQueue") {
+                    let playerQueues = queues[ws.playerId];
+                    Object.keys(playerQueues).forEach(key => {
+                        playerQueues[key] = [];
+                    });
                 }
             }
         }

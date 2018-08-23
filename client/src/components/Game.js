@@ -9,7 +9,7 @@ import Lobby from "./Lobby";
 
 const {SquareType, Costs, UnitType, Action} = require("./config");
 
-const KeyMap = {
+const MoveKeyMap = {
     ArrowDown: Action.MOVE_DOWN,
     ArrowUp: Action.MOVE_UP,
     ArrowLeft: Action.MOVE_LEFT,
@@ -59,7 +59,6 @@ class Game extends Component {
         this.unitSquareMap = null;
 
         this.keyDownBound = e => {
-            const action = KeyMap[e.key];
             if (e.key === "="){
                 let all = document.getElementsByClassName('square');
                 backsize = Math.min(backsize + 5, 45);
@@ -90,7 +89,8 @@ class Game extends Component {
                 }
 
             }
-            if (action && this.state.cursor) {
+            if (e.key in MoveKeyMap && this.state.cursor) {
+                const action = MoveKeyMap[e.key];
                 let {dy, dx} = ActionProp[action];
                 let [cursorY, cursorX, unitId] = this.state.cursor;
                 if (unitId === null) {
@@ -125,6 +125,11 @@ class Game extends Component {
                     });
                     this.sendMove(move);
                 }
+            } else if (e.key === "c") {
+                let move = {
+                    action: "cancelQueue"
+                };
+                this.sendMove(move);
             }
         };
 
