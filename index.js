@@ -628,9 +628,15 @@ function updateState(room) {
         if (squareStates[tY][tX].type !== SquareType.RIVER && isInSpawningRange(room, tY, tX, playerId, type)) {
             let count = 0;
             if (type === UnitType.ATTACKER) {
+                if (Costs.ATTACKER > shards[playerId]) {
+                    return;
+                }
                 count = 1;
                 shards[playerId] -= Costs.ATTACKER;
             } else if (type === UnitType.DEFENDER) {
+                if (Costs.DEFENDER > shards[playerId]) {
+                    return;
+                }
                 count = 10;
                 shards[playerId] -= Costs.DEFENDER;
             }
