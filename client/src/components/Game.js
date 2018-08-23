@@ -32,7 +32,7 @@ class Game extends Component {
         // Defender square has to have vision and cannot have existing units on it except defenders of your sort
         // Also, don't allow spawning defenders on your own spawn square
         let square = this.state.squares[y][x];
-        if (!(square.type === SquareType.UNKNOWN) &&
+        if (!(square.type === SquareType.UNKNOWN) && !(square.type === SquareType.RIVER) &&
             (!square.unit || (this.state.playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER)) &&
             !(y === this.state.spawnSquare[0] && x === this.state.spawnSquare[1])) {
             return true;
@@ -54,7 +54,8 @@ class Game extends Component {
             cursor: null,
             waitingText: '',
             canPlayAgain: true,
-            spawnSquare: null
+            spawnSquare: null,
+            isSpawnDefender: false,
         };
         this.actionQueue = [];
         this.unitSquareMap = null;
@@ -90,7 +91,7 @@ class Game extends Component {
                 }
 
             }
-            if (e.key in MoveKeyMap && this.state.cursor) {
+            else if (e.key in MoveKeyMap && this.state.cursor) {
                 const action = MoveKeyMap[e.key];
                 let {dy, dx} = ActionProp[action];
                 let [cursorY, cursorX, unitId] = this.state.cursor;
@@ -127,13 +128,23 @@ class Game extends Component {
                     });
                     this.sendMove(move);
                 }
-            } else if (e.key === "c") {
+            }
+            else if (e.key === "c") {
                 let move = {
                     action: "cancelQueue"
                 };
                 this.sendMove(move);
             }
+            else if (e.key === "Alt") {
+                this.setState({isSpawnDefender: true});
+            }
         };
+
+        this.keyUpBound = e => {
+            if (e.key === "Alt") {
+                this.setState({isSpawnDefender: false});
+            }
+        }
 
         this.onClickBound = e => {
             let target = e.currentTarget;
@@ -160,6 +171,7 @@ class Game extends Component {
 
     componentDidMount() {
         document.addEventListener("keydown", this.keyDownBound);
+        document.addEventListener("keyup", this.keyUpBound);
 
         this.ws = new WebSocket('ws://' + window.location.hostname + ':5000' + window.location.pathname);
 
@@ -213,7 +225,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, playerStatus, playerId, playerIds, cursor, canPlayAgain} = this.state;
+        let {squares, playerStatus, playerId, playerIds, cursor, canPlayAgain, isSpawnDefender} = this.state;
         console.log(squares);
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
@@ -221,7 +233,16 @@ class Game extends Component {
                     <div id="game-page">
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                        <Map playerIds={playerIds} squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
+                        <Map
+                            playerId={playerId}
+                            playerIds={playerIds}
+                            squares={squares}
+                            actionQueue={[]}
+                            cursor={cursor}
+                            handleClick={this.onClickBound}
+                            isSpawnDefender={isSpawnDefender}
+                            isInSpawningRange={this.isInSpawningRange.bind(this)}
+                        />
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit}
                                  status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
@@ -233,8 +254,16 @@ class Game extends Component {
                 <div id="game-page">
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                    <Map playerIds={playerIds} squares={squares} actionQueue={this.actionQueue} cursor={cursor}
-                         handleClick={this.onClickBound}/>
+                    <Map
+                        playerId={playerId}
+                        playerIds={playerIds}
+                        squares={squares}
+                        actionQueue={this.actionQueue}
+                        cursor={cursor}
+                        handleClick={this.onClickBound}
+                        isSpawnDefender={isSpawnDefender}
+                        isInSpawningRange={this.isInSpawningRange.bind(this)}
+                    />
 
                     <ResourceBoard displayShards={this.state.displayShards}/>
                 </div>
