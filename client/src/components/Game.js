@@ -218,26 +218,27 @@ class Game extends Component {
 
     render() {
         let {squares, playerStatus, playerId, playerIds, cursor, canPlayAgain, tutorial} = this.state;
-        console.log(squares);
-        if (tutorial){
+        console.log(this.state.isTutorial);
+        if (this.state.isTutorial && squares){
+
             return (
                 <div id="game-page">
-                    <PlayerBoard playerStatus={this.state.playerStatus}/>
-
-                    <Map playerId={playerId} playerIds={playerIds} squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
-
-                    <EndGame resetClick={this.onReset} exitClick={this.onExit}
-                             status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
+                    <Tutorial playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
                 </div>
-            )
+
+            );
         }
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        <Tutorial playerStatus={playerStatus} squares={squares} actionQuere={[]} cursor={cursor} handleClick={this.onClickBound}/>
-                    </div>
+                        <PlayerBoard playerStatus={this.state.playerStatus}/>
 
+                        <Map playerId={playerId} playerIds={playerIds} squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
+
+                        <EndGame resetClick={this.onReset} exitClick={this.onExit}
+                                 status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
+                    </div>
                 );
             }
             return (
