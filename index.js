@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const expressWs = require('express-ws')(app);
 const path = require('path');
-const {SquareType, UnitType, Costs} = require('./config');
+const {SquareType, UnitType, Costs, HP} = require('./config');
 
 const Vision = {
     UNIT: 1,
@@ -634,13 +634,13 @@ function updateState(room) {
                 if (Costs.ATTACKER > shards[playerId]) {
                     return;
                 }
-                count = 1;
+                count = HP.ATTACKER;
                 shards[playerId] -= Costs.ATTACKER;
             } else if (type === UnitType.DEFENDER) {
                 if (Costs.DEFENDER > shards[playerId]) {
                     return;
                 }
-                count = 10;
+                count = HP.DEFENDER;
                 shards[playerId] -= Costs.DEFENDER;
             }
             let unitId = Math.floor(10000000*Math.random()).toString();
