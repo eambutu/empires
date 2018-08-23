@@ -36,6 +36,7 @@ export const ActionProp = {
 
 export default function Map(props) {
     const {playerId, playerIds, squares, queue, cursor, handleClick, isSpawnDefender, isInSpawningRange} = props;
+    console.log(squares);
     var actionVisuals = {};
     queue.forEach((action) => {
         if (action.action.includes("move")) {
@@ -217,6 +218,11 @@ class Cell extends Component {
             {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
             {/*{square.unit.count}*/}
             {/*</div>);*/}
+        }
+
+        if (square.isFog) {
+            divStyle["backgroundColor"] = "black";
+            divStyle["opacity"] = 0.2;
         }
 
         return (

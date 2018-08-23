@@ -158,12 +158,13 @@ app.listen(5000, function () {
 });
 
 class SquareState {
-    constructor(y, x, type, units, baseId, baseHP) {
-        this.pos = [y, x];
-        this.type = type;
-        this.units = units;
-        this.baseId = baseId;
-        this.baseHP = baseHP
+    constructor(options = {}) {
+        Object.assign(this, {
+            units: [],
+            baseId: null,
+            baseHP: 0,
+            inFog: false
+        }, options);
     }
 
     currentOwner() {
@@ -391,20 +392,20 @@ function initState(room) {
 
     let squareStates = [...Array(height)].map(y => {
         return [...Array(width)].map(x => {
-            return new SquareState(y, x, SquareType.REGULAR, [], null, 0);
+            return new SquareState({pos: [y, x], type: SquareType.REGULAR});
         });
     });
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
-        squareStates[y][x] = new SquareState(y, x, SquareType.BASE, [], playerId, 5);
+        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
     });
     towers.forEach(([y, x]) => {
-        squareStates[y][x] = new SquareState(y, x, SquareType.TOWER, [], null, 0);
+        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.TOWER});
     });
     watchTowers.forEach(([y, x]) => {
-        squareStates[y][x] = new SquareState(y, x, SquareType.WATCHTOWER, [], null, 0);
+        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.WATCHTOWER});
     });
     rivers.forEach(([y, x]) => {
-        squareStates[y][x] = new SquareState(y, x, SquareType.RIVER, [], null, 0);
+        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.RIVER});
     });
 
     if (room.isTutorial) {
@@ -472,9 +473,13 @@ function maskForPlayer(squares, playerId) {
         row.map((cell, x) => {
             if (visible[y][x]) {
                 return cell;
+            } else if (cell.type === SquareType.WATCHTOWER || cell.type === SquareType.TOWER) {
+                return new SquareState({pos: [y, x], type: cell.type, isFog: true});
+            } else if (cell.type === SquareType.BASE) {
+                return new SquareState({pos: [y, x], type: SquareType.TOWER, isFog: true});
             } else {
-                return new SquareState(y, x, SquareType.UNKNOWN, [], null, 0);
-            }
+                return new SquareState({pos: [y, x], type: SquareType.UNKNOWN})
+            };
         })
     ));
 }
