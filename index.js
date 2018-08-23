@@ -121,11 +121,12 @@ app.listen(5000, function () {
 });
 
 class SquareState {
-    constructor(y, x, type, units, baseId) {
+    constructor(y, x, type, units, baseId, baseHP) {
         this.pos = [y, x];
         this.type = type;
         this.units = units;
         this.baseId = baseId;
+        this.baseHP = baseHP
     }
 
     currentOwner() {
@@ -330,28 +331,28 @@ function initState(room) {
         squareStates[i] = [];
         for (let j = 0; j < width; j++) {
             if (i === playerBases[room.clients[0].playerId][0] && j === playerBases[room.clients[0].playerId][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[0].playerId);
+                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[0].playerId, 5);
                 squareStates[i][j] = squareState;
             }
             else if (i === playerBases[room.clients[1].playerId][0] && j === playerBases[room.clients[1].playerId][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[1].playerId);
+                let squareState = new SquareState(i, j, SquareType.BASE, [], room.clients[1].playerId, 5);
                 squareStates[i][j] = squareState;
             }
             else {
-                squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, [], null);
+                squareStates[i][j] = new SquareState(i, j, SquareType.REGULAR, [], null, 0);
                 towers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, [], null);
+                        squareStates[i][j] = new SquareState(i, j, SquareType.TOWER, [], null, 0);
                     }
                 })
                 watchTowers.forEach(function(tower) {
                     if (i === tower[0] && j === tower[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, [], null);
+                        squareStates[i][j] = new SquareState(i, j, SquareType.WATCHTOWER, [], null, 0);
                     }
                 })
                 rivers.forEach(function (river) {
                     if (i === river[0] && j === river[1]) {
-                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, [], null);
+                        squareStates[i][j] = new SquareState(i, j, SquareType.RIVER, [], null, 0);
                     }
                 })
             }
@@ -403,7 +404,7 @@ function maskForPlayer(squares, playerId) {
             if (visible[y][x]) {
                 return cell;
             } else {
-                return new SquareState(y, x, SquareType.UNKNOWN, [], null);
+                return new SquareState(y, x, SquareType.UNKNOWN, [], null, 0);
             }
         })
     ));
@@ -669,11 +670,17 @@ function updateState(room) {
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
         let unit = squareStates[y][x].getUnit();
         if (unit && (unit.playerId !== playerId)) {
-            let gameWonStatus = {};
-            gameWonStatus[playerId] = "lost";
-            gameWonStatus[unit.playerId] = "won";
-            room.gameWonStatus = gameWonStatus;
-            room.gameEnded = true;
+            if (unit.count >= squareStates[y][x].baseHP) {
+                let gameWonStatus = {};
+                gameWonStatus[playerId] = "lost";
+                gameWonStatus[unit.playerId] = "won";
+                room.gameWonStatus = gameWonStatus;
+                room.gameEnded = true;
+            }
+            else {
+                squareStates[y][x].baseHP -= unit.count;
+                squareStates[y][x].units.length = 0;
+            }
         }
     });
 }
