@@ -35,9 +35,9 @@ export const ActionProp = {
 }
 
 export default function Map(props) {
-    const {playerIds, squares, actionQueue, cursor, handleClick} = props;
+    const {playerIds, squares, queue, cursor, handleClick} = props;
     var actionVisuals = {};
-    actionQueue.forEach((action, index) => {
+    queue.forEach((action, index) => {
         if (action.action.includes("move")) {
             let [y, x] = action.source;
             if (!(y in actionVisuals)) {

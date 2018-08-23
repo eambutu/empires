@@ -47,6 +47,7 @@ class Game extends Component {
             playerId: null,
             secret: null,
             squares: null,
+            queue: [],
             displayShards: 0,
             waiting: true,
             width: 0,
@@ -57,7 +58,6 @@ class Game extends Component {
             spawnSquare: null,
             isTutorial: false
         };
-        this.actionQueue = [];
         this.unitSquareMap = null;
 
         this.keyDownBound = e => {
@@ -112,8 +112,7 @@ class Game extends Component {
                     this.setState({cursor: [targetY, targetX, unitId]});
                     this.sendMove(move);
                 }
-            }
-            else if (e.key === " " || e.key === "Spacebar") {
+            } else if (e.key === " " || e.key === "Spacebar") {
                 e.preventDefault();
                 let [y, x] = this.state.spawnSquare;
                 if (this.state.displayShards >= Costs.ATTACKER) {
@@ -128,11 +127,38 @@ class Game extends Component {
                     });
                     this.sendMove(move);
                 }
+            } else if (e.key === "q") {
+                let [y, x, cursorUnitId] = this.state.cursor;
+                let move = {
+                    action:"cancelUnitQueue",
+                    unitId: cursorUnitId
+                }
+                this.sendMove(move);
+
+                let currentQueue = this.state.queue;
+                let newY = y;
+                let newX = x;
+                currentQueue.reverse().forEach(move => {
+                    if (move.unitId === cursorUnitId) {
+                        let [sY, sX] = move.source;
+                        newY = sY;
+                        newX = sX;
+                        return;
+                    }
+                });
+                this.setState({
+                    cursor: [newY, newX, cursorUnitId]
+                });
             } else if (e.key === "c") {
                 let move = {
-                    action: "cancelQueue"
+                    action: "cancelPlayerQueues"
                 };
                 this.sendMove(move);
+
+                let [y, x, cursorUnitId] = this.state.cursor;
+                this.setState({
+                    cursor: [y, x, null]
+                });
             }
         };
 
@@ -153,8 +179,7 @@ class Game extends Component {
                     });
                     this.sendMove(move);
                 }
-            }
-            else if (this.unitSquareMap[y][x]) {
+            } else if (this.unitSquareMap[y][x]) {
                 this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
             }
         };
@@ -188,39 +213,31 @@ class Game extends Component {
                     waitingText: connectedText,
                     isTutorial: data.isTutorial
                 });
-            }
-            else if (data.event === 'init') {
+            } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,
                     height: data.height,
                     playerIds: data.playerIds,
                     spawnSquare: data.spawn
                 });
-            }
-            else if (data.event === 'update') {
+            } else if (data.event === 'update') {
                 this.updateGame(data.state);
-            }
-            else if (data.event === 'full') {
+            } else if (data.event === 'full') {
                 let fullText = 'Lobby is full. Check back again later.'
                 if (this.state.isTutorial) {
                     fullText = 'This tutorial is full. Refresh and try again.'
                 }
                 this.setState({waitingText: fullText})
-            }
-            else if (data.event === 'starting') {
+            } else if (data.event === 'starting') {
                 let startingText = 'Starting game...'
                 if (this.state.isTutorial) {
                     startingText = 'Starting tutorial...'
                 }
                 this.setState({waitingText: startingText})
-            }
-            else if (data.event === 'redirect') {
+            } else if (data.event === 'redirect') {
                 window.location.replace('/')
-            }
-            else if (data.event === 'noPlayAgain') {
+            } else if (data.event === 'noPlayAgain') {
                 this.setState({canPlayAgain: false})
-            }
-            else {
             }
         });
     }
@@ -230,7 +247,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, playerStatus, playerId, playerIds, cursor, canPlayAgain} = this.state;
+        let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain} = this.state;
         console.log(squares);
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
@@ -238,7 +255,7 @@ class Game extends Component {
                     <div id="game-page">
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                        <Map playerIds={playerIds} squares={squares} actionQueue={[]} cursor={cursor} handleClick={this.onClickBound}/>
+                        <Map playerIds={playerIds} squares={squares} queue={[]} cursor={cursor} handleClick={this.onClickBound}/>
 
                         <EndGame resetClick={this.onReset} exitClick={this.onExit}
                                  status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
@@ -250,14 +267,13 @@ class Game extends Component {
                 <div id="game-page">
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
-                    <Map playerIds={playerIds} squares={squares} actionQueue={this.actionQueue} cursor={cursor}
+                    <Map playerIds={playerIds} squares={squares} queue={queue} cursor={cursor}
                          handleClick={this.onClickBound}/>
 
                     <ResourceBoard displayShards={this.state.displayShards}/>
                 </div>
             );
-        }
-        else {
+        } else {
             return (
                 <Lobby playerStatus={this.state.playerStatus} waitingText={this.state.waitingText} />
             )
@@ -270,8 +286,6 @@ class Game extends Component {
         Object.entries(newState.queues).forEach(([unitId, queue]) => {
             flattenedPlayerQueue.push.apply(flattenedPlayerQueue, queue);
         });
-
-        this.actionQueue = flattenedPlayerQueue;
 
         let unitSquareMap = newState.squares.map(row => {
             return row.map(cell => {
@@ -300,13 +314,13 @@ class Game extends Component {
             if (move.action === "spawn") {
                 if (move.type === UnitType.ATTACKER) {
                     displayShards -= Costs.ATTACKER;
-                }
-                else if (move.type === UnitType.DEFENDER) {
+                } else if (move.type === UnitType.DEFENDER) {
                     displayShards -= Costs.DEFENDER;
                 }
             }
         });
         this.setState({
+            queue: flattenedPlayerQueue,
             displayShards: displayShards,
             squares: newState.squares,
             playerStatus: newState.playerStatus
