@@ -1,11 +1,42 @@
 .endgame {
-    min-width: 200px;
     padding: 30px;
     text-align: center;
-    background-color: white;
+    background-color: #aaaaaa;
     z-index: 100;
+    border-radius: 30px;
 }
 
-button {
-    margin: 10px;
+
+.end-button {
+    height: 30px;
+    cursor: pointer;
+    font-family: 'Marvel';
+
+
+    background-color: transparent;
+    color: #fefbef;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color 300ms, border-color 300ms, box-shadow 150ms;
+    width: 20%;
+
+
+    min-width: 10rem;
+    border-radius: 0.75rem;
+    font-size: 1.2em;
+    letter-spacing: 1px;
+    min-height: 3rem;
+
+    color: #ff4136;
+    border: 3px solid #ff4136;
+    margin: 5px;
+}
+
+.end-button:hover {
+    background-color: #ff4136; /* Green */
+    color: white;
+    /*height: 58px;*/
+    /*width: 22%;*/
+    /*margin-top: 10px;*/
+    /*transform: scale(1.1);*/
 }
