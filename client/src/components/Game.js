@@ -262,7 +262,7 @@ class Game extends Component {
 
             return (
                 <div id="game-page">
-                    <Tutorial playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={[]} cursor={cursor} handleClick={this.onClickBound}/>
+                    <Tutorial playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={queue} cursor={cursor} handleClick={this.onClickBound}/>
                 </div>
 
             );

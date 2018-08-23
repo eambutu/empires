@@ -404,16 +404,23 @@ function initState(room) {
         squareStates[y][x] = new SquareState(y, x, SquareType.RIVER, [], null, 0);
     });
 
-    console.log(queues);
-    // if (room.isTutorial) {
-    //     queues['1']['spawn'].push(
-    //         {
-    //             "action": "spawn",
-    //             "target": [3, 3],
-    //             "type": UnitType.ATTACKER
-    //         }
-    //     );
-    // }
+    if (room.isTutorial) {
+        shards["1"] = 1000;
+        queues["1"]["spawn"] = [
+            {
+                "action": "spawn",
+                "target": [1, 13],
+                "type": UnitType.ATTACKER,
+                "playerId": "1",
+            },
+            {
+                "action": "spawn",
+                "target": [0, 11],
+                "type": UnitType.DEFENDER,
+                "playerId": "1",
+            }
+        ]
+    }
 
     room.playerIds = playerIds;
     room.playerBases = playerBases;
