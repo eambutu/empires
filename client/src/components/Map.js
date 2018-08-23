@@ -68,7 +68,7 @@ export default function Map(props) {
 
 function Cell(props) {
     const {square, highlighted, handleClick, x, y, actionVisuals} = props;
-    let styleClass = "square-holder";
+    let styleClass = "square";
     let divStyle = {
         "backgroundColor": SquareColor[square.squareType]
     };
@@ -95,7 +95,7 @@ function Cell(props) {
         }
     }
     if (highlighted) {
-        styleClass = "square-holder highlighted"
+        styleClass = styleClass + " highlighted"
     }
 
     let actionVisualEntries = Object.entries(actionVisuals);
@@ -110,45 +110,52 @@ function Cell(props) {
                 </div>);
     }
     if (square.squareType === SquareType.BASE) {
-        overlayComponent = (
-            <div className={"square base"} style={{backgroundImage: `url(${base})`}} >
-                {countComponent}
-    </div>
-        );
+        styleClass = styleClass + " base"
+        divStyle["backgroundImage"] = `url(${base})`;
+        overlayComponent = countComponent;
+
+    //         (
+    //         <div className={styleClass + "base"} style={{backgroundImage: `url(${base})`}} >
+    //             {countComponent}
+    // </div>
+    //     );
     }
     else if (square.squareType === SquareType.WATCHTOWER) {
-        overlayComponent = (
-        <div className={"square watchtower"} style={{backgroundImage: `url(${eye})`}} >
-            {countComponent}
-        </div>
-        );
+        styleClass = styleClass + " watchtower"
+        divStyle["backgroundImage"] = `url(${eye})`;
+        overlayComponent = countComponent;
+        // overlayComponent = (
+        // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
+        //     {countComponent}
+        // </div>
+        // );
     }
     else if (square.squareType === SquareType.TOWER){
-        overlayComponent =
-            <div className={"square shardtower"} style={{backgroundImage: `url(${shards})`}} >
-                {countComponent}
-        {/*<object className={"icon"} type={"image/svg+xml"} data={shards}>*/}
-        {/*</object>*/}
-            </div>
+
+        styleClass = styleClass + " shardtower"
+        divStyle["backgroundImage"] = `url(${shards})`;
+        overlayComponent = countComponent;
+        // overlayComponent =
+        //     <div className={"square shardtower"} style={{backgroundImage: `url(${shards})`}} >
+        //         {countComponent}
+        // {/*<object className={"icon"} type={"image/svg+xml"} data={shards}>*/}
+        // {/*</object>*/}
+        //     </div>
     }
     else if (square.unit) {
-        overlayComponent = (
-            <div className={"square attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >
-                <div className={"count-text"}>
-                {square.unit.count}
-                </div>
-            </div>);
+        overlayComponent = (square.unit.count);
+        styleClass = styleClass + " attacker count-text";
+        divStyle["backgroundImage"] = `url(${sword})`;
+            {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
+            {/*{square.unit.count}*/}
+            {/*</div>);*/}
+
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
         if (square.squareType === SquareType.UNKNOWN) {
             divStyle["backgroundColor"] = "#404040";
         }
-    //     overlayComponent = (<div className="overlay-component square">
-    //         <object className={"icon"} type={"image/svg+xml"} data={icon}>
-    //             Your browser does not support SVG
-    //         </object>
-    //     </div>);
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
         {/*<div className="overlay-wrapper">*/}
