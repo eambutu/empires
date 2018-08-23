@@ -35,8 +35,7 @@ export const ActionProp = {
 }
 
 export default function Map(props) {
-    const {playerId, playerIds, squares, queue, cursor, handleClick, isSpawnDefender, isInSpawningRange} = props;
-    console.log(squares);
+    const {onReleaseMap, onDragMap, onClickMap, playerId, playerIds, squares, queue, cursor, handleClick, isSpawnDefender, isInSpawningRange} = props;
     var actionVisuals = {};
     queue.forEach((action) => {
         if (action.action.includes("move")) {
@@ -52,7 +51,7 @@ export default function Map(props) {
         }
     });
     return (
-        <table className={"map"}>
+        <table className={"map"} onMouseDown={onClickMap} onMouseUp={onReleaseMap} onMouseMove={onDragMap}>
             <tbody>
             {squares.map((row, y) => (
                 <tr key={y}>
