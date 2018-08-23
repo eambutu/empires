@@ -6,7 +6,7 @@ import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
 
-const {SquareType, AttackerCost, Action} = require("./config");
+const {SquareType, Costs, UnitType, Action} = require("./config");
 
 const KeyMap = {
     ArrowDown: Action.MOVE_DOWN,
@@ -24,12 +24,17 @@ class Game extends Component {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
     }
 
-    isInSpawningRange(y, x) {
+    isInSpawningRange(y, x, type) {
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
                 if ((i !== 0 || j !== 0) && this.isInBound(y + i, x + j)) {
                     let square = this.state.squares[y + i][x + j];
-                    if (square.squareType === SquareType.BASE && square.playerId === this.state.player) {
+                    if (type === UnitType.ATTACKER && square.squareType === SquareType.BASE && square.baseId === this.state.player) {
+                        return true;
+                    }
+                    // Defender square has to have vision and cannot have existing units on it except defenders of your sort
+                    if (type === UnitType.DEFENDER && !(square.squareType === SquareType.UNKNOWN) &&
+                        (!square.unit || (this.state.player === square.unit.playerId && square.unit.type === UnitType.DEFENDER))) {
                         return true;
                     }
                 }
@@ -79,14 +84,32 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
+            console.log(e.altKey);
             if (e.ctrlKey || e.metaKey) {
-                if (this.state.displayShards >= AttackerCost && this.isInSpawningRange(y, x)) {
+                if (this.state.displayShards >= Costs.ATTACKER && this.isInSpawningRange(y, x, UnitType.ATTACKER)) {
                     let move = {
                         "action": "spawn",
-                        "target": [y, x]
+                        "target": [y, x],
+                        "type": UnitType.ATTACKER
                     };
-                    this.state.displayShards -= AttackerCost;
-                    this.setState({cursor: [y, x]});
+                    this.setState({
+                        cursor: [y, x],
+                        displayShards: this.state.displayShards - Costs.ATTACKER
+                    });
+                    this.sendMove(move);
+                }
+            }
+            else if (e.altKey) {
+                if (this.state.displayShards >= Costs.DEFENDER && this.isInSpawningRange(y, x, UnitType.DEFENDER)) {
+                    let move = {
+                        "action": "spawn",
+                        "target": [y, x],
+                        "type": UnitType.DEFENDER
+                    };
+                    this.setState({
+                        cursor: [y, x],
+                        displayShards: this.state.displayShards - Costs.DEFENDER
+                    });
                     this.sendMove(move);
                 }
             }
@@ -147,6 +170,7 @@ class Game extends Component {
 
     render() {
         let {squares, playerStatus, player, cursor} = this.state;
+        console.log(squares);
         if (squares) {
             if (playerStatus[player]['status'] === "lost" || playerStatus[player]['status'] === "won") {
                 return (
@@ -204,31 +228,21 @@ class Game extends Component {
 
         this.isPlayer = isPlayer;
 
-        let newCursor = null;
-        if (this.state.cursor) {
-            let [y, x] = this.state.cursor;
-            if (this.isPlayer[y][x]) {
-                newCursor = this.state.cursor;
-            } else if (newState.queue.length > 0) {
-                newCursor = newState.queue[newState.queue.length - 1].target;
-            } else if (newState.lastMove) {
-                if (newState.lastMove.action.includes("move")) {
-                    newCursor = newState.lastMove.source;
-                }
-            }
-        }
-
         let displayShards = newState.shards;
         newState.queue.forEach(move => {
             if (move.action === "spawn") {
-                displayShards -= AttackerCost;
+                if (move.type === UnitType.ATTACKER) {
+                    displayShards -= Costs.ATTACKER;
+                }
+                else if (move.type === UnitType.DEFENDER) {
+                    displayShards -= Costs.DEFENDER;
+                }
             }
         });
         this.setState({
             displayShards: displayShards,
             squares: newState.squares,
-            playerStatus: newState.playerStatus,
-            cursor: newCursor
+            playerStatus: newState.playerStatus
         });
     }
 

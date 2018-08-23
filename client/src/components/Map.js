@@ -84,7 +84,7 @@ function Cell(props) {
             };
         }
     } else if (square.squareType === SquareType.BASE) {
-        if (square.playerId === 1) {
+        if (square.baseId === 1) {
             divStyle = {
                 "backgroundColor": 'red'
             };
