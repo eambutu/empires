@@ -33,7 +33,7 @@ class Tutorial extends Component {
         return (
             <div>
                 <TutorialBox nextBox={this.nextBox} text={tutorialTextMap[this.state.textIndex]}/>
-                <Map playerId={this.props.playerId} playerIds={this.props.playerIds} squares={this.props.squares} actionQueue={[]} cursor={this.props.cursor} handleClick={this.props.handleClick}/>
+                <Map playerId={this.props.playerId} playerIds={this.props.playerIds} squares={this.props.squares} queue={[]} cursor={this.props.cursor} handleClick={this.props.handleClick}/>
             </div>
         );
     }
