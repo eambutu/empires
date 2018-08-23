@@ -7,44 +7,58 @@
 }
 
 .square-holder {
-    height: 40px;
-    width: 40px;
+    width: 32px;
+    height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     border: 0.5px solid #aaaaaa;
     background-color: black;
-    padding: 4px;
 }
 
 .attacker {
-    height: 33px !important;
-    width: 33px !important;
+    /*height: 33px !important;*/
+    /*width: 33px !important;*/
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 25px 25px;
 }
 
 .base {
-    height: 33px !important;
-    width: 33px !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 25px 25px;
 }
 
 .watchtower {
-    height: 17px !important;
-    width: 33px !important;
-    line-height: 14px !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 25px 25px;
+
 }
 
 .shardtower {
-    height: 33px !important;
-    width: 25px !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 25px 25px;
 }
 
 .square {
-    line-height: 30px;
+    width: 32px;
+    height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border: 0.5px solid #aaaaaa;
+    background-color: black;
     text-align: center;
     color: white;
-    font-size: 1.5pc;
     /* margin-top: 10px; */
     font-weight: 900;
     font-size: 25px;
     box-sizing: border-box;
-    margin: auto;
 }
 
 .highlighted {

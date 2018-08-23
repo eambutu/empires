@@ -5,13 +5,17 @@ import sword from "../sword.svg";
 import base from "../base.svg";
 import eye from "../eye.svg"
 import shards from "../shard.svg"
+import shield from "../shield.svg";
+import defendedshard from "../defendedshard.svg";
+import defendedeye from "../defendedeye.svg";
+import defendedbase from "../defendedbase.svg";
 
 import up_arrow from "../up_arrow.svg";
 import down_arrow from "../down_arrow.svg";
 import left_arrow from "../left_arrow.svg";
 import right_arrow from "../right_arrow.svg";
 
-const {SquareType, Action} = require("./config");
+const {SquareType, Action, UnitType} = require("./config");
 
 const SquareColor = {
     [SquareType.UNKNOWN]: 'black',
@@ -68,7 +72,7 @@ export default function Map(props) {
 
 function Cell(props) {
     const {square, highlighted, handleClick, x, y, actionVisuals} = props;
-    let styleClass = "square-holder";
+    let styleClass = "square";
     let divStyle = {
         "backgroundColor": SquareColor[square.type]
     };
@@ -95,7 +99,7 @@ function Cell(props) {
         }
     }
     if (highlighted) {
-        styleClass = "square-holder highlighted"
+        styleClass = styleClass + " highlighted"
     }
 
     let actionVisualEntries = Object.entries(actionVisuals);
@@ -110,53 +114,68 @@ function Cell(props) {
                 </div>);
     }
     if (square.type === SquareType.BASE) {
-        overlayComponent = (
-            <div className={"square base"} style={{backgroundImage: `url(${base})`}} >
-                {countComponent}
-    </div>
-        );
+        if (square.unit && square.unit.type === UnitType.DEFENDER) {
+            styleClass = styleClass + " base"
+            divStyle["backgroundImage"] = `url(${defendedbase})`;
+        }
+        else {
+            styleClass = styleClass + " count-text attacker base"
+            divStyle["backgroundImage"] = `url(${base})`;
+        }
+        overlayComponent = countComponent;
+
     }
     else if (square.type === SquareType.WATCHTOWER) {
-        overlayComponent = (
-        <div className={"square watchtower"} style={{backgroundImage: `url(${eye})`}} >
-            {countComponent}
-        </div>
-        );
+        if (square.unit && square.unit.type === UnitType.DEFENDER) {
+            styleClass = styleClass + " watchtower"
+            divStyle["backgroundImage"] = `url(${defendedeye})`;
+        }
+        else {
+            styleClass = styleClass + " count-text attacker base"
+            divStyle["backgroundImage"] = `url(${eye})`;
+        }
+        overlayComponent = countComponent;
+        // overlayComponent = (
+        // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
+        //     {countComponent}
+        // </div>
+        // );
     }
     else if (square.type === SquareType.TOWER){
-        overlayComponent =
-            <div className={"square shardtower"} style={{backgroundImage: `url(${shards})`}} >
-                {countComponent}
-        {/*<object className={"icon"} type={"image/svg+xml"} data={shards}>*/}
-        {/*</object>*/}
-            </div>
+        if (square.unit && square.unit.type === UnitType.DEFENDER) {
+            styleClass = styleClass + " watchtower"
+            divStyle["backgroundImage"] = `url(${defendedshard})`;
+        }
+        else {
+            styleClass = styleClass + " count-text attacker base"
+            divStyle["backgroundImage"] = `url(${shards})`;
+        }
+        overlayComponent = countComponent;
     }
     else if (square.unit) {
-        overlayComponent = (
-            <div className={"square attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >
-                <div className={"count-text"}>
-                {square.unit.count}
-                </div>
-            </div>);
+        console.log(square.unit)
+        console.log(square.unit.type)
+        if (square.unit.type === UnitType.DEFENDER){
+            divStyle["backgroundImage"] = `url(${shield})`;
+        }
+        else if (square.unit.type === UnitType.ATTACKER)
+        {
+            divStyle["backgroundImage"] = `url(${sword})`;
+        }
+        overlayComponent = (square.unit.count);
+        styleClass = styleClass + " attacker count-text";
+            {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
+            {/*{square.unit.count}*/}
+            {/*</div>);*/}
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
         if (square.type === SquareType.UNKNOWN) {
             divStyle["backgroundColor"] = "#404040";
         }
-    //     overlayComponent = (<div className="overlay-component square">
-    //         <object className={"icon"} type={"image/svg+xml"} data={icon}>
-    //             Your browser does not support SVG
-    //         </object>
-    //     </div>);
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
-        {/*<div className="overlay-wrapper">*/}
             {overlayComponent}
-            {/*<div className={"square count-text"}>*/}
-                {/*{text}*/}
-            {/*</div>*/}
-        {/*</div>*/}
     </td>);
 
 

@@ -5,6 +5,7 @@ import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
+import Lobby from "./Lobby";
 
 const {SquareType, Costs, UnitType, Action} = require("./config");
 
@@ -50,7 +51,7 @@ class Game extends Component {
             secret: null,
             squares: null,
             displayShards: 0,
-            playerStatus: null,
+            waiting: true,
             width: 0,
             height: 0,
             cursor: null,
@@ -202,7 +203,7 @@ class Game extends Component {
         }
         else {
             return (
-                <div>{this.state.waitingText}</div>
+                <Lobby playerStatus={this.state.playerStatus}/ >
             )
         }
     }
