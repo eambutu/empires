@@ -58,7 +58,8 @@ class Game extends Component {
             canPlayAgain: true,
             spawnSquare: null,
             isSpawnDefender: false,
-            isTutorial: false
+            isTutorial: false,
+            insufficientShards: false
         };
         this.unitSquareMap = null;
 
@@ -128,6 +129,11 @@ class Game extends Component {
                     });
                     this.sendMove(move);
                 }
+                else {
+                    this.setState({
+                        insufficientShards: true,
+                    });
+                }
             } else if (e.key === "q") {
                 let [y, x, cursorUnitId] = this.state.cursor;
                 let move = {
@@ -177,16 +183,23 @@ class Game extends Component {
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
             if (e.altKey) {
-                if (this.state.displayShards >= Costs.DEFENDER && this.isInSpawningRange(y, x)) {
-                    let move = {
-                        "action": "spawn",
-                        "target": [y, x],
-                        "type": UnitType.DEFENDER
-                    };
+                if (this.state.displayShards >= Costs.DEFENDER) {
+                    if (this.isInSpawningRange(y, x)) {
+                        let move = {
+                            "action": "spawn",
+                            "target": [y, x],
+                            "type": UnitType.DEFENDER
+                        };
+                        this.setState({
+                            displayShards: this.state.displayShards - Costs.DEFENDER
+                        });
+                        this.sendMove(move);
+                    }
+                }
+                else {
                     this.setState({
-                        displayShards: this.state.displayShards - Costs.DEFENDER
+                        insufficientShards: true,
                     });
-                    this.sendMove(move);
                 }
             } else if (this.unitSquareMap[y][x]) {
                 this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
@@ -304,7 +317,7 @@ class Game extends Component {
                         isInSpawningRange={this.isInSpawningRange.bind(this)}
                     />
 
-                    <ResourceBoard displayShards={this.state.displayShards}/>
+                    <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                 </div>
             );
         } else {
@@ -357,7 +370,8 @@ class Game extends Component {
             queue: flattenedPlayerQueue,
             displayShards: displayShards,
             squares: newState.squares,
-            playerStatus: newState.playerStatus
+            playerStatus: newState.playerStatus,
+            insufficientShards: false
         });
     }
 
