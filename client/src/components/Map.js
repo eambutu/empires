@@ -35,9 +35,9 @@ export const ActionProp = {
 }
 
 export default function Map(props) {
-    const {playerId, playerIds, squares, actionQueue, cursor, handleClick, isSpawnDefender, isInSpawningRange} = props;
-    let actionVisuals = {};
-    actionQueue.forEach((action) => {
+    const {playerId, playerIds, squares, queue, cursor, handleClick, isSpawnDefender, isInSpawningRange} = props;
+    var actionVisuals = {};
+    queue.forEach((action) => {
         if (action.action.includes("move")) {
             let [y, x] = action.source;
             if (!(y in actionVisuals)) {
@@ -155,8 +155,7 @@ class Cell extends Component {
                     </div>);
             }
 
-        }
-        else if (square.type === SquareType.WATCHTOWER) {
+        } else if (square.type === SquareType.WATCHTOWER) {
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
                 styleClass = styleClass + " square-content"
                 divStyle["backgroundImage"] = `url(${defendedeye})`;
@@ -177,8 +176,7 @@ class Cell extends Component {
             //     {countComponent}
             // </div>
             // );
-        }
-        else if (square.type === SquareType.TOWER){
+        } else if (square.type === SquareType.TOWER){
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
                 styleClass = styleClass + " square-content"
                 divStyle["backgroundImage"] = `url(${defendedshard})`;
@@ -194,8 +192,7 @@ class Cell extends Component {
                         {count + square.baseHP}
                     </div>);
             }
-        }
-        else if (square.unit) {
+        } else if (square.unit) {
             console.log(square.unit)
             console.log(square.unit.type)
             if (square.unit.type === UnitType.DEFENDER){
@@ -210,8 +207,7 @@ class Cell extends Component {
             {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
             {/*{square.unit.count}*/}
             {/*</div>);*/}
-        }
-        else if (actionVisualEntries.length > 0) {
+        } else if (actionVisualEntries.length > 0) {
             let [action, id] = actionVisualEntries[0];
             let {icon} = ActionProp[action].visual;
             if (square.type === SquareType.UNKNOWN) {
