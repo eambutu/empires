@@ -28,21 +28,14 @@ class Game extends Component {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
     }
 
-    isInSpawningRange(y, x, type) {
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                if ((i !== 0 || j !== 0) && this.isInBound(y + i, x + j)) {
-                    let square = this.state.squares[y + i][x + j];
-                    if (type === UnitType.ATTACKER && square.type === SquareType.BASE && square.baseId === this.state.playerId) {
-                        return true;
-                    }
-                    // Defender square has to have vision and cannot have existing units on it except defenders of your sort
-                    if (type === UnitType.DEFENDER && !(square.type === SquareType.UNKNOWN) &&
-                        (!square.unit || (this.state.playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER))) {
-                        return true;
-                    }
-                }
-            }
+    isInSpawningRange(y, x) {
+        // Defender square has to have vision and cannot have existing units on it except defenders of your sort
+        // Also, don't allow spawning defenders on your own spawn square
+        let square = this.state.squares[y][x];
+        if (!(square.type === SquareType.UNKNOWN) &&
+            (!square.unit || (this.state.playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER)) &&
+            !(y === this.state.spawnSquare[0] && x === this.state.spawnSquare[1])) {
+            return true;
         }
         return false;
     }
@@ -59,7 +52,8 @@ class Game extends Component {
             height: 0,
             cursor: null,
             waitingText: '',
-            canPlayAgain: true
+            canPlayAgain: true,
+            spawnSquare: null
         };
         this.actionQueue = [];
         this.unitSquareMap = null;
@@ -117,14 +111,9 @@ class Game extends Component {
                     this.sendMove(move);
                 }
             }
-        };
-
-        this.onClickBound = e => {
-            let target = e.currentTarget;
-            let y = parseInt(target.getAttribute("y"));
-            let x = parseInt(target.getAttribute("x"));
-            if (e.ctrlKey || e.metaKey) {
-                if (this.state.displayShards >= Costs.ATTACKER && this.isInSpawningRange(y, x, UnitType.ATTACKER)) {
+            else if (e.key === " " || e.key === "Spacebar") {
+                let [y, x] = this.state.spawnSquare;
+                if (this.state.displayShards >= Costs.ATTACKER) {
                     let move = {
                         "action": "spawn",
                         "target": [y, x],
@@ -137,8 +126,14 @@ class Game extends Component {
                     this.sendMove(move);
                 }
             }
-            else if (e.altKey) {
-                if (this.state.displayShards >= Costs.DEFENDER && this.isInSpawningRange(y, x, UnitType.DEFENDER)) {
+        };
+
+        this.onClickBound = e => {
+            let target = e.currentTarget;
+            let y = parseInt(target.getAttribute("y"));
+            let x = parseInt(target.getAttribute("x"));
+            if (e.altKey) {
+                if (this.state.displayShards >= Costs.DEFENDER && this.isInSpawningRange(y, x)) {
                     let move = {
                         "action": "spawn",
                         "target": [y, x],
@@ -183,6 +178,7 @@ class Game extends Component {
                 this.setState({
                     width: json.width,
                     height: json.height,
+                    spawnSquare: json.spawn
                 });
             }
             else if (json.event === 'update') {

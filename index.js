@@ -255,11 +255,13 @@ function broadcastStarting(room) {
 function broadcastInit(room) {
     // Things that get broadcast in the beginning of the game
     let playerBases = room.playerBases;
+    let spawnSquares = room.spawnSquares;
     room.clients.forEach(client => {
         if (client.readyState === 1) {
             client.send(JSON.stringify({
                 'event': 'init',
                 'base': playerBases[client.playerId],
+                'spawn': spawnSquares[client.playerId],
                 'width': width,
                 'height': height,
             }));
@@ -281,6 +283,7 @@ function broadcastState(room) {
 function initState(room) {
     let squareStates = [];
     let playerBases = {};
+    let spawnSquares = {};
     let queues = {};
 
     let corners = [
@@ -288,7 +291,14 @@ function initState(room) {
         [14, 0],
         [0, 14],
         [14, 14]
-    ]
+    ];
+
+    let spawnChoices = [
+        [1, 1],
+        [13, 1],
+        [1, 13],
+        [13, 13]
+    ];
 
     queues[room.clients[0].playerId] = {'spawn': []};
     queues[room.clients[1].playerId] = {'spawn': []};
@@ -326,6 +336,8 @@ function initState(room) {
     }
     playerBases[room.clients[0].playerId] = corners[randIdxOne];
     playerBases[room.clients[1].playerId] = corners[randIdxTwo];
+    spawnSquares[room.clients[0].playerId] = spawnChoices[randIdxOne];
+    spawnSquares[room.clients[1].playerId] = spawnChoices[randIdxTwo];
     corners.forEach(function(corner, idx) {
         if (idx !== randIdxOne && idx !== randIdxTwo) {
             towers.push(corner);
@@ -365,6 +377,7 @@ function initState(room) {
     }
 
     room.playerBases = playerBases;
+    room.spawnSquares = spawnSquares;
     room.squareStates = squareStates;
     room.queues = queues;
     room.shards = {
@@ -419,27 +432,22 @@ function maskForPlayer(squares, playerId) {
     ));
 }
 
-function isInBound(y, x) {
-    return (0 <= y && y < height) && (0 <= x && x < width);
-}
-
 function isInSpawningRange(room, y, x, playerId, type) {
+    let spawnSquares = room.spawnSquares;
     let squareStates = room.squareStates;
-    let squareVisions = maskForPlayer(squareStates, playerId);
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            if ((i !== 0 || j !== 0) && isInBound(y + i, x + j)) {
-                let square = squareStates[y + i][x + j];
-                let squareVision = squareVisions[y + i][x + j];
-                if (type === UnitType.ATTACKER && square.type === SquareType.BASE && playerId === square.baseId) {
-                    return true;
-                }
-                // Defender square has to have vision and cannot have existing units on it except defenders of your sort
-                if (type === UnitType.DEFENDER && !(squareVision.type === SquareType.UNKNOWN) &&
-                    (!square.getUnit() || (playerId === square.currentOwner() && square.getUnit().type === UnitType.DEFENDER))) {
-                    return true;
-                }
-            }
+    let isSpawnSquare = (y === spawnSquares[playerId][0] && x === spawnSquares[playerId][1]);
+    if (type === UnitType.ATTACKER) {
+        return isSpawnSquare;
+    }
+    else if (type === UnitType.DEFENDER) {
+        // Defender square has to have vision and cannot have existing units on it except defenders of your sort
+        // Also, cannot be your own spawn square
+        let squareVisions = maskForPlayer(squareStates, playerId);
+        let square = squareVisions[y][x];
+        if (type === UnitType.DEFENDER && !(square.type === SquareType.UNKNOWN) &&
+            (!square.getUnit() || (playerId === square.currentOwner() && square.getUnit().type === UnitType.DEFENDER)) &&
+            !isSpawnSquare) {
+            return true;
         }
     }
     return false;
@@ -564,22 +572,18 @@ function updateState(room) {
         let {playerId, target, type} = spawn;
         let [tY, tX] = target;
         if (squareStates[tY][tX].type !== SquareType.RIVER && isInSpawningRange(room, tY, tX, playerId, type)) {
-            if (!squareStates[tY][tX].getUnit()) {
-                let unitId = Math.floor(10000000*Math.random()).toString();
-                squareStates[tY][tX].units.push(new Unit(unitId, playerId, type, 0));
-                queues[playerId][unitId] = [];
+            let count = 0;
+            if (type === UnitType.ATTACKER) {
+                count = 1;
+                shards[playerId] -= Costs.ATTACKER;
             }
-            let unit = squareStates[tY][tX].getUnit();
-            if (unit.type === type) {
-                if (type === UnitType.ATTACKER) {
-                    unit.count++;
-                    shards[playerId] -= Costs.ATTACKER;
-                }
-                else if (type === UnitType.DEFENDER) {
-                    unit.count += 10;
-                    shards[playerId] -= Costs.DEFENDER;
-                }
+            else if (type === UnitType.DEFENDER) {
+                count = 10;
+                shards[playerId] -= Costs.DEFENDER;
             }
+            let unitId = Math.floor(10000000*Math.random()).toString();
+            squareStates[tY][tX].units.push(new Unit(unitId, playerId, type, count));
+            queues[playerId][unitId] = [];
         }
     });
 
@@ -651,20 +655,16 @@ function updateState(room) {
                             movingUnit = unit;
                         }
                         moves.forEach(move => {
-                            if (move.unitId === unit.id) {
+                            if (move.action.includes("move") && move.unitId === unit.id) {
                                 wasMovingUnit = unit;
                             }
                         });
                     });
 
-                    if (numUnitsMoving === 0){
-                        unit = wasMovingUnit;
-                    }
-                    else if (numUnitsMoving === 1) {
+                    if (numUnitsMoving === 1) {
                         unit = movingUnit;
                     }
-                    else {
-                        // let newUnitId = Math.floor(10000000*Math.random()).toString();
+                    else if (numUnitsMoving > 1) {
                         queues[unit.playerId][movingUnit.id].length = 0;
                         unit = movingUnit;
                     }
