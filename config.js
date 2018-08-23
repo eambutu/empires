@@ -7,7 +7,14 @@ module.exports = {
         WATCHTOWER: 4,
         RIVER: 5
     },
-    AttackerCost: 25,
+    UnitType: {
+        ATTACKER: 1,
+        DEFENDER: 2,
+    },
+    Costs: {
+        ATTACKER: 25,
+        DEFENDER: 200,
+    },
     Action: {
         MOVE_DOWN: "move_down",
         MOVE_UP: "move_up",

@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const expressWs = require('express-ws')(app);
 const path = require('path');
-const {SquareType, AttackerCost} = require('./config');
+const {SquareType, UnitType, Costs} = require('./config');
 
 const Vision = {
     UNIT: 1,
@@ -113,64 +113,29 @@ app.listen(5000, function () {
 });
 
 class SquareState {
-    constructor(y, x, squareType, unit) {
+    constructor(y, x, squareType, unit, baseId) {
         this.pos = [y, x];
         this.squareType = squareType;
         this.unit = unit;
+        this.baseId = baseId;
     }
 }
 
-class SquareCounts {
-    constructor(counts) {
+class SquareCount {
+    constructor(counts, type) {
         this.counts = counts;
+        this.type = type
     }
+}
 
-    collapseUnits() {
-        let maxIdx = -1;
-        let maxNum = 0;
-        let secondMaxIdx = -1;
-        let secondMaxNum = 0;
-        this.counts.forEach(function (count, idx) {
-            if (count > maxNum) {
-                secondMaxIdx = maxIdx;
-                secondMaxNum = maxNum;
-                maxIdx = idx;
-                maxNum = count;
-            }
-            else if (count > secondMaxNum) {
-                secondMaxIdx = idx;
-                secondMaxNum = count;
-            }
-        })
-
-        if (maxIdx === -1 || maxNum === secondMaxNum) {
-            for (let idx = 0; idx < this.counts.length; idx++) {
-                this.counts[idx] = 0;
-            }
-        }
-        else {
-            for (let idx = 0; idx < this.counts.length; idx++) {
-                this.counts[idx] = 0;
-                if (idx === maxIdx) {
-                    this.counts[idx] = maxNum - secondMaxNum;
-                }
-            }
-        }
-    };
-
-    nonZeroIdx() {
-        for (let idx = 0; idx < this.counts.length; idx++) {
-            if (this.counts[idx] > 0) {
-                return idx;
-            }
-        }
-        return -1;
-    }
+function compareSquareCounts(squareCount1, squareCount2) {
+    return squareCount1.counts - squareCount2.counts;
 }
 
 class Unit {
-    constructor(playerId, count) {
+    constructor(playerId, type, count) {
         this.playerId = playerId;
+        this.type = type;
         this.count = count;
     }
 }
@@ -335,13 +300,11 @@ function initState(room) {
         squareStates[i] = [];
         for (let j = 0; j < width; j++) {
             if (i === playerBases[0][0] && j === playerBases[0][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, null);
-                squareState.playerId = 1;
+                let squareState = new SquareState(i, j, SquareType.BASE, null, 1);
                 squareStates[i][j] = squareState;
             }
             else if (i === playerBases[1][0] && j === playerBases[1][1]) {
-                let squareState = new SquareState(i, j, SquareType.BASE, null);
-                squareState.playerId = 2;
+                let squareState = new SquareState(i, j, SquareType.BASE, null, 2);
                 squareStates[i][j] = squareState;
             }
             else {
@@ -365,10 +328,15 @@ function initState(room) {
         }
     }
     let squareCounts = squareStates.map(row => row.map(cell => {
-        let counts = Array(maxPlayers).fill(0);
+        // if you do this with Array fill, the whole array will refer to the same object
+        // (dont spend 30 minutes debugging this like me)
+        let counts = [];
+        for (let idx = 0; idx < maxPlayers; idx++) {
+            counts[idx] = new SquareCount(0, null);
+        }
         if (cell.unit) {
-            let {playerId, count} = cell.unit;
-            counts[playerId - 1] = count;
+            let {playerId, type, count} = cell.unit;
+            counts[playerId - 1] = SquareCount(count, type);
         }
         return counts;
     }));
@@ -399,7 +367,7 @@ function maskForPlayer(squares, playerId) {
     squares.forEach((row, y) => {
         row.forEach((cell, x) => {
             let range;
-            if (cell.squareType === SquareType.BASE && playerId === cell.playerId) {
+            if (cell.squareType === SquareType.BASE && playerId === cell.baseId) {
                 range = Vision.BASE;
             } else if (cell.squareType === SquareType.WATCHTOWER && cell.unit && cell.unit.playerId === playerId) {
                 range = Vision.WATCHTOWER;
@@ -427,13 +395,20 @@ function isInBound(y, x) {
     return (0 <= y && y < height) && (0 <= x && x < width);
 }
 
-function isInSpawningRange(room, y, x, playerId) {
+function isInSpawningRange(room, y, x, playerId, type) {
     let squareStates = room.squareStates;
+    let squareVisions = maskForPlayer(squareStates, playerId);
     for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
             if ((i !== 0 || j !== 0) && isInBound(y + i, x + j)) {
                 let square = squareStates[y + i][x + j];
-                if (square.squareType === SquareType.BASE && playerId === square.playerId) {
+                let squareVision = squareVisions[y + i][x + j];
+                if (type === UnitType.ATTACKER && square.squareType === SquareType.BASE && playerId === square.baseId) {
+                    return true;
+                }
+                // Defender square has to have vision and cannot have existing units on it except defenders of your sort
+                if (type === UnitType.DEFENDER && !(squareVision.type === SquareType.UNKNOWN) &&
+                    (!square.unit || (playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER))) {
                     return true;
                 }
             }
@@ -510,24 +485,33 @@ function updateState(room) {
 
     // update the counts with the moves
     moves.forEach(move => {
-        let {action, player, target} = move;
+        let {action, player, target, type} = move;
         let playerIndex = player - 1;
         let [tY, tX] = target;
         if (squareStates[tY][tX].squareType !== SquareType.RIVER) {
             if (action.includes("move")) {
                 let [sY, sX] = move.source;
-                squareCounts[tY][tX][playerIndex] += squareCounts[sY][sX][playerIndex];
-                squareCounts[sY][sX][playerIndex] = 0;
+                squareCounts[tY][tX][playerIndex].counts += squareCounts[sY][sX][playerIndex].counts;
+                squareCounts[sY][sX][playerIndex].counts = 0;
             } else if (action === "spawn") {
+                console.log(moves);
                 let [tY, tX] = target;
-                squareCounts[tY][tX][playerIndex]++;
-                shards[playerIndex] -= AttackerCost;
+                if (type === UnitType.ATTACKER) {
+                    squareCounts[tY][tX][playerIndex].counts++;
+                    squareCounts[tY][tX][playerIndex].type = UnitType.ATTACKER;
+                    shards[playerIndex] -= Costs.ATTACKER;
+                }
+                else if (type === UnitType.DEFENDER) {
+                    squareCounts[tY][tX][playerIndex].counts += 10;
+                    squareCounts[tY][tX][playerIndex].type = UnitType.DEFENDER;
+                    shards[playerIndex] -= Costs.DEFENDER;
+                }
             }
         }
         lastPlayerMoves[playerIndex] = move;
     });
 
-    let comp = ([_1, count1], [_2, count2]) => (count1 - count2);
+    let comp = ([_1, count1], [_2, count2]) => (compareSquareCounts(count1, count2));
     // update squareStates with squareCounts
     squareCounts.forEach((row, y) => {
         row.forEach((counts, x) => {
@@ -536,14 +520,21 @@ function updateState(room) {
             let [bestPlayerIndex, firstCount] = countTuples[0];
             let bestPlayerId = bestPlayerIndex + 1;
             let secondCount = countTuples[1][1];
-            let finalCount = firstCount - secondCount;
+            let finalCount = firstCount.counts - secondCount.counts;
+            // don't use fill here, because array fill doesnt work well with objects
+            for (let idx = 0; idx < maxPlayers; idx++) {
+                squareCounts[y][x][idx] = new SquareCount(0, null)
+            }
             if (finalCount > 0) {
-                squareStates[y][x].unit = new Unit(bestPlayerId, finalCount);
+                squareStates[y][x].unit = new Unit(bestPlayerId, firstCount.type, finalCount);
+                squareCounts[y][x][bestPlayerIndex] = new SquareCount(finalCount, firstCount.type);
             } else {
                 squareStates[y][x].unit = null;
             }
         });
     });
+
+    console.log(squareCounts[1][0]);
 
     Object.entries(queues).forEach(([playerIdStr, queue]) => {
         let playerId = parseInt(playerIdStr);
@@ -566,9 +557,11 @@ function updateState(room) {
             }
             else if (move.action === "spawn") {
                 let [y, x] = move.target;
-                if (!isInSpawningRange(room, y, x, playerId)) {
+                if (!isInSpawningRange(room, y, x, playerId, move.type)) {
                     return false;
-                } else if (currShards - AttackerCost < 0) {
+                } else if (move.type === UnitType.ATTACKER && currShards - Costs.ATTACKER < 0) {
+                    return false;
+                } else if (move.type === UnitType.DEFENDER && currShards - Costs.DEFENDER < 0) {
                     return false;
                 }
                 isPlayer[y][x] = true;
