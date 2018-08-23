@@ -12,8 +12,8 @@ module.exports = {
         DEFENDER: 2,
     },
     Costs: {
-        ATTACKER: 1,
-        DEFENDER: 1,
+        ATTACKER: 25,
+        DEFENDER: 200,
     },
     Action: {
         MOVE_DOWN: "move_down",
