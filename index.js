@@ -686,7 +686,10 @@ function updateState(room) {
                         });
                     });
 
-                    if (numUnitsMoving === 1) {
+                    if (numUnitsMoving === 0) {
+                        unit = wasMovingUnit;
+                    }
+                    else if (numUnitsMoving === 1) {
                         unit = movingUnit;
                     }
                     else if (numUnitsMoving > 1) {
