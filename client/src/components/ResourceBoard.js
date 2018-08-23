@@ -6,8 +6,8 @@ export default function ResourceBoard(props) {
     const {displayShards, insufficientShards} = props;
 
     return (
-        <div className={"resource-info"}>
-            <div className={insufficientShards ? "shard-count shard-red" : "shard-count"}>
+        <div className={insufficientShards ? "resource-info shard-invalid" : "resource-info"}>
+            <div className={"shard-count"}>
                 <span>
                     <object className={"shards-icon"} type={"image/svg+xml"} data={shard}>
                         Your browser does not support SVG

@@ -18,6 +18,6 @@
     height: 20px;
 }
 
-.shard-red {
-    color: red;
+.shard-invalid {
+    background: red;
 }
