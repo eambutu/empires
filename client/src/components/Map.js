@@ -98,11 +98,18 @@ class Cell extends Component {
     render () {
         const {playerId, playerIds, square, highlighted, handleClick, x, y, actionVisuals, isSpawnDefender, isInSpawningRange} = this.props;
         let styleClass = "square";
+        let renderSpawnDefender = this.state.isHover && isSpawnDefender && isInSpawningRange(y, x);
+
+        // background color
         let divStyle = {
             "backgroundColor": SquareColor[square.type]
         };
-        let renderSpawnDefender = this.state.isHover && isSpawnDefender && isInSpawningRange(y, x);
-
+        let actionVisualEntries = Object.entries(actionVisuals);
+        if (actionVisualEntries.length > 0 && square.type !== SquareType.RIVER) {
+            let [action, id] = actionVisualEntries[0];
+            let {icon} = ActionProp[action].visual;
+            divStyle["backgroundColor"] = "#505050";
+        }
         if (square.unit) {
             playerIds.forEach((playerId, index) => {
                 if (square.unit.playerId === playerId) {
@@ -117,15 +124,18 @@ class Cell extends Component {
             });
         }
 
+        if (renderSpawnDefender) {
+            divStyle["opacity"] = "0.5";
+            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(playerId)];
+        }
+
         if (highlighted) {
             styleClass = styleClass + " highlighted"
         }
-
         if (renderSpawnDefender) {
             divStyle["backgroundImage"] = `url(${shield})`;
         }
 
-        let actionVisualEntries = Object.entries(actionVisuals);
         let overlayComponent = null;
         let countComponent = null;
         let count = 0;
@@ -207,17 +217,6 @@ class Cell extends Component {
             {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
             {/*{square.unit.count}*/}
             {/*</div>);*/}
-        } else if (actionVisualEntries.length > 0) {
-            let [action, id] = actionVisualEntries[0];
-            let {icon} = ActionProp[action].visual;
-            if (square.type === SquareType.UNKNOWN) {
-                divStyle["backgroundColor"] = "#404040";
-            }
-        }
-
-        if (renderSpawnDefender) {
-            divStyle["opacity"] = "0.5";
-            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(playerId)];
         }
 
         return (
