@@ -210,9 +210,6 @@ class Game extends Component {
     }
 
     componentDidMount() {
-        document.addEventListener("keydown", this.keyDownBound);
-        document.addEventListener("keyup", this.keyUpBound);
-
         this.ws = new WebSocket('ws://' + window.location.hostname + ':5000' + window.location.pathname);
 
         this.onReset = e => {
@@ -245,6 +242,8 @@ class Game extends Component {
                     playerIds: data.playerIds,
                     spawnSquare: data.spawn
                 });
+                document.addEventListener("keydown", this.keyDownBound);
+                document.addEventListener("keyup", this.keyUpBound);
             } else if (data.event === 'update') {
                 this.updateGame(data.state);
             } else if (data.event === 'full') {
