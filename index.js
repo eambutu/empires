@@ -12,7 +12,6 @@ const Vision = {
 
 const ts = 1000 / 8;
 const framesPerTurn = 4;
-const maxPlayers = 2;
 const width = 15;
 const height = 15;
 
@@ -24,7 +23,7 @@ app.get('/room/:roomId', function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-function initOrGetRoom(roomId, ws) {
+function initOrGetRoom(roomId, ws, maxPlayers, isTutorial) {
     if (!(roomId in rooms)) {
         rooms[roomId] = {
             id: roomId,
@@ -33,7 +32,9 @@ function initOrGetRoom(roomId, ws) {
             gameEnded: false,
             gameInterval: null,
             heartbeatInterval: null,
-            frameCounter: 0
+            frameCounter: 0,
+            isTutorial: isTutorial,
+            maxPlayers: maxPlayers
         }
     }
     rooms[roomId].clients.push(ws);
@@ -41,38 +42,62 @@ function initOrGetRoom(roomId, ws) {
 }
 
 function onConnect(room, ws) {
-    if (!room.full && (room.clients.length <= maxPlayers)) {
+    if (!room.full && (room.clients.length <= room.maxPlayers)) {
         ws.ponged = true;
         ws.isAlive = true;
         ws.playerId = room.clients.length.toString();
         ws.name = `player_${ws.playerId}`;
         ws.secret = Math.floor(Math.random() * 10000);
 
+        if (room.isTutorial) {
+            connectedText = 'Connected! Welcome to the tutorial.'
+            fullText = 'This tutorial is full.'
+        }
+        else {
+            connectedText = 'Connected! Waiting for other players to join.'
+            fullText = 'Lobby is full.'
+        }
+
         ws.send(JSON.stringify({
             event: 'connected',
             playerId: ws.playerId,
             secret: ws.secret,
-            text: 'Connected! Waiting for other players to join.'
+            text: connectedText
         }));
         console.log(`player ${ws.playerId} connected to ${room.id}`);
 
-        if (room.clients.length === maxPlayers) {
+        if (room.clients.length === room.maxPlayers) {
             room.full = true;
             runGame(room);
         }
     } else {
         ws.send(JSON.stringify({
             event: 'full',
-            text: 'Lobby is full'
+            text: fullText
         }));
         ws.close();
     }
 }
 
-app.ws('/room/:roomId', function (ws, req) {
-    let roomId = req.params.roomId;
-    let room = initOrGetRoom(roomId, ws);
+function onPong(ws) {
+    ws.on('pong', () => {
+        ws.ponged = true;
+    });
+}
 
+function onClose(room, ws) {
+    ws.on('close', function () {
+        room.clients = room.clients.filter(client => (client.readyState === 1));
+        if (ws.playerId) {
+            console.log(`player ${ws.playerId} disconnected from ${room.id}`);
+        }
+        else {
+            console.log(`client attempted connect to ${room.id}`);
+        }
+    });
+}
+
+function onMessage(room, ws) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
@@ -83,7 +108,7 @@ app.ws('/room/:roomId', function (ws, req) {
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
                 } else if (data.move.action.includes("move")) {
-                    if (data.move.unitId) {
+                    if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
                     }
                 } else if (data.move.action === "cancelQueue") {
@@ -108,21 +133,28 @@ app.ws('/room/:roomId', function (ws, req) {
             ws.close();
         }
     });
+}
 
-    ws.on('pong', () => {
-        ws.ponged = true;
-    });
+app.ws('/room/:roomId', function (ws, req) {
+    let roomId = req.params.roomId;
+    let room = initOrGetRoom(roomId, ws, 2, false);
 
-    ws.on('close', function () {
-        room.clients = room.clients.filter(client => (client.readyState === 1));
-        if (ws.playerId) {
-            console.log(`player ${ws.playerId} disconnected from ${room.id}`);
-        }
-        else {
-            console.log(`client attempted connect to ${room.id}`);
-        }
-    });
     onConnect(room, ws);
+    onMessage(room, ws);
+    onPong(ws);
+    onClose(room, ws);
+});
+
+app.ws('/tutorial', function (ws, req) {
+    if (!ws.tutorialRoomId) {
+        ws.tutorialRoomId = 'tutorial-'.concat(Math.floor(10000000*Math.random()).toString());
+    }
+    let room = initOrGetRoom(ws.tutorialRoomId, ws, 1, true);
+
+    onConnect(room, ws);
+    onMessage(room, ws);
+    onPong(ws);
+    onClose(room, ws);
 });
 
 app.listen(5000, function () {
@@ -232,11 +264,6 @@ function resetGame(room) {
     room.gameEnded = false;
 }
 
-// getSetRoomNotFull = targetRoom => function () {
-//     room = targetRoom;
-//     room.full = false;
-// };
-
 function openRoom(room) {
     console.log('RESTART GAME');
     resetGame(room);
@@ -245,7 +272,6 @@ function openRoom(room) {
         1000
     );
 }
-
 
 function broadcastStarting(room) {
     room.clients.forEach(client => {
@@ -285,9 +311,13 @@ function broadcastState(room) {
     // console.log("Sent state");
 }
 
-
 function initState(room) {
     let playerIds = room.clients.map(client => client.playerId);
+
+    if (room.isTutorial) {
+        playerIds.push('cpu')
+    }
+
     let playerBases = {};
     let spawnSquares = {};
     let queues = {};
@@ -476,8 +506,12 @@ function getState(room, playerId) {
         });
     }
 
-    let maskedSquares = maskForPlayer(squares, playerId);
-    maskedSquares.forEach(row => {
+    let visibleSquares = squares;
+    if (!room.isTutorial) {
+        visibleSquares = maskForPlayer(squares, playerId);
+    }
+
+    visibleSquares.forEach(row => {
         row.forEach(square => {
             // The client expects the field in terms of "unit"
             square.unit = square.getUnit();
@@ -486,7 +520,7 @@ function getState(room, playerId) {
 
     return {
         queues: queues[playerId],
-        squares: maskedSquares,
+        squares: visibleSquares,
         playerStatus: playerStatus,
         shards: shards[playerId],
     };

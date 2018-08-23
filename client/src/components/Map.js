@@ -183,8 +183,8 @@ function Cell(props) {
     } else if (actionVisualEntries.length > 0) {
         let [action, id] = actionVisualEntries[0];
         let {icon} = ActionProp[action].visual;
-        if (square.type === SquareType.UNKNOWN) {
-            divStyle["backgroundColor"] = "#404040";
+        if (square.type !== SquareType.RIVER) {
+            divStyle["backgroundColor"] = "#505050";
         }
     }
     return (<td className={styleClass} style={divStyle} onClick={handleClick} x={x} y={y}>
