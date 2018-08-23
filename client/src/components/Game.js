@@ -112,6 +112,7 @@ class Game extends Component {
                 }
             }
             else if (e.key === " " || e.key === "Spacebar") {
+                e.preventDefault();
                 let [y, x] = this.state.spawnSquare;
                 if (this.state.displayShards >= Costs.ATTACKER) {
                     let move = {
