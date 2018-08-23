@@ -147,7 +147,6 @@ class Game extends Component {
                         "type": UnitType.DEFENDER
                     };
                     this.setState({
-                        cursor: [y, x, null],
                         displayShards: this.state.displayShards - Costs.DEFENDER
                     });
                     this.sendMove(move);
