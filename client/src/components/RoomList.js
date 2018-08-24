@@ -8,6 +8,11 @@ class RoomList extends Component {
     constructor(props) {
         super(props);
         this.state = {data: null};
+
+        this.onClickSubmitLobby = () => {
+            window.location = "/room/" + document.getElementById("room_id").value
+        }
+
     }
 
     onClickRoom(id) {
@@ -46,6 +51,12 @@ class RoomList extends Component {
                 <div className={"room-list-title"}>
             <img src={sword} className="App-logo" alt="logo"/>
             <div className="title">Lobbies</div>
+                    <div className={"create-lobby"}>
+            <div className={"join-room-text"}>
+                Create or join a room: <br/><input type="text" id="room_id"/> <br/>
+            </div>
+            <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
+                </div>
             <table>
                 <tbody className={"room-list-table"}>
                 {Object.entries(this.state.data).map(([key, value]) => (

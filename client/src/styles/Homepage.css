@@ -1,7 +1,20 @@
+
 .button-area{
     margin: 15px;
 }
 
+.back-arrow {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    text-align: center;
+    margin-top: 15px !important;
+    width: 45px;
+    height: 45px;
+    margin: auto;
+    cursor: pointer;
+}
 
 .homepage-button {
     height: 30px;
