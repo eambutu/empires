@@ -376,35 +376,53 @@ function initState(room) {
         [7, 14]
     ];
 
-    let randIdxOne = Math.floor(Math.random() * 4);
-    let randIdxTwo = Math.floor(Math.random() * 4);
-    while(randIdxTwo === randIdxOne) {
-        randIdxTwo = Math.floor(Math.random() * 4);
+    let cornerMap = {};
+    let remainingCornerIndices = [0, 1, 2, 3];
+    if (room.isTutorial) {
+        cornerMap[playerIds[0]] = 2;
+        cornerMap[playerIds[1]] = 0;
+        remainingCornerIndices = [1, 3];
+    } else { // randomly assign players to a corner index
+        playerIds.forEach(playerId => {
+            let randIndex = Math.floor(Math.random() * remainingCornerIndices.length);
+            cornerMap[playerId] = remainingCornerIndices[randIndex];
+            remainingCornerIndices.splice(randIndex, 1);
+        });
     }
 
-    if (room.isTutorial) {
-        randIdxOne = 2;
-        randIdxTwo = 0;
-    } 
-
-    let rand = {
-        [playerIds[0]]: randIdxOne,
-        [playerIds[1]]: randIdxTwo
-    };
     playerIds.forEach(playerId => {
         // Initialize queue
         queues[playerId] = {
             spawn: [],
         };
         trimmed[playerId] = {};
-        playerBases[playerId] = corners[rand[playerId]];
-        spawnSquares[playerId] = spawnChoices[rand[playerId]];
+        let cornerIndex = cornerMap[playerId];
+        playerBases[playerId] = corners[cornerIndex];
+        spawnSquares[playerId] = spawnChoices[cornerIndex];
         shards[playerId] = 23;
     });
-    corners.forEach((corner, idx) => {
-        if (idx !== randIdxOne && idx !== randIdxTwo) {
-            towers.push(corner);
-        }
+
+    if (room.isTutorial) {
+        let realPlayerId = playerIds[0];
+        shards[realPlayerId] = 1000;
+        queues[realPlayerId]["spawn"] = [
+            {
+                "action": "spawn",
+                "target": [1, 13],
+                "type": UnitType.ATTACKER,
+                "playerId": realPlayerId
+            },
+            {
+                "action": "spawn",
+                "target": [0, 11],
+                "type": UnitType.DEFENDER,
+                "playerId": realPlayerId
+            }
+        ];
+    }
+
+    remainingCornerIndices.forEach(index => {
+        towers.push(corners[index]);
     });
 
     let squareStates = [...Array(height)].map(y => {
@@ -424,24 +442,6 @@ function initState(room) {
     rivers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.RIVER});
     });
-
-    if (room.isTutorial) {
-        shards["1"] = 1000;
-        queues["1"]["spawn"] = [
-            {
-                "action": "spawn",
-                "target": [1, 13],
-                "type": UnitType.ATTACKER,
-                "playerId": "1",
-            },
-            {
-                "action": "spawn",
-                "target": [0, 11],
-                "type": UnitType.DEFENDER,
-                "playerId": "1",
-            }
-        ]
-    }
 
     room.playerIds = playerIds;
     room.playerBases = playerBases;
@@ -780,8 +780,13 @@ function updateBasesAndCheckWin(room) {
         if (unit && (unit.playerId !== playerId)) {
             if (unit.count >= room.squareStates[y][x].baseHP) {
                 let gameWonStatus = {};
-                gameWonStatus[playerId] = "lost";
-                gameWonStatus[unit.playerId] = "won";
+                room.playerIds.forEach(playerId => {
+                    if (playerId === unit.playerId) {
+                        gameWonStatus[playerId] = "won";
+                    } else {
+                        gameWonStatus[playerId] = "lost";
+                    }
+                })
                 room.gameWonStatus = gameWonStatus;
                 room.gameEnded = true;
             } else {
