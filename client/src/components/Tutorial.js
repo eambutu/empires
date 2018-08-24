@@ -64,10 +64,10 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[7].children[7].classList.add("expanded");
                     break;
                 case 7:;
+                    props.onVeil();
                     document.getElementsByClassName("map")[0].children[0].children[7].children[7].classList.remove("expanded");
                     break;
                 default:
-                    props.onVeil();
                     document.getElementsByClassName("tutorial-box")[0].style.display= "none";
             }
         }
@@ -78,8 +78,19 @@ class Tutorial extends Component {
             return (
                 <div>
                     <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
-                    <Map onReleaseMap={this.props.onReleaseMap} onDragMap={this.props.onDragMap} onClickMap={this.props.onClickMap} playerId={this.props.playerId} playerIds={this.props.playerIds} squares={this.props.squares}
-                         queue={this.props.queue} cursor={this.props.cursor} handleClick={this.props.handleClick}/>
+                    <Map
+                        onReleaseMap={this.props.onReleaseMap}
+                        onDragMap={this.props.onDragMap}
+                        onClickMap={this.props.onClickMap}
+                        playerId={this.props.playerId}
+                        playerIds={this.props.playerIds}
+                        squares={this.props.squares}
+                        queue={this.props.queue}
+                        cursor={this.props.cursor}
+                        handleClick={this.props.handleClick}
+                        isSpawnDefender={this.props.isSpawnDefender}
+                        isInSpawningRange={this.props.isInSpawningRange}
+                    />
                     <EndGame exitClick={this.props.exitClick}
                              status={this.props.playerStatus[this.props.playerId]['status']}/>
                 </div>
@@ -89,7 +100,19 @@ class Tutorial extends Component {
                 <div>
                     <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
                     <TutorialBox nextBox={this.nextBox} text={tutorialTextMap[this.state.textIndex]}/>
-                    <Map onReleaseMap={this.props.onReleaseMap} onDragMap={this.props.onDragMap} onClickMap={this.props.onClickMap} playerId={this.props.playerId} playerIds={this.props.playerIds} squares={this.props.squares} queue={this.props.queue} cursor={this.props.cursor} handleClick={this.props.handleClick}/>
+                    <Map
+                        onReleaseMap={this.props.onReleaseMap}
+                        onDragMap={this.props.onDragMap}
+                        onClickMap={this.props.onClickMap}
+                        playerId={this.props.playerId}
+                        playerIds={this.props.playerIds}
+                        squares={this.props.squares}
+                        queue={this.props.queue}
+                        cursor={this.props.cursor}
+                        handleClick={this.props.handleClick}
+                        isSpawnDefender={this.props.isSpawnDefender}
+                        isInSpawningRange={this.props.isInSpawningRange}
+                    />
                 </div>
             );
     }

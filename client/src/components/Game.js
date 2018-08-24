@@ -320,8 +320,26 @@ class Game extends Component {
 
             return (
                 <div id="game-page">
-                    <Tutorial onReleaseMap={this.onReleaseMap} onDragMap={this.onDragMap}onClickMap={this.onClickMap} displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards} onVeil={this.onVeil} exitClick={this.onExit} playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={queue} cursor={cursor} handleClick={this.onClickBound}/>
+                    <Tutorial
+                        onReleaseMap={this.onReleaseMap}
+                        onDragMap={this.onDragMap}
+                        onClickMap={this.onClickMap}
+                        displayShards={this.state.displayShards}
+                        insufficientShards={this.state.insufficientShards}
+                        onVeil={this.onVeil}
+                        exitClick={this.onExit}
+                        playerId={playerId}
+                        playerIds={playerIds}
+                        playerStatus={playerStatus}
+                        squares={squares}
+                        queue={queue}
+                        cursor={cursor}
+                        handleClick={this.onClickBound}
+                        isSpawnDefender={isSpawnDefender}
+                        isInSpawningRange={this.isInSpawningRange.bind(this)}
+                    />
                 </div>
+
 
             );
         }
