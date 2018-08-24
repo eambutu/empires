@@ -97,7 +97,6 @@ class Cell extends Component {
 
     render () {
         const {playerId, playerIds, square, highlighted, handleClick, x, y, actionVisuals, isSpawnDefender, isInSpawningRange} = this.props;
-        let styleClass = "square";
         let renderSpawnDefender = this.state.isHover && isSpawnDefender && isInSpawningRange(y, x) && !square.isFog;
 
         // background color
@@ -110,96 +109,58 @@ class Cell extends Component {
             let {icon} = ActionProp[action].visual;
             divStyle["backgroundColor"] = "#505050";
         }
+        if (square.isFog) {
+            divStyle["opacity"] = 0.2;
+        }
+        let colorId;
         if (square.unit) {
-            playerIds.forEach((playerId, index) => {
-                if (square.unit.playerId === playerId) {
-                    divStyle["backgroundColor"] = playerSquareColors[index];
-                }
-            });
+            colorId = square.unit.playerId;
         } else if (square.type === SquareType.BASE) {
-            playerIds.forEach((playerId, index) => {
-                if (square.baseId === playerId) {
-                    divStyle["backgroundColor"] = playerSquareColors[index];
-                }
-            });
-        }
-
-        if (renderSpawnDefender) {
+            colorId = square.baseId;
+        } else if (renderSpawnDefender) {
             divStyle["opacity"] = "0.5";
-            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(playerId)];
-            divStyle["backgroundImage"] = `url(${shield})`;
-            styleClass += " square-content";
+            colorId = playerId;
+        }
+        if (colorId) {
+            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(colorId)]
         }
 
+        let styleClass = "square square-content count-text";
         if (highlighted) {
-            styleClass = styleClass + " highlighted"
+            styleClass += " highlighted"
         }
-
-        let overlayComponent = null;
-        let countComponent = null;
-        let count = 0;
-
+        // background image and count
+        let count = null;
         if (square.unit) {
-            count = count + square.unit.count;
-            countComponent = (
-                <div className={"count-text"}>
-                    {square.unit.count + square.baseHP}
-                </div>);
+            count = square.unit.count;
         }
-
         if (square.type === SquareType.BASE) {
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
-                styleClass = styleClass + " square-content"
                 divStyle["backgroundImage"] = `url(${defendedbase})`;
             }
             else {
-                styleClass = styleClass + " count-text square-content"
                 divStyle["backgroundImage"] = `url(${base})`;
             }
-            overlayComponent = countComponent;
-            if (square.baseHP > 0){
-                overlayComponent = (
-                    <div className={"count-text"}>
-                        {count + square.baseHP}
-                    </div>);
+            if (square.baseHP === 0) { // dead
+                count = 0;
+            } else if (square.unit) { // has player's own units
+                count += square.baseHP;
+            } else { // doesn't have player's own units
+                count = square.baseHP;
             }
-
         } else if (square.type === SquareType.WATCHTOWER) {
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
-                styleClass = styleClass + " square-content"
                 divStyle["backgroundImage"] = `url(${defendedeye})`;
             }
             else {
-                styleClass = styleClass + " count-text square-content"
                 divStyle["backgroundImage"] = `url(${eye})`;
             }
-            overlayComponent = countComponent;
-            if (square.baseHP > 0){
-                overlayComponent = (
-                    <div className={"count-text"}>
-                        {count + square.baseHP}
-                    </div>);
-            }
-            // overlayComponent = (
-            // <div className={styleClass + "watchtower"} style={{backgroundImage: `url(${eye})`}} >
-            //     {countComponent}
-            // </div>
-            // );
-        } else if (square.type === SquareType.TOWER){
+        } else if (square.type === SquareType.TOWER) {
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
-                styleClass = styleClass + " square-content"
                 divStyle["backgroundImage"] = `url(${defendedshard})`;
             }
             else {
-                styleClass = styleClass + " count-text square-content"
                 divStyle["backgroundImage"] = `url(${shards})`;
-            }
-            overlayComponent = countComponent;
-            if (square.baseHP > 0){
-                overlayComponent = (
-                    <div className={"count-text"}>
-                        {count + square.baseHP}
-                    </div>);
             }
         } else if (square.unit) {
             if (square.unit.type === UnitType.DEFENDER){
@@ -209,16 +170,8 @@ class Cell extends Component {
             {
                 divStyle["backgroundImage"] = `url(${sword})`;
             }
-            overlayComponent = (square.unit.count);
-            styleClass = styleClass + " square-content count-text";
-            {/*<div className={styleClass + "attacker count-text"} style={{backgroundImage: `url(${sword})`}}  >*/}
-            {/*{square.unit.count}*/}
-            {/*</div>);*/}
-        }
-
-        if (square.isFog) {
-            divStyle["backgroundColor"] = "black";
-            divStyle["opacity"] = 0.2;
+        } else if (renderSpawnDefender) {
+            divStyle["backgroundImage"] = `url(${shield})`;
         }
 
         return (
@@ -231,7 +184,7 @@ class Cell extends Component {
                 onMouseEnter={this.handleMouseEnter}
                 onMouseLeave={this.handleMouseLeave}
             >
-                {overlayComponent}
+                {count}
             </td>
         );
     }

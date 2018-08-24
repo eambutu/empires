@@ -138,11 +138,9 @@ function onMessage(room, ws) {
         } else if (data.event === 'veil') {
             room.isTutorial = false;
         } else if (data.event === 'reset') {
-            // console.log(data);
             resetGame(room);
             runGame(room);
         } else if (data.event === 'exit') {
-            // console.log(data);
             ws.send(JSON.stringify({'event': 'redirect'}));
             room.clients.forEach(client => {
                 client.send(JSON.stringify({'event': 'noPlayAgain'}))
@@ -433,7 +431,7 @@ function initState(room) {
         let cornerIndex = cornerMap[playerId];
         playerBases[playerId] = corners[cornerIndex];
         spawnSquares[playerId] = spawnChoices[cornerIndex];
-        shards[playerId] = 23;
+        shards[playerId] = 150;
     });
 
     if (room.isTutorial) {
@@ -809,6 +807,9 @@ function updateBasesAndCheckWin(room) {
         let unit = room.squareStates[y][x].getUnit();
         if (unit && (unit.playerId !== playerId)) {
             if (unit.count >= room.squareStates[y][x].baseHP) {
+                unit.count -= room.squareStates[y][x].baseHP;
+                room.squareStates[y][x].baseHP = 0;
+                
                 let gameWonStatus = {};
                 room.playerIds.forEach(playerId => {
                     if (playerId === unit.playerId) {

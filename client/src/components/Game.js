@@ -262,17 +262,16 @@ class Game extends Component {
         }
     }
 
-    componentDidMount() {
-        let pathname;
-        if (this.props.queuedGame) {
-            pathname = '/queue';
-        } else {
-            pathname = window.location.pathname;
-        }
-        this.ws = new WebSocket('ws://' + window.location.hostname + ':5000' + pathname);
+    setUpWebSocket(wsPath) {
+        this.ws = new WebSocket(wsPath);
 
         this.onReset = e => {
-            this.ws.send(JSON.stringify({'event': 'reset'}));
+            if (this.props.queuedGame) {
+                this.onExit();
+                this.setUpWebSocket(wsPath); // wsPath is still the queued game
+            } else {
+                this.ws.send(JSON.stringify({'event': 'reset'}));
+            }
         };
 
         this.onExit = e => {
@@ -327,6 +326,17 @@ class Game extends Component {
                 this.setState({canPlayAgain: false})
             }
         });
+    }
+
+    componentDidMount() {
+        let pathname;
+        if (this.props.queuedGame) {
+            pathname = '/queue';
+        } else {
+            pathname = window.location.pathname;
+        }
+        let wsPath = 'ws://' + window.location.hostname + ':5000' + pathname
+        this.setUpWebSocket(wsPath);
     }
 
     componentWillUnmount() {
