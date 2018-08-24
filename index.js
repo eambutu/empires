@@ -21,7 +21,7 @@ var rooms = {};
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-app.get('/room', function (req, res) {
+app.get('/room_list', function (req, res) {
     let temp_rooms = _.cloneDeep(rooms);
     Object.keys(temp_rooms).map(function (key) {
         let numPlayers = temp_rooms[key]['clients'].length;
@@ -29,6 +29,10 @@ app.get('/room', function (req, res) {
         temp_rooms[key]['numPlayers'] = numPlayers;
     });
     res.send(JSON.stringify(temp_rooms));
+})
+
+app.get('/room', function(req, res) {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 })
 
 app.get('/room/:roomId', function (req, res) {
