@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const expressWs = require('express-ws')(app);
 const path = require('path');
+
 const {SquareType, UnitType, Costs, HP} = require('./config');
 
 const _ = require('lodash');
@@ -29,19 +30,11 @@ app.get('/room_list', function (req, res) {
         temp_rooms[key]['numPlayers'] = numPlayers;
     });
     res.send(JSON.stringify(temp_rooms));
-})
-
-app.get('/room', function(req, res) {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-})
-
-app.get('/room/:roomId', function (req, res) {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-app.get('/tutorial', function (req, res) {
+app.get(['/room', '/room/:roomId', '/tutorial'], function(req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
+})
 
 function initOrGetRoom(roomId, ws, maxPlayers, isTutorial) {
     if (!(roomId in rooms)) {
