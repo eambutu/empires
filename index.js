@@ -517,10 +517,12 @@ function isInSpawningRange(room, y, x, playerId, type) {
         return isSpawnSquare;
     } else if (type === UnitType.DEFENDER) {
         // Defender square has to have vision and cannot have existing units on it except defenders of your sort
+        // Cannot spawn on enemy base
         // Also, cannot be your own spawn square
         let squareVisions = maskForPlayer(squareStates, playerId);
         let square = squareVisions[y][x];
-        if (type === UnitType.DEFENDER && !(square.type === SquareType.UNKNOWN) &&
+        if (type === UnitType.DEFENDER && !(square.type === SquareType.UNKNOWN) && !square.isFog &&
+            (square.type !== SquareType.BASE || square.baseId === playerId) &&
             (!square.getUnit() || (playerId === square.currentOwner() && square.getUnit().type === UnitType.DEFENDER)) &&
             !isSpawnSquare) {
             return true;

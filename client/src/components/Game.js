@@ -43,9 +43,11 @@ class Game extends Component {
 
     isInSpawningRange(y, x) {
         // Defender square has to have vision and cannot have existing units on it except defenders of your sort
+        // Cannot spawn on enemy base
         // Also, don't allow spawning defenders on your own spawn square
         let square = this.state.squares[y][x];
-        if (!(square.type === SquareType.UNKNOWN) && !(square.type === SquareType.RIVER) &&
+        if (!(square.type === SquareType.UNKNOWN) && !(square.type === SquareType.RIVER) && !square.isFog &&
+            (square.type !== SquareType.BASE || square.baseId === this.state.playerId) &&
             (!square.unit || (this.state.playerId === square.unit.playerId && square.unit.type === UnitType.DEFENDER)) &&
             !(y === this.state.spawnSquare[0] && x === this.state.spawnSquare[1])) {
             return true;
