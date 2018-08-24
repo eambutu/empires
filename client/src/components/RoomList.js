@@ -12,7 +12,7 @@ class RoomList extends Component {
 
     onClickRoom(id) {
         function onClick(e) {
-            window.location.href = window.location.href + "/" + id;
+            window.location.href = '/room/' + id;
         }
 
         return onClick;
