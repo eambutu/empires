@@ -24,6 +24,18 @@ const MoveKeyMap = {
 let backsize = 42;
 let squaresize = 52;
 
+let mousepos = {
+    x: null,
+    y: null
+}
+
+let initMapPos = {
+    x: null,
+    y: null
+}
+
+let downFlag = false;
+
 class Game extends Component {
     isInBound(y, x) {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
@@ -211,6 +223,34 @@ class Game extends Component {
                 this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
             }
         };
+
+        this.onClickMap = e => {
+            downFlag = true;
+            // Record click position
+            mousepos.x = e.clientX;
+            mousepos.y = e.clientY;
+            initMapPos.x = document.getElementsByClassName("map")[0].offsetLeft;
+            initMapPos.y = document.getElementsByClassName("map")[0].offsetTop;
+            console.log(mousepos)
+
+            document.getElementsByClassName("map")[0].style.position = "absolute";
+            document.getElementsByClassName("map")[0].style.top = initMapPos.y + "px";
+            document.getElementsByClassName("map")[0].style.left = initMapPos.x + "px";
+
+        }
+
+        this.onDragMap = e => {
+            console.log(e.clientX);
+            console.log(e.clientY);
+            if (downFlag) {
+                document.getElementsByClassName("map")[0].style.top = (initMapPos.y + (e.clientY - mousepos.y)) + "px";
+                document.getElementsByClassName("map")[0].style.left = (initMapPos.x + (e.clientX - mousepos.x)) + "px";
+            }
+        }
+
+        this.onReleaseMap = () => {
+            downFlag = false;
+        }
     }
 
     componentDidMount() {
@@ -284,8 +324,26 @@ class Game extends Component {
 
             return (
                 <div id="game-page">
-                    <Tutorial displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards} onVeil={this.onVeil} exitClick={this.onExit} playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={queue} cursor={cursor} handleClick={this.onClickBound}/>
+                    <Tutorial
+                        onReleaseMap={this.onReleaseMap}
+                        onDragMap={this.onDragMap}
+                        onClickMap={this.onClickMap}
+                        displayShards={this.state.displayShards}
+                        insufficientShards={this.state.insufficientShards}
+                        onVeil={this.onVeil}
+                        exitClick={this.onExit}
+                        playerId={playerId}
+                        playerIds={playerIds}
+                        playerStatus={playerStatus}
+                        squares={squares}
+                        queue={queue}
+                        cursor={cursor}
+                        handleClick={this.onClickBound}
+                        isSpawnDefender={isSpawnDefender}
+                        isInSpawningRange={this.isInSpawningRange.bind(this)}
+                    />
                 </div>
+
 
             );
         }
@@ -296,6 +354,9 @@ class Game extends Component {
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
 
                         <Map
+                            onReleaseMap={this.onReleaseMap}
+                            onDragMap={this.onDragMap}
+                            onClickMap={this.onClickMap}
                             playerId={playerId}
                             playerIds={playerIds}
                             squares={squares}
@@ -316,6 +377,9 @@ class Game extends Component {
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
                     <Map
+                        onReleaseMap={this.onReleaseMap}
+                        onDragMap={this.onDragMap}
+                        onClickMap={this.onClickMap}
                         playerId={playerId}
                         playerIds={playerIds}
                         squares={squares}
