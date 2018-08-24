@@ -25,7 +25,7 @@ const SquareColor = {
     [SquareType.RIVER]: 'white'
 };
 
-const playerSquareColors = ['red', 'blue'];
+const playerSquareColors = ['red', 'blue', 'green', 'yellow'];
 
 export const ActionProp = {
     [Action.MOVE_DOWN]: {dx: 0, dy: 1, visual: {icon: down_arrow}},
