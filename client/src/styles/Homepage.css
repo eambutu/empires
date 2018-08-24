@@ -53,7 +53,7 @@ input:focus{
 }
 
 .play-button:hover {
-    background-color: #ff4136; /* Green */
+    background-color: #ff4136;
     color: white;
 }
 
