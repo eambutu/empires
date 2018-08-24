@@ -231,7 +231,6 @@ class Game extends Component {
             mousepos.y = e.clientY;
             initMapPos.x = document.getElementsByClassName("map")[0].offsetLeft;
             initMapPos.y = document.getElementsByClassName("map")[0].offsetTop;
-            console.log(mousepos)
 
             document.getElementsByClassName("map")[0].style.position = "absolute";
             document.getElementsByClassName("map")[0].style.top = initMapPos.y + "px";
@@ -240,8 +239,6 @@ class Game extends Component {
         }
 
         this.onDragMap = e => {
-            console.log(e.clientX);
-            console.log(e.clientY);
             if (downFlag) {
                 document.getElementsByClassName("map")[0].style.top = (initMapPos.y + (e.clientY - mousepos.y)) + "px";
                 document.getElementsByClassName("map")[0].style.left = (initMapPos.x + (e.clientX - mousepos.x)) + "px";
@@ -449,6 +446,12 @@ class Game extends Component {
             else {
                 iShards = true;
             }
+        }
+
+        let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
+        let trimmed = newState.trimmed;
+        if (trimmed[cursorUnitId]) {
+            this.resetUnitQueueCursor();
         }
 
         this.setState({

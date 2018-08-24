@@ -320,6 +320,7 @@ function initState(room) {
     let playerBases = {};
     let spawnSquares = {};
     let queues = {};
+    let trimmed = {};
     let shards = {};
 
     let corners = [
@@ -382,6 +383,7 @@ function initState(room) {
         queues[playerId] = {
             spawn: [],
         };
+        trimmed[playerId] = {};
         playerBases[playerId] = corners[rand[playerId]];
         spawnSquares[playerId] = spawnChoices[rand[playerId]];
         shards[playerId] = 23;
@@ -433,6 +435,7 @@ function initState(room) {
     room.spawnSquares = spawnSquares;
     room.squareStates = squareStates;
     room.queues = queues;
+    room.trimmed = trimmed;
     room.shards = shards;
     room.towers = towers;
     room.gameWonStatus = null;
@@ -511,6 +514,7 @@ function getState(room, playerId) {
     const gameWonStatus = room.gameWonStatus;
     const shards = room.shards;
     const queues = room.queues;
+    const trimmed = room.trimmed;
     const playerStatus = {};
     if (gameWonStatus) {
         room.clients.forEach(client => {
@@ -544,15 +548,18 @@ function getState(room, playerId) {
 
     return {
         queues: queues[playerId],
+        trimmed: trimmed[playerId],
         squares: visibleSquares,
         playerStatus: playerStatus,
-        shards: shards[playerId],
+        shards: shards[playerId]
     };
 }
 
 function validateQueues(room) {
+    let trimmed = {}
     Object.entries(room.queues).forEach(([playerId, unitQueues]) => {
         [spawnY, spawnX] = room.spawnSquares[playerId];
+        trimmed[playerId] = {}
         Object.entries(unitQueues).forEach(([unitId, queue]) => {
             // Don't need to validate spawn queue, because they're always cleared
             if (unitId === "spawn") {
@@ -566,6 +573,7 @@ function validateQueues(room) {
                 });
             });
 
+            startingLength = queue.length;
             unitQueues[unitId] = queue.filter(move => {
                 if (move.action.includes("move")) {
                     let [y, x] = move.source;
@@ -576,11 +584,12 @@ function validateQueues(room) {
                         return true;
                     }
                 }
-
                 return false;
             });
+            trimmed[playerId][unitId] = (unitQueues[unitId].length !== startingLength);
         });
     });
+    room.trimmed = trimmed;
 }
 
 function fetchSpawns(room) {
