@@ -17,9 +17,9 @@ export default function HomepageButtons(props) {
         case 1:
             return (
                 <div id={"play-buttons"}>
-                    <button id="custom-game-button" className="homepage-button" onClick={() => {window.location = "/room/"}}>Custom Game</button>
-                    <br/>
                     <button id="ffa-game-button" className="homepage-button" onClick={onClickFFA}>FFA</button>
+                    <br/>
+                    <button id="custom-game-button" className="homepage-button" onClick={() => {window.location = "/room/"}}>Custom Game</button>
                 </div>
             )
     }
