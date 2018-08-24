@@ -77,22 +77,35 @@ class Game extends Component {
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
 
-        this.resetUnitQueueCursor = function() {
+        this.freeCursor = function() {
             let [y, x, cursorUnitId] = this.state.cursor;
-            let currentQueue = this.state.queue;
-            let newY = y;
-            let newX = x;
-            currentQueue.reverse().forEach(move => {
-                if (move.unitId === cursorUnitId) {
-                    let [sY, sX] = move.source;
-                    newY = sY;
-                    newX = sX;
-                    return;
-                }
-            });
             this.setState({
-                cursor: [newY, newX, cursorUnitId]
+                cursor: [y, x, null]
             });
+        }
+
+        this.resetUnitQueueCursor = function() {
+            let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
+            let newY = null;
+            let newX = null;
+
+            this.state.squares.forEach((row, y) => {
+                row.forEach((square, x) => {
+                    if (square.unit && square.unit.id === cursorUnitId){
+                        newY = y;
+                        newX = x;
+                    }
+                })
+            })
+
+            if (newY && this.state.squares[newY][newX].unit.playerId === this.state.playerId) {
+                this.setState({
+                    cursor: [newY, newX, cursorUnitId]
+                });
+            } else {
+                this.freeCursor();
+            }
+
         }
 
         this.keyDownBound = e => {
@@ -131,7 +144,7 @@ class Game extends Component {
                 let [cursorY, cursorX, unitId] = this.state.cursor;
                 if (unitId === null) {
                     const sq = this.state.squares[cursorY][cursorX];
-                    unitId = (sq.unit && sq.unit.type !== UnitType.DEFENDER) ? sq.unit.id : null;
+                    unitId = (sq.unit && sq.unit.type !== UnitType.DEFENDER && sq.unit.playerId === this.state.playerId) ? sq.unit.id : null;
                 }
                 let targetY = cursorY + dy;
                 let targetX = cursorX + dx;
@@ -175,11 +188,7 @@ class Game extends Component {
                 }
                 this.sendMove(move);
             } else if (e.key === "c") {
-                let [y, x, cursorUnitId] = this.state.cursor;
-                this.setState({
-                    cursor: [y, x, null]
-                });
-
+                this.freeCursor();
                 let move = {
                     action: "cancelPlayerQueues"
                 };
@@ -231,7 +240,6 @@ class Game extends Component {
             mousepos.y = e.clientY;
             initMapPos.x = document.getElementsByClassName("map")[0].offsetLeft;
             initMapPos.y = document.getElementsByClassName("map")[0].offsetTop;
-            console.log(mousepos)
 
             document.getElementsByClassName("map")[0].style.position = "absolute";
             document.getElementsByClassName("map")[0].style.top = initMapPos.y + "px";
@@ -240,8 +248,6 @@ class Game extends Component {
         }
 
         this.onDragMap = e => {
-            console.log(e.clientX);
-            console.log(e.clientY);
             if (downFlag) {
                 document.getElementsByClassName("map")[0].style.top = (initMapPos.y + (e.clientY - mousepos.y)) + "px";
                 document.getElementsByClassName("map")[0].style.left = (initMapPos.x + (e.clientX - mousepos.x)) + "px";
@@ -458,6 +464,11 @@ class Game extends Component {
             playerStatus: newState.playerStatus,
             insufficientShards: iShards
         });
+
+        let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
+        if ((cursorUnitId in newState.trimmed) && newState.trimmed[cursorUnitId]) {
+            this.resetUnitQueueCursor();
+        }
     }
 
     sendMove(move) {
