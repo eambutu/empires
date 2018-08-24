@@ -53,7 +53,7 @@ class Game extends Component {
             waiting: true,
             width: 0,
             height: 0,
-            cursor: null,
+            cursor: [null, null, null],
             waitingText: '',
             canPlayAgain: true,
             spawnSquare: null,
@@ -64,6 +64,24 @@ class Game extends Component {
         this.unitSquareMap = null;
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
+
+        this.resetUnitQueueCursor = function() {
+            let [y, x, cursorUnitId] = this.state.cursor;
+            let currentQueue = this.state.queue;
+            let newY = y;
+            let newX = x;
+            currentQueue.reverse().forEach(move => {
+                if (move.unitId === cursorUnitId) {
+                    let [sY, sX] = move.source;
+                    newY = sY;
+                    newX = sX;
+                    return;
+                }
+            });
+            this.setState({
+                cursor: [newY, newX, cursorUnitId]
+            });
+        }
 
         this.keyDownBound = e => {
             if (e.key === "="){
@@ -137,37 +155,23 @@ class Game extends Component {
                     });
                 }
             } else if (e.key === "q") {
+                this.resetUnitQueueCursor();
                 let [y, x, cursorUnitId] = this.state.cursor;
                 let move = {
                     action:"cancelUnitQueue",
                     unitId: cursorUnitId
                 }
                 this.sendMove(move);
-
-                let currentQueue = this.state.queue;
-                let newY = y;
-                let newX = x;
-                currentQueue.reverse().forEach(move => {
-                    if (move.unitId === cursorUnitId) {
-                        let [sY, sX] = move.source;
-                        newY = sY;
-                        newX = sX;
-                        return;
-                    }
-                });
-                this.setState({
-                    cursor: [newY, newX, cursorUnitId]
-                });
             } else if (e.key === "c") {
-                let move = {
-                    action: "cancelPlayerQueues"
-                };
-                this.sendMove(move);
-
                 let [y, x, cursorUnitId] = this.state.cursor;
                 this.setState({
                     cursor: [y, x, null]
                 });
+
+                let move = {
+                    action: "cancelPlayerQueues"
+                };
+                this.sendMove(move);
             }
             else if (e.key === "Alt") {
                 this.setState({isSpawnDefender: true});
