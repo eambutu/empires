@@ -11,3 +11,14 @@
 .overlay-component {
     position: absolute;
 }
+
+.blinking{
+    border-width: 0px;
+    animation: blink .5s step-end infinite alternate; ;
+}
+
+@keyframes blink {
+    50% {
+        border-width: 0px;
+    }
+}
