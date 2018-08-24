@@ -1,4 +1,6 @@
 import React, {Component} from 'react';
+import Game from './Game.js';
+
 import sword from '../sword.svg';
 import '../styles/Homepage.css';
 import HomepageButtons from "./HomepageButtons";
@@ -6,48 +8,32 @@ import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 
 class Homepage extends Component {
-    constructor(props){
+    constructor(props) {
         super(props);
 
         this.state = {
             menuIndex: 0,
+            queuedGame: false
         }
         this.goToPlayMenu = () => {
-            console.log("hi")
-            this.setState({"menuIndex" :1});
+            this.setState({menuIndex: 1});
         }
 
         this.goToHomeMenu = () => {
-            this.setState({"menuIndex" : 0});
+            this.setState({menuIndex: 0});
         }
 
         this.onClickFFA = () => {
-            console.log("FFA!!")
+            this.setState({queuedGame: true})
         }
-
     }
-
-    componentDidMount() {
-        // Call our fetch function below once the component mounts
-        this.callBackendAPI()
-            .then(res => this.setState({data: res.express}))
-            .catch(err => console.log(err));
-    }
-
-    // Fetches our GET route from the Express server. (Note the route we are fetching matches the GET route from server.js
-    callBackendAPI = async () => {
-        const response = await fetch('/express_backend');
-        const body = await response.json();
-
-        if (response.status !== 200) {
-            throw Error(body.message)
-        }
-        return body;
-    };
 
     render() {
+        if (this.state.queuedGame) {
+            return <Game queuedGame={true} />
+        }
         let arrowicon = null
-        if (this.state.menuIndex !== 0 ){
+        if (this.state.menuIndex !== 0 ) {
             arrowicon = (
                 <div id="back-arrow" onMouseLeave={() => {console.log("hi"); document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
                      onMouseOver={() => {console.log('hover'); document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
@@ -74,7 +60,6 @@ class Homepage extends Component {
                 </div>
             </div>
         );
-
     }
 }
 

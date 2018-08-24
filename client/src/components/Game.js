@@ -262,7 +262,13 @@ class Game extends Component {
     }
 
     componentDidMount() {
-        this.ws = new WebSocket('ws://' + window.location.hostname + ':5000' + window.location.pathname);
+        let pathname;
+        if (this.props.queuedGame) {
+            pathname = '/queue';
+        } else {
+            pathname = window.location.pathname;
+        }
+        this.ws = new WebSocket('ws://' + window.location.hostname + ':5000' + pathname);
 
         this.onReset = e => {
             this.ws.send(JSON.stringify({'event': 'reset'}));

@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const expressWs = require('express-ws')(app);
 const path = require('path');
+const crypto = require('crypto');
 
 const {SquareType, UnitType, Costs, HP} = require('./config');
 
@@ -19,6 +20,8 @@ const width = 15;
 const height = 15;
 
 var rooms = {};
+let queueRooms = {};
+let queueRoomId = null;
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -34,9 +37,9 @@ app.get('/room_list', function (req, res) {
 
 app.get(['/room', '/room/:roomId', '/tutorial'], function(req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-})
+});
 
-function initOrGetRoom(roomId, ws, maxPlayers, isTutorial) {
+function initOrGetRoom(roomId, rooms, ws, maxPlayers, isTutorial) {
     if (!(roomId in rooms)) {
         rooms[roomId] = {
             id: roomId,
@@ -52,6 +55,12 @@ function initOrGetRoom(roomId, ws, maxPlayers, isTutorial) {
     }
     rooms[roomId].clients.push(ws);
     return rooms[roomId];
+}
+
+const OnConnectStatus = {
+    WAITING: 1,
+    STARTING: 2,
+    EXCLUDED: 3
 }
 
 function onConnect(room, ws) {
@@ -71,14 +80,15 @@ function onConnect(room, ws) {
         console.log(`player ${ws.playerId} connected to ${room.id}`);
 
         if (room.clients.length === room.maxPlayers) {
-            room.full = true;
-            runGame(room);
+            return OnConnectStatus.STARTING;
         }
+        return OnConnectStatus.WAITING;
     } else {
         ws.send(JSON.stringify({
             event: 'full',
         }));
         ws.close();
+        return OnConnectStatus.EXCLUDED;
     }
 }
 
@@ -142,14 +152,38 @@ function onMessage(room, ws) {
     });
 }
 
+app.ws('/queue', function (ws, req) {
+    if (!queueRoomId) {
+        queueRoomId = crypto.randomBytes(10).toString('hex');
+    }
+    let queueRoom = initOrGetRoom(queueRoomId, queueRooms, ws, 2, false);
+    let onConnectStatus = onConnect(queueRoom, ws);
+    if (onConnectStatus !== OnConnectStatus.EXCLUDED) {
+        onMessage(queueRoom, ws);
+        onPong(ws);
+        onClose(queueRoom, ws);
+    }
+    if (onConnectStatus === OnConnectStatus.STARTING) {
+        queueRoomId = null;
+        queueRoom.full = true;
+        runGame(queueRoom);
+    }
+});
+
 app.ws('/room/:roomId', function (ws, req) {
     let roomId = req.params.roomId;
-    let room = initOrGetRoom(roomId, ws, 2, false);
+    let room = initOrGetRoom(roomId, rooms, ws, 2, false);
 
-    onConnect(room, ws);
-    onMessage(room, ws);
-    onPong(ws);
-    onClose(room, ws);
+    let onConnectStatus = onConnect(room, ws);
+    if (onConnectStatus !== OnConnectStatus.EXCLUDED) {
+        onMessage(room, ws);
+        onPong(ws);
+        onClose(room, ws);
+    }
+    if (onConnectStatus === OnConnectStatus.STARTING) {
+        room.full = true;
+        runGame(room);
+    }
 });
 
 app.ws('/tutorial', function (ws, req) {
@@ -243,7 +277,7 @@ getPingPlayers = targetRoom => {
             }
         });
     }    
-}
+};
 
 function runGame(room) {
     broadcastStarting(room);
@@ -303,7 +337,7 @@ function broadcastInit(room) {
         if (client.readyState === 1) {
             client.send(JSON.stringify({
                 'event': 'init',
-                'playerIds': room.playerIds,
+                'playerIds': playerIds,
                 'base': playerBases[client.playerId],
                 'spawn': spawnSquares[client.playerId],
                 'width': width,
@@ -609,14 +643,10 @@ function validateQueues(room) {
 
 function fetchSpawns(room) {
     let spawns = [];
-    room.clients.forEach(client => {
-        Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
-            if (unitId === "spawn") {
-                spawns.push.apply(spawns, unitQueue);
-                unitQueue.length = 0;
-            }
-        });
-
+    room.playerIds.forEach(playerId => {
+        let unitQueue = room.queues[playerId]["spawn"];
+        spawns.push.apply(spawns, unitQueue);
+        unitQueue.length = 0;
     });
     return spawns;
 }
