@@ -104,8 +104,7 @@ function onMessage(room, ws) {
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
                 } else if (data.move.action.includes("move")) {
-                    data.move.unitId = data.move.unitId ? data.move.unitId : "unknown";
-                    if (data.move.unitId in queues[ws.playerId]) {
+                    if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
                     }
                 } else if (data.move.action === "cancelUnitQueue") {
@@ -117,6 +116,8 @@ function onMessage(room, ws) {
                     });
                 }
             }
+        } else if (data.event === 'veil') {
+            room.isTutorial = false;
         } else if (data.event === 'reset') {
             // console.log(data);
             resetGame(room);
@@ -380,7 +381,6 @@ function initState(room) {
         // Initialize queue
         queues[playerId] = {
             spawn: [],
-            unknown: []
         };
         playerBases[playerId] = corners[rand[playerId]];
         spawnSquares[playerId] = spawnChoices[rand[playerId]];
@@ -551,19 +551,18 @@ function getState(room, playerId) {
 }
 
 function validateQueues(room) {
-    let queues = room.queues;
-    let squareStates = room.squareStates;
-    Object.entries(queues).forEach(([playerId, unitQueues]) => {
+    Object.entries(room.queues).forEach(([playerId, unitQueues]) => {
+        [spawnY, spawnX] = room.spawnSquares[playerId];
         Object.entries(unitQueues).forEach(([unitId, queue]) => {
-            // Don't need to clear shard queue, because they're always cleared
-            if ((unitId === "spawn") || (unitId === "unknown")) {
+            // Don't need to validate spawn queue, because they're always cleared
+            if (unitId === "spawn") {
                 return;
             }
 
-            let isPlayerAndUnit = squareStates.map(row => {
-                return row.map(cell => {
+            let isPlayerAndUnit = room.squareStates.map((row, y) => {
+                return row.map((cell, x) => {
                     let unit = cell.getUnit();
-                    return unit && (unit.playerId === playerId) && (unit.id === unitId);
+                    return (unit && (unit.playerId === playerId) && (unit.id === unitId));
                 });
             });
 
@@ -584,96 +583,99 @@ function validateQueues(room) {
     });
 }
 
-function updateState(room) {
-    let squareStates = room.squareStates;
-    let spawnSquares = room.spawnSquares;
-    let playerBases = room.playerBases;
-    let shards = room.shards;
-    let towers = room.towers;
-    let queues = room.queues;
-    let frameCounter = room.frameCounter;
-
+function fetchSpawns(room) {
     let spawns = [];
-    let moves = [];
-
-    validateQueues(room);
     room.clients.forEach(client => {
-        Object.entries(queues[client.playerId]).forEach(([unitId, unitQueue]) => {
+        Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
             if (unitId === "spawn") {
                 spawns.push.apply(spawns, unitQueue);
                 unitQueue.length = 0;
-            } else if (unitQueue.length > 0 && (frameCounter === 0)) {
+            }
+        });
+
+    });
+    return spawns;
+}
+
+function addSpawns(room, spawns) {
+    spawns.forEach(spawn => {
+        let {playerId, target, type} = spawn;
+        let [tY, tX] = target;
+        if (room.squareStates[tY][tX].type !== SquareType.RIVER && isInSpawningRange(room, tY, tX, playerId, type)) {
+            let count = 0;
+            if (type === UnitType.ATTACKER) {
+                if (Costs.ATTACKER > room.shards[playerId]) {
+                    return;
+                }
+                count = HP.ATTACKER;
+                room.shards[playerId] -= Costs.ATTACKER;
+            } else if (type === UnitType.DEFENDER) {
+                if (Costs.DEFENDER > room.shards[playerId]) {
+                    return;
+                }
+                count = HP.DEFENDER;
+                room.shards[playerId] -= Costs.DEFENDER;
+            }
+            let unitId = Math.floor(10000000*Math.random()).toString();
+            room.squareStates[tY][tX].units.push(new Unit(unitId, playerId, type, count));
+            room.queues[playerId][unitId] = [];
+        }
+    });
+}
+
+function incrementShards(room) {
+    if (room.frameCounter === 0) {
+        // increment everyone's shard per turn
+        Object.keys(room.shards).forEach((playerId) => {
+            room.shards[playerId]++;
+        });
+
+        // increment shard if owned tower from previous turn
+        room.towers.forEach(([y, x]) => {
+            let unit = room.squareStates[y][x].getUnit();
+            if (unit) {
+                room.shards[unit.playerId]++;
+            }
+        });
+    }
+}
+
+function fetchMoves(room) {
+    let moves = [];
+    room.clients.forEach(client => {
+        Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
+            if (unitQueue.length > 0 && (room.frameCounter === 0)) {
                 let move = unitQueue.shift();
                 moves.push(move);
             }
         });
 
     });
+    return moves;
+}
 
-    if (frameCounter === 0) {
-        // increment everyone's shard per turn
-        Object.keys(shards).forEach((playerId) => {
-            shards[playerId]++;
-        });
-
-        // increment shard if owned tower from previous turn
-        towers.forEach(([y, x]) => {
-            let unit = squareStates[y][x].getUnit();
-            if (unit) {
-                shards[unit.playerId]++;
-            }
-        });
-    }
-
-    spawns.forEach(spawn => {
-        let {playerId, target, type} = spawn;
-        let [tY, tX] = target;
-        if (squareStates[tY][tX].type !== SquareType.RIVER && isInSpawningRange(room, tY, tX, playerId, type)) {
-            let count = 0;
-            if (type === UnitType.ATTACKER) {
-                if (Costs.ATTACKER > shards[playerId]) {
-                    return;
-                }
-                count = HP.ATTACKER;
-                shards[playerId] -= Costs.ATTACKER;
-            } else if (type === UnitType.DEFENDER) {
-                if (Costs.DEFENDER > shards[playerId]) {
-                    return;
-                }
-                count = HP.DEFENDER;
-                shards[playerId] -= Costs.DEFENDER;
-            }
-            let unitId = Math.floor(10000000*Math.random()).toString();
-            squareStates[tY][tX].units.push(new Unit(unitId, playerId, type, count));
-            queues[playerId][unitId] = [];
-        }
-    });
-
+function addMoves(room, moves) {
     // update the units arrays with move
     moves.forEach(move => {
         let {unitId, playerId, target} = move;
         let [sY, sX] = move.source;
         let [tY, tX] = target;
-        let [spawnY, spawnX] = spawnSquares[playerId]
 
-        if ((move.unitId === "unknown") && (sY === spawnY) && (sX === spawnX)){
-            let [spawnY, spawnX] = spawnSquares[playerId];
-            unitId = squareStates[spawnY][spawnX].getUnit().id;
-        }
-        if (squareStates[tY][tX].type !== SquareType.RIVER && !squareStates[tY][tX].hasDefenderId(playerId)) {
-            let unit = squareStates[sY][sX].popUnitById(unitId);
+        if (room.squareStates[tY][tX].type !== SquareType.RIVER && !room.squareStates[tY][tX].hasDefenderId(playerId)) {
+            let unit = room.squareStates[sY][sX].popUnitById(unitId);
             if (unit) {
                 if (unit.playerId !== playerId) {
-                    squareStates[sY][sX].units.push(unit);
+                    room.squareStates[sY][sX].units.push(unit);
                 } else {
-                    squareStates[tY][tX].units.push(unit);
+                    room.squareStates[tY][tX].units.push(unit);
                 }
             }
         }
     });
+}
 
-
-    squareStates.forEach((row) => {
+function resolveConflicts(room, moves) {
+    room.squareStates.forEach((row) => {
         row.forEach((square) => {
             if (square.units.length > 1) {
                 // Gets the total counts for each player
@@ -716,8 +718,8 @@ function updateState(room) {
                     let numUnitsWasMoving = 0;
                     let wasMovingUnit = null;
 
-                    square.units.forEach((unit) =>{
-                        if (queues[unit.playerId][unit.id].length > 0) {
+                    square.units.forEach((unit) => {
+                        if (room.queues[unit.playerId][unit.id].length > 0) {
                             numUnitsGoingToMove++;
                             goingToMoveUnit = unit;
                         }
@@ -736,7 +738,7 @@ function updateState(room) {
                     } else if (numUnitsGoingToMove === 1) {
                         unit = goingToMoveUnit;
                     } else if (numUnitsGoingToMove > 1) {
-                        queues[unit.playerId][goingToMoveUnit.id].length = 0;
+                        room.queues[unit.playerId][goingToMoveUnit.id].length = 0;
                         unit = goingToMoveUnit;
                     }
                 }
@@ -746,24 +748,44 @@ function updateState(room) {
             }
         })
     });
+}
 
-    validateQueues(room);
-
-    Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
-        let unit = squareStates[y][x].getUnit();
+function updateBasesAndCheckWin(room) {
+    Object.entries(room.playerBases).forEach(([playerId, [y, x]]) => {
+        let unit = room.squareStates[y][x].getUnit();
         if (unit && (unit.playerId !== playerId)) {
-            if (unit.count >= squareStates[y][x].baseHP) {
+            if (unit.count >= room.squareStates[y][x].baseHP) {
                 let gameWonStatus = {};
                 gameWonStatus[playerId] = "lost";
                 gameWonStatus[unit.playerId] = "won";
                 room.gameWonStatus = gameWonStatus;
                 room.gameEnded = true;
             } else {
-                squareStates[y][x].baseHP -= unit.count;
-                squareStates[y][x].units.length = 0;
+                room.squareStates[y][x].baseHP -= unit.count;
+                room.squareStates[y][x].units.length = 0;
             }
         }
     });
+}
 
-    room.frameCounter = (frameCounter + 1) % framesPerTurn;
+function incrementFrameCounter(room) {
+    room.frameCounter = (room.frameCounter + 1) % framesPerTurn;
+}
+
+function updateState(room) {
+    validateQueues(room);
+
+    let spawns = fetchSpawns(room);
+    addSpawns(room, spawns);
+
+    let moves = fetchMoves(room);
+    addMoves(room, moves);
+    resolveConflicts(room, moves);
+
+    validateQueues(room);
+
+    updateBasesAndCheckWin(room);
+
+    incrementShards(room);
+    incrementFrameCounter(room);
 }
