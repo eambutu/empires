@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import '../styles/RoomList.css';
+import sword from "../sword.svg";
 
 class RoomList extends Component {
     constructor(props) {
@@ -29,20 +30,28 @@ class RoomList extends Component {
 
     render() {
         if (this.state.data) {
-            return <table>
-                <tbody>
+            return (
+                <div className={"room-list-title"}>
+            <img src={sword} className="App-logo" alt="logo"/>
+            <div className="title">Lobbies</div>
+            <table>
+                <tbody className={"room-list-table"}>
                 {Object.entries(this.state.data).map(([key, value]) => (
-                    <tr>
-                        <td>
-                            Room Name: {value['id']}
+                    <tr className={"room-list-row-container"}>
+                        <div className={"room-list-row"}>
+                        <td className={"room-list-element"}>
+                            {value['id']}
                         </td>
-                        <td>
+                        <td className={"room-list-element"}>
                             {value['numPlayers']} / {value['maxPlayers']}
                         </td>
+                        </div>
                     </tr>
                 ))}
                 </tbody>
             </table>
+                </div>
+        )
         } else {
             return <div></div>
         }
