@@ -30,7 +30,7 @@ class Homepage extends Component {
 
     render() {
         if (this.state.queuedGame) {
-            return <Game queuedGame={true} />
+            return <Game goHome={this.goToHomeMenu} queuedGame={true} />
         }
         let arrowicon = null
         if (this.state.menuIndex !== 0 ) {

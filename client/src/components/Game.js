@@ -7,6 +7,7 @@ import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
 import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
+import GlobalQueue from "./GlobalQueue";
 
 const {SquareType, Costs, UnitType, Action} = require("./config");
 
@@ -407,7 +408,12 @@ class Game extends Component {
                     <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                 </div>
             );
-        } else {
+        } else if (this.props.queuedGame){
+            return (
+                <GlobalQueue goToHomeMenu ={this.props.goHome} />
+            )
+        }
+        else {
             return (
                 <Lobby playerStatus={this.state.playerStatus} waitingText={this.state.waitingText} />
             )
