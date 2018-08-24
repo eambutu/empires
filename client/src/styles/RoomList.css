@@ -33,7 +33,7 @@
 
 .room-list-title{
     position: absolute;
-    top: 30%;
+    top: 40%;
     left: 50%;
     transform: translateY(-50%) translateX(-50%);
     text-align: center;
