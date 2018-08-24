@@ -21,7 +21,7 @@ var rooms = {};
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-app.get('/room_list', function (req, res) {
+app.get('/room', function (req, res) {
     let temp_rooms = _.cloneDeep(rooms);
     Object.keys(temp_rooms).map(function (key) {
         let numPlayers = temp_rooms[key]['clients'].length;
@@ -265,7 +265,11 @@ function runGame(room) {
 function resetIfEmpty(room) {
     room.clients = room.clients.filter(client => (client.readyState === 1));
     if (room.clients.length === 0) {
-        openRoom(room);
+        if (room.isTutorial) {
+            delete room;
+        } else {
+            openRoom(room);
+        }
     }
 }
 

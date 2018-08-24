@@ -31,7 +31,7 @@ class RoomList extends Component {
 
     // Fetch the list of rooms from express
     callBackendAPI = async () => {
-        const response = await fetch('/room_list');
+        const response = await fetch('/room');
         const body = await response.json();
 
         if (response.status !== 200) {
