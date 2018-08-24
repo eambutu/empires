@@ -22,7 +22,7 @@ class RoomList extends Component {
         this.callBackendAPI()
             .then(res => {
                 let filtered = _.pickBy(res, function(value) {
-                    return (value['numPlayers'] !== value['maxPlayers']) && !value['isTutorial'];
+                    return (!value['isTutorial']);
                 })
                 this.setState({data: filtered})
             })

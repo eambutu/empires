@@ -12,8 +12,8 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-const ts = 1000 / 8;
-const framesPerTurn = 4;
+const ts = 1000 / 10;
+const framesPerTurn = 2;
 const width = 15;
 const height = 15;
 
