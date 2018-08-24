@@ -6,7 +6,7 @@ export default function Lobby(props) {
     const {playerStatus, waitingText} = props;
     console.log(playerStatus)
     return (
-        <div>
+        <div className={"center"}>
             {waitingText}
         </div>
     )
