@@ -24,6 +24,18 @@ const MoveKeyMap = {
 let backsize = 42;
 let squaresize = 52;
 
+let mousepos = {
+    x: null,
+    y: null
+}
+
+let initMapPos = {
+    x: null,
+    y: null
+}
+
+let downFlag = false;
+
 class Game extends Component {
     isInBound(y, x) {
         return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
@@ -53,7 +65,7 @@ class Game extends Component {
             waiting: true,
             width: 0,
             height: 0,
-            cursor: null,
+            cursor: [null, null, null],
             waitingText: '',
             canPlayAgain: true,
             spawnSquare: null,
@@ -64,6 +76,24 @@ class Game extends Component {
         this.unitSquareMap = null;
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
+
+        this.resetUnitQueueCursor = function() {
+            let [y, x, cursorUnitId] = this.state.cursor;
+            let currentQueue = this.state.queue;
+            let newY = y;
+            let newX = x;
+            currentQueue.reverse().forEach(move => {
+                if (move.unitId === cursorUnitId) {
+                    let [sY, sX] = move.source;
+                    newY = sY;
+                    newX = sX;
+                    return;
+                }
+            });
+            this.setState({
+                cursor: [newY, newX, cursorUnitId]
+            });
+        }
 
         this.keyDownBound = e => {
             if (e.key === "="){
@@ -137,37 +167,23 @@ class Game extends Component {
                     });
                 }
             } else if (e.key === "q") {
+                this.resetUnitQueueCursor();
                 let [y, x, cursorUnitId] = this.state.cursor;
                 let move = {
                     action:"cancelUnitQueue",
                     unitId: cursorUnitId
                 }
                 this.sendMove(move);
-
-                let currentQueue = this.state.queue;
-                let newY = y;
-                let newX = x;
-                currentQueue.reverse().forEach(move => {
-                    if (move.unitId === cursorUnitId) {
-                        let [sY, sX] = move.source;
-                        newY = sY;
-                        newX = sX;
-                        return;
-                    }
-                });
-                this.setState({
-                    cursor: [newY, newX, cursorUnitId]
-                });
             } else if (e.key === "c") {
-                let move = {
-                    action: "cancelPlayerQueues"
-                };
-                this.sendMove(move);
-
                 let [y, x, cursorUnitId] = this.state.cursor;
                 this.setState({
                     cursor: [y, x, null]
                 });
+
+                let move = {
+                    action: "cancelPlayerQueues"
+                };
+                this.sendMove(move);
             }
             else if (e.key === "Alt") {
                 this.setState({isSpawnDefender: true});
@@ -207,6 +223,34 @@ class Game extends Component {
                 this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
             }
         };
+
+        this.onClickMap = e => {
+            downFlag = true;
+            // Record click position
+            mousepos.x = e.clientX;
+            mousepos.y = e.clientY;
+            initMapPos.x = document.getElementsByClassName("map")[0].offsetLeft;
+            initMapPos.y = document.getElementsByClassName("map")[0].offsetTop;
+            console.log(mousepos)
+
+            document.getElementsByClassName("map")[0].style.position = "absolute";
+            document.getElementsByClassName("map")[0].style.top = initMapPos.y + "px";
+            document.getElementsByClassName("map")[0].style.left = initMapPos.x + "px";
+
+        }
+
+        this.onDragMap = e => {
+            console.log(e.clientX);
+            console.log(e.clientY);
+            if (downFlag) {
+                document.getElementsByClassName("map")[0].style.top = (initMapPos.y + (e.clientY - mousepos.y)) + "px";
+                document.getElementsByClassName("map")[0].style.left = (initMapPos.x + (e.clientX - mousepos.x)) + "px";
+            }
+        }
+
+        this.onReleaseMap = () => {
+            downFlag = false;
+        }
     }
 
     componentDidMount() {
@@ -280,8 +324,26 @@ class Game extends Component {
 
             return (
                 <div id="game-page">
-                    <Tutorial displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards} onVeil={this.onVeil} exitClick={this.onExit} playerId={playerId} playerIds={playerIds} playerStatus={playerStatus} squares={squares} queue={queue} cursor={cursor} handleClick={this.onClickBound}/>
+                    <Tutorial
+                        onReleaseMap={this.onReleaseMap}
+                        onDragMap={this.onDragMap}
+                        onClickMap={this.onClickMap}
+                        displayShards={this.state.displayShards}
+                        insufficientShards={this.state.insufficientShards}
+                        onVeil={this.onVeil}
+                        exitClick={this.onExit}
+                        playerId={playerId}
+                        playerIds={playerIds}
+                        playerStatus={playerStatus}
+                        squares={squares}
+                        queue={queue}
+                        cursor={cursor}
+                        handleClick={this.onClickBound}
+                        isSpawnDefender={isSpawnDefender}
+                        isInSpawningRange={this.isInSpawningRange.bind(this)}
+                    />
                 </div>
+
 
             );
         }
@@ -292,6 +354,9 @@ class Game extends Component {
                         <PlayerBoard playerStatus={this.state.playerStatus}/>
 
                         <Map
+                            onReleaseMap={this.onReleaseMap}
+                            onDragMap={this.onDragMap}
+                            onClickMap={this.onClickMap}
                             playerId={playerId}
                             playerIds={playerIds}
                             squares={squares}
@@ -312,6 +377,9 @@ class Game extends Component {
                     <PlayerBoard playerStatus={this.state.playerStatus}/>
 
                     <Map
+                        onReleaseMap={this.onReleaseMap}
+                        onDragMap={this.onDragMap}
+                        onClickMap={this.onClickMap}
                         playerId={playerId}
                         playerIds={playerIds}
                         squares={squares}
