@@ -4,6 +4,8 @@ const expressWs = require('express-ws')(app);
 const path = require('path');
 const {SquareType, UnitType, Costs, HP} = require('./config');
 
+const _ = require('lodash');
+
 const Vision = {
     UNIT: 1,
     BASE: 3,
@@ -18,6 +20,16 @@ const height = 15;
 var rooms = {};
 
 app.use(express.static(path.join(__dirname, 'client/build')));
+
+app.get('/room_list', function (req, res) {
+    let temp_rooms = _.cloneDeep(rooms);
+    Object.keys(temp_rooms).map(function (key) {
+        let numPlayers = temp_rooms[key]['clients'].length;
+        temp_rooms[key] = _.pick(temp_rooms[key], ['id', 'full', 'gameEnded', 'isTutorial', 'maxPlayers']);
+        temp_rooms[key]['numPlayers'] = numPlayers;
+    });
+    res.send(JSON.stringify(temp_rooms));
+})
 
 app.get('/room/:roomId', function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
