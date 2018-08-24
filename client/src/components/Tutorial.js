@@ -10,7 +10,7 @@ const tutorialTextMap = {
     1: "The objective of Squarecraft is to take the opponent’s base and defend your own",
     2: "You have two army types. Defenders are static, and can defend against up to 10 attacker hits. Attackers move around and can take other squares. ",
     3: "Attackers cost 25 shards. Press spacebar now to spawn an attacker and wasd to move it around.",
-    4: "Defenders cost 100 shards. Hold alt and click a valid location to spawn a defender. Try it on this square!",
+    4: "Defenders cost 100 shards. Hold the control (or command) key and click a valid location to spawn a defender. Try it on this square!",
     5: "Increase your shard collection rate by taking over these shard towers.",
     6: "You can also take the vision tower for more vision.",
     7: "During real gameplay, you can't see the whole board. Move an attacker onto the other player's base to win and exit the tutorial. Have fun!",

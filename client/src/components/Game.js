@@ -194,13 +194,13 @@ class Game extends Component {
                 };
                 this.sendMove(move);
             }
-            else if (e.key === "Alt") {
+            else if (e.key === "Control" || e.key === "Meta") {
                 this.setState({isSpawnDefender: true});
             }
         };
 
         this.keyUpBound = e => {
-            if (e.key === "Alt") {
+            if (e.key === "Control" || e.key === "Meta") {
                 this.setState({isSpawnDefender: false});
             }
         }
@@ -209,7 +209,7 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            if (e.altKey) {
+            if (e.ctrlKey || e.metaKey) {
                 if (this.state.displayShards >= Costs.DEFENDER) {
                     if (this.isInSpawningRange(y, x)) {
                         let move = {
