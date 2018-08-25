@@ -113,8 +113,6 @@ function onConnect(room, ws) {
         }
         if (ws.status === ClientStatus.DISCONNECTED) {
             ws.close();
-            clearInterval(ws.heartbeatInterval);
-            checkRoomState(room);
         }
     }, 1000);
 }
@@ -124,8 +122,8 @@ function onClose(room, ws) {
         room.clients = room.clients.filter(client => (client !== ws));
         room.waitingClients = room.waitingClients.filter(client => (client !== ws));
         ws.status = ClientStatus.DISCONNECTED;
+        clearInterval(ws.heartbeatInterval);
         checkRoomState(room);
-        console.log(ws.playerId + ' closed connection');
     });
 }
 
@@ -183,8 +181,10 @@ function connectToRoom(room, ws) {
         ws.close();
     } else {
         room.waitingClients.push(ws);
+
         onConnect(room, ws);
         onClose(room, ws);
+        let {status, playerId} = room.waitingClients[0];
 
         if (room.gameStatus === GameStatus.QUEUING) {
             tryStartGame(room);
@@ -229,14 +229,11 @@ getPerformOneTurn = targetRoom => {
             broadcastState(room);
             clearTrimmedAndSpawned(room);
             if (gameEnded) {
-                room.gameStatus = GameStatus.QUEUING;
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
-                        ws.status = ClientStatus.DISCONNECTED;
                     }
                 });                
-                checkRoomState(room);
             }
         }
     };    
@@ -244,7 +241,6 @@ getPerformOneTurn = targetRoom => {
 
 
 function runGame(room) {
-    console.log('start game');
     room.gameStatus = GameStatus.IN_PROGRESS;
     broadcastStarting(room);
     initState(room, room.type);
@@ -259,10 +255,10 @@ function checkRoomState(room) {
     let clients = room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
     if (clients.length === 0) {
         clearInterval(room.gameInterval);
+        room.gameStatus = GameStatus.QUEUING;
         tryStartGame(room);
-        if (room.gameStatus === GameStatus.QUEUING && room.waitingClients.length === 0) {
+        if (room.waitingClients.length === 0) {
             delete rooms[room.id];
-            delete room;
             console.log("deleting room with id " + room.id);
         }
     }
