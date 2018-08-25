@@ -82,7 +82,7 @@ function initState(room, type) {
     let shards = {};
     let flags = {};
 
-    let genMap = generateMap();
+    let genMap = generateMap(type);
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
