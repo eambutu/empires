@@ -92,7 +92,7 @@ function onConnect(room, ws) {
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
     ws.playerId = randString();
-    ws.name = `player_${ws.playerId}`;
+    ws.name = `${ws.playerId}`;
     ws.secret = randSecret();
     console.log(`player ${ws.playerId} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
