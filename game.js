@@ -65,10 +65,12 @@ class Unit {
     }
 }
 
-function initState(room) {
+function initState(room, isTutorial) {
     let playerIds = room.clients.map(client => client.playerId);
 
-    if (room.isTutorial) {
+    room.fogOfWar = true;
+    if (isTutorial) {
+        room.fogOfWar = false;
         playerIds.push("cpu".toString())
     }
 
@@ -76,6 +78,7 @@ function initState(room) {
     let spawnSquares = {};
     let queues = {};
     let trimmed = {};
+    let spawned = {};
     let shards = {};
     let flags = {};
 
@@ -83,7 +86,7 @@ function initState(room) {
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
-    if (room.isTutorial) {
+    if (isTutorial) {
         cornerMap[playerIds[0]] = 2;
         cornerMap[playerIds[1]] = 0;
         remainingCornerIndices = [1, 3];
@@ -101,6 +104,7 @@ function initState(room) {
             spawn: [],
         };
         trimmed[playerId] = {};
+        spawned[playerId] = false;
         let cornerIndex = cornerMap[playerId];
         playerBases[playerId] = genMap.corners[cornerIndex];
         spawnSquares[playerId] = genMap.spawnChoices[cornerIndex];
@@ -108,7 +112,7 @@ function initState(room) {
         flags[playerId] = 0;
     });
 
-    if (room.isTutorial) {
+    if (isTutorial) {
         let realPlayerId = playerIds[0];
         shards[realPlayerId] = 1000;
         queues[realPlayerId]["spawn"] = [
@@ -156,6 +160,7 @@ function initState(room) {
     room.flagSpawns = genMap.flagSpawns;
     room.queues = queues;
     room.trimmed = trimmed;
+    room.spawned = spawned;
     room.shards = shards;
     room.flags = flags;
     room.towers = genMap.towers;
@@ -239,6 +244,7 @@ function getState(room, playerId) {
     const flags = room.flags;
     const queues = room.queues;
     const trimmed = room.trimmed;
+    const spawned = room.spawned;
     const playerStatus = {};
     if (gameWonStatus) {
         room.clients.forEach(client => {
@@ -249,17 +255,13 @@ function getState(room, playerId) {
     } else {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
-                if (client.isAlive) {
-                    playerStatus[client.playerId] = {'name': client.name, 'status': 'playing'};
-                } else {
-                    playerStatus[client.playerId] = {'name': client.name, 'status': 'afk'};
-                }
+                playerStatus[client.playerId] = {'name': client.name, 'status': client.status};
             }
         });
     }
 
     let visibleSquares = squares;
-    if (!room.isTutorial) {
+    if (room.fogOfWar) {
         visibleSquares = maskForPlayer(squares, playerId);
     }
 
@@ -273,6 +275,7 @@ function getState(room, playerId) {
     return {
         queues: queues[playerId],
         trimmed: trimmed[playerId],
+        spawned: spawned[playerId],
         squares: visibleSquares,
         playerStatus: playerStatus,
         shards: shards[playerId],
@@ -281,10 +284,8 @@ function getState(room, playerId) {
 }
 
 function validateQueues(room) {
-    let trimmed = {}
     Object.entries(room.queues).forEach(([playerId, unitQueues]) => {
         [spawnY, spawnX] = room.spawnSquares[playerId];
-        trimmed[playerId] = {}
         Object.entries(unitQueues).forEach(([unitId, queue]) => {
             // Don't need to validate spawn queue, because they're always cleared
             if (unitId === "spawn") {
@@ -301,20 +302,30 @@ function validateQueues(room) {
             let startingLength = queue.length;
             unitQueues[unitId] = queue.filter(move => {
                 if (move.action.includes("move")) {
-                    let [y, x] = move.source;
-                    if (isPlayerAndUnit[y][x]) {
-                        isPlayerAndUnit[y][x] = false;
-                        let [newY, newX] = move.target;
-                        isPlayerAndUnit[newY][newX] = true;
+                    let [sY, sX] = move.source;
+                    let [tY, tX] = move.target;
+                    if (isPlayerAndUnit[sY][sX] && room.squareStates[tY][tX].type !== SquareType.RIVER) {
+                        isPlayerAndUnit[sY][sX] = false;
+                        isPlayerAndUnit[tY][tX] = true;
                         return true;
                     }
                 }
                 return false;
             });
-            trimmed[playerId][unitId] = (unitQueues[unitId].length !== startingLength);
+            room.trimmed[playerId][unitId] = (room.trimmed[playerId][unitId] || (unitQueues[unitId].length !== startingLength));
         });
     });
-    room.trimmed = trimmed;
+}
+
+function clearTrimmedAndSpawned(room) {
+    Object.entries(room.trimmed).forEach(([playerId, playerTrimmed]) => {
+        Object.keys(playerTrimmed).forEach(unitId => {
+            room.trimmed[playerId][unitId] = false;
+        });
+    });
+    Object.keys(room.spawned).forEach(playerId => {
+        room.spawned[playerId] = false;
+    });
 }
 
 function fetchSpawns(room) {
@@ -379,7 +390,6 @@ function fetchMoves(room) {
                 moves.push(move);
             }
         });
-
     });
     return moves;
 }
@@ -481,6 +491,7 @@ function resolveConflicts(room, moves) {
 }
 
 function updateBasesAndCheckWin(room) {
+    let gameEnded = false;
     Object.entries(room.playerBases).forEach(([playerId, [y, x]]) => {
         let unit = room.squareStates[y][x].getUnit();
         if (unit && (unit.playerId !== playerId)) {
@@ -497,13 +508,14 @@ function updateBasesAndCheckWin(room) {
                     }
                 })
                 room.gameWonStatus = gameWonStatus;
-                room.gameEnded = true;
+                gameEnded = true;
             } else {
                 room.squareStates[y][x].baseHP -= unit.count;
                 room.squareStates[y][x].units.length = 0;
             }
         }
     });
+    return gameEnded;
 }
 
 function spawnFlags(room) {
@@ -520,6 +532,7 @@ function spawnFlags(room) {
 }
 
 function updateFlagsAndCheckWin(room) {
+    let gameEnded = false;
     // First, give flags to everyone who owns a flag square
     room.flagSpawns.forEach(([y, x]) => {
         let square = room.squareStates[y][x];
@@ -556,10 +569,10 @@ function updateFlagsAndCheckWin(room) {
                 }
             })
             room.gameWonStatus = gameWonStatus;
-            room.gameEnded = true;
-            return;
+            gameEnded = true;
         }
     });
+    return gameEnded;
 }
 
 function updateState(room, isFlag) {
@@ -574,13 +587,17 @@ function updateState(room, isFlag) {
 
     validateQueues(room);
 
+    incrementShards(room);
+
+    let gameEnded;
     if (isFlag) {
-        updateFlagsAndCheckWin(room);
+        gameEnded = updateFlagsAndCheckWin(room);
         spawnFlags(room);
     } else {
-        updateBasesAndCheckWin(room);
+        gameEnded = updateBasesAndCheckWin(room);
     }
-    incrementShards(room);
+
+    return gameEnded;
 }
 
 module.exports = {
@@ -588,5 +605,6 @@ module.exports = {
     getState: getState,
     updateState: updateState,
     width: width,
-    height: height
+    height: height,
+    clearTrimmedAndSpawned: clearTrimmedAndSpawned
 }

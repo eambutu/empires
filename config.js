@@ -25,5 +25,6 @@ module.exports = {
         MOVE_UP: "move_up",
         MOVE_LEFT: "move_left",
         MOVE_RIGHT: "move_right"
-    }
+    },
+    playerSquareColors: ['red', 'blue', 'green', 'yellow'],
 };
