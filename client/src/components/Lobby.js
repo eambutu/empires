@@ -3,7 +3,7 @@ import '../styles/Lobby.css';
 import sword from "../sword.svg";
 
 export default function Lobby(props) {
-    const {onPlayerReady, playerIds, playerStatus, waitingText} = props;
+    const {togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
     return (
         <div className={"center"}>
             <div className={"lobby-title"}>
@@ -22,7 +22,7 @@ export default function Lobby(props) {
                             </div>
                         </td>
                         <td style={{minWidth: "100px", textAlign: "right"}}>
-                            <button className="ready-up-button" onClick={onPlayerReady}>
+                            <button className={active ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
                                 <div>ready up!
                                 </div>
                             </button>

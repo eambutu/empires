@@ -9,7 +9,7 @@ import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
 import GlobalQueue from "./GlobalQueue";
 
-const {SquareType, Costs, UnitType, Action} = require("./config");
+const {SquareType, Costs, UnitType, Action, ReadyType} = require("./config");
 
 const MoveKeyMap = {
     ArrowDown: Action.MOVE_DOWN,
@@ -74,7 +74,8 @@ class Game extends Component {
             isSpawnDefender: false,
             insufficientShards: false,
             flags: null,
-            unitIdQueue: []
+            unitIdQueue: [],
+            ready: ReadyType.NOT_READY
         };
     }
 
@@ -341,17 +342,8 @@ class Game extends Component {
             };
         }
 
-        this.onPlayerReady = () => {
-            this.ws.send(JSON.stringify({'event': 'ready'}));
-            // abhi do your shit here
-
-            // also don't forget you need to pass the names of all the players in the lobby into playerids earlier so i can
-            // render their names and whatnot
-
-
-            // so do that
-
-            // luv u
+        this.togglePlayerReady = e => {
+            this.ws.send(JSON.stringify({'event': 'toggleReady'}));
         }
 
         this.onPlayAgain = e => {
@@ -387,6 +379,11 @@ class Game extends Component {
                     secret: data.secret,
                     waitingText: connectedText
                 });
+            } else if (data.event === 'setReady') {
+                this.setState({
+                    'ready': data.ready
+                })
+                console.log(this.state.ready);
             } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,
@@ -515,7 +512,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby onPlayerReady={this.onPlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }

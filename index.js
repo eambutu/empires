@@ -289,9 +289,17 @@ function onMessage(room, ws) {
                     });
                 }
             }
-        } else if (data.event === 'ready') {
-            ws.ready = ReadyType.READY;
-            tryStartGame(room);
+        } else if (data.event === 'toggleReady') {
+            if (ws.ready === ReadyType.NOT_READY) {
+                ws.ready = ReadyType.READY;
+                tryStartGame(room);
+            } else {
+                ws.ready = ReadyType.NOT_READY;
+            }
+            ws.send(JSON.stringify({
+                'event': 'setReady',
+                'ready': ws.ready
+            }));
         } else if (data.event === 'veil') {
             console.log('here veil');
             room.fogOfWar = true;
