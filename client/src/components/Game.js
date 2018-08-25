@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import * as Cookies from 'js-cookie';
 import '../styles/Game.css';
 import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
@@ -338,6 +339,16 @@ class Game extends Component {
 
     setUpWebSocket(wsPath) {
         this.ws = new WebSocket(wsPath);
+        let session = Cookies.get('session');
+        if (!this.props.isTutorial) {
+            this.ws.onopen = () => {
+                console.log('WebSocket opened, sending session');
+                this.ws.send(JSON.stringify({
+                    event: 'verify',
+                    session: session
+                }));
+            };
+        }
 
         this.onPlayAgain = e => {
             this.ws.close();

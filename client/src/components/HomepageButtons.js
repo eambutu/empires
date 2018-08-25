@@ -16,13 +16,13 @@ export default function HomepageButtons(props) {
                         <div style={{fontSize: "10px"}}>
                         (Rank 200)
                         </div>
-                        <form onSubmit={onRegisterUsername()} action="#">
+                        <form onSubmit={onRegisterUsername(() => {})} action="#">
                             <input type="text" id="username" placeholder="Username"/> <br/>
                         </form>
                     </div>
-                    <button className="homepage-button" onClick={() => {onRegisterUsername(); goToPlayMenu()}}>Play!</button>
+                    <button className="homepage-button" onClick={() => {onRegisterUsername(goToPlayMenu);}}>Play!</button>
                     <br/>
-                    <button className="homepage-button" onClick={() => {onRegisterUsername(); window.location = "/tutorial/"}}>Tutorial</button>
+                    <button className="homepage-button" onClick={() => {window.location = "/tutorial/";}}>Tutorial</button>
                 </div>
             )
 
