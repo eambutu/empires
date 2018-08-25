@@ -122,22 +122,20 @@ class Cell extends Component {
             divStyle["opacity"] = "0.5";
             colorId = playerId;
         }
-        if (colorId) {
+
+        let styleClass = "square square-content count-text";
+
+
+        // players on other people's bases
+        if(square.unit && square.type === SquareType.BASE && square.unit.playerId !== square.baseId) {
+            divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(square.unit.playerId)]
+            styleClass += " blinking"
+            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(square.baseId)]
+        } else if (colorId) {
             divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(colorId)]
             divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(colorId)];
         }
 
-        let styleClass = "square square-content count-text";
-
-        // players on other people's bases
-        if(square.unit && square.type === SquareType.BASE && square.unit.playerId !== square.baseId){
-            console.log(playerIds.indexOf(square.baseId));
-            console.log(square.unit.playerId)
-            divStyle["border"] = "solid " + playerSquareColors[playerIds.indexOf(square.unit.playerId)]
-            styleClass += " blinking"
-            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(square.baseId)]
-            divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(square.baseId)];
-        }
 
         if (highlighted) {
             styleClass += " highlighted"
