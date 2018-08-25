@@ -47,7 +47,7 @@ app.get(['/room', '/room/:roomId', '/tutorial'], function(req, res) {
 });
 
 function randString() {
-    return crypto.randomBytes(10).toString('hex');
+    return crypto.randomBytes(10).toString('hex').substring(0,7);
 }
 
 function initOrGetRoom(roomId, roomType) {
