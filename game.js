@@ -1,4 +1,4 @@
-const {SquareType, UnitType, RoomType, Costs, HP} = require('./config');
+const {SquareType, ClientStatus, UnitType, RoomType, Costs, HP} = require('./config');
 var {generateMap} = require('./map');
 
 const Vision = {
@@ -597,7 +597,21 @@ function updateFlagsAndCheckWin(room) {
     return gameEnded;
 }
 
-function updateState(room, isFlag) {
+function endGameIfEmpty(room) {
+    let gameEnded = false;
+    let aliveClients = room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
+    if (room.type !== RoomType.TUTORIAL && aliveClients.length === 1) {
+        let gameWonStatus = {};
+        remainingClientId = aliveClients[0].playerId;
+        gameWonStatus[remainingClientId] = "won";
+        room.gameWonStatus = gameWonStatus;
+        gameEnded = true;
+    }
+
+    return gameEnded;
+}
+
+function updateState(room) {
     validateQueues(room);
 
     let spawns = fetchSpawns(room);
@@ -612,12 +626,14 @@ function updateState(room, isFlag) {
     incrementShards(room);
 
     let gameEnded;
-    if (isFlag) {
+    if (room.type === RoomType.FFA) {
         gameEnded = updateFlagsAndCheckWin(room);
         spawnFlags(room);
     } else {
         gameEnded = updateBasesAndCheckWin(room);
     }
+    gameEnded = gameEnded || endGameIfEmpty(room);
+    room.fogOfWar = !((room.type === RoomType.TUTORIAL && !room.fogOfWar) || gameEnded);
 
     return gameEnded;
 }

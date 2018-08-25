@@ -329,6 +329,8 @@ class Game extends Component {
             this.ws.close();
             this.setState(this.getInitialState());
             this.setUpWebSocket(wsPath); // wsPath is still the queued game
+            document.removeEventListener("keydown", this.keyDownBound);
+            document.removeEventListener("keyup", this.keyUpBound);
         };
 
         this.onExit = e => {
@@ -397,6 +399,7 @@ class Game extends Component {
 
     componentWillUnmount() {
         document.removeEventListener("keydown", this.keyDownBound);
+        document.removeEventListener("keyup", this.keyUpBound);
     }
 
     render() {

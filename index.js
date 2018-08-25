@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const _ = require('lodash');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned} = require('./game');
-const {RoomType} = require('./config');
+const {RoomType, ClientStatus} = require('./config');
 
 const ts = 1000 / 8;
 const framesPerTurn = 8;
@@ -14,12 +14,6 @@ const framesPerTurn = 8;
 const GameStatus = {
     QUEUING: "queuing",
     IN_PROGRESS: "inProgress"
-};
-
-const ClientStatus = {
-    CONNECTED: "connected",
-    CONNECTING: "connecting",
-    DISCONNECTED: "disconnected"
 };
 
 let rooms = {};
@@ -230,9 +224,7 @@ getPerformOneTurn = targetRoom => {
         room = targetRoom;
         checkRoomState(room);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
-            let gameEnded = updateState(room, (room.type === RoomType.FFA)) ||
-                            ((room.type !== RoomType.TUTORIAL) && (room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED)).length === 1));
-            room.fogOfWar = !((room.type === RoomType.TUTORIAL && !room.fogOfWar) || gameEnded);
+            let gameEnded = updateState(room);
             incrementFrameCounter(room);
             broadcastState(room);
             clearTrimmedAndSpawned(room);

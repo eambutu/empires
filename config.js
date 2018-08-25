@@ -31,5 +31,10 @@ module.exports = {
         FFA: "ffa",
         CUSTOM: "custom",
         TUTORIAL: "tutorial"
+    },
+    ClientStatus: {
+        CONNECTED: "connected",
+        CONNECTING: "connecting",
+        DISCONNECTED: "disconnected"
     }
 };
