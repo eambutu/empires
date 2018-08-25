@@ -13,7 +13,7 @@ const tutorialTextMap = {
     5: "Increase your shard collection rate by moving an attacker or spawning a defender on these shard towers.",
     6: "This is your base. If any enemy attacker occupies it, they will take your flags at a steady rate. Make sure to defend it!",
     7: "During real gameplay, you can't see the whole board. You can also take the vision tower for more vision.",
-    8: "Capture 20 flags to win and exit the tutorial. Have fun!",
+    8: "Have fun!",
 }
 
 
@@ -22,7 +22,8 @@ class Tutorial extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            textIndex: 0
+            textIndex: 0,
+            tutorialWon: false,
         }
         this.props = props;
         this.nextBox = () => {
@@ -103,12 +104,13 @@ class Tutorial extends Component {
                     break;
                 default:
                     document.getElementsByClassName("tutorial-box")[0].style.display= "none";
+                    this.setState({tutorialWon: true})
             }
         }
     }
 
     render() {
-        if (this.props.playerStatus[this.props.playerId]['status'] === "lost" || this.props.playerStatus[this.props.playerId]['status'] === "won") {
+        if (this.state.tutorialWon | this.props.playerStatus[this.props.playerId]['status'] === "lost" || this.props.playerStatus[this.props.playerId]['status'] === "won") {
             return (
                 <div>
                     <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
@@ -126,7 +128,7 @@ class Tutorial extends Component {
                         isInSpawningRange={this.props.isInSpawningRange}
                     />
                     <EndGame exitClick={this.props.exitClick}
-                             status={this.props.playerStatus[this.props.playerId]['status']}/>
+                             status={"won"}/>
                 </div>
             );
         }
