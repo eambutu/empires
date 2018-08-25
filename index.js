@@ -234,6 +234,7 @@ getPerformOneTurn = targetRoom => {
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             let gameEnded = updateState(room, (room.type === RoomType.FFA));
             incrementFrameCounter(room);
+            room.fogOfWar = (!gameEnded);
             broadcastState(room);
             clearTrimmedAndSpawned(room);
             if (gameEnded) {
@@ -241,7 +242,7 @@ getPerformOneTurn = targetRoom => {
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
-                        wd.status = ClientStatus.DISCONNECTED;
+                        ws.status = ClientStatus.DISCONNECTED;
                     }
                 });                
                 checkRoomState(room);
