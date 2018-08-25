@@ -6,13 +6,14 @@ import ResourceBoard from "./ResourceBoard";
 
 const tutorialTextMap = {
     0: "Hi! Welcome to Squarecraft.io. Let’s walk you through how to play.",
-    1: "The objective of Squarecraft is to take the opponent’s base and defend your own.",
+    1: "The objective of Squarecraft is to capture these flags by moving your army units over them. Whoever captures 20 flags first wins.",
     2: "You have two army types. Defenders are static, and can defend against up to 5 hits. Attackers move around and can take other squares.",
     3: "Attackers cost 25 shards. Press SPACEBAR now to spawn an attacker and WASD to move it around.",
     4: "Defenders cost 100 shards. Hold the CONTROL (or COMMAND) key and CLICK a valid location to spawn a defender. Try it on this square!",
-    5: "Increase your shard collection rate by taking over these shard towers.",
-    6: "You can also take the vision tower for more vision.",
-    7: "During real gameplay, you can't see the whole board. Move an attacker onto the other player's base to win and exit the tutorial. Have fun!",
+    5: "Increase your shard collection rate by moving an attacker or spawning a defender on these shard towers.",
+    6: "This is your base. If any enemy attacker occupies it, they will take your flags at a steady rate. Make sure to defend it!",
+    7: "During real gameplay, you can't see the whole board. You can also take the vision tower for more vision.",
+    8: "Capture 20 flags to win and exit the tutorial. Have fun!",
 }
 
 
@@ -31,40 +32,74 @@ class Tutorial extends Component {
             console.log(map)
             switch(this.state.textIndex) {
                 case 1:
-                    console.log(map[0]);
-                    document.getElementsByClassName("map")[0].children[0].children[0].children[0].classList.add("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[0].children[14].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.add("expanded");
                     break;
                 case 2:
-                    document.getElementsByClassName("map")[0].children[0].children[0].children[0].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[0].children[14].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[0].children[11].classList.add("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[1].children[13].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.add("expanded");
                     break;
                 case 3:
-                    document.getElementsByClassName("map")[0].children[0].children[0].children[11].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[1].children[13].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.remove("expanded");
                     break;
                 case 4:
-                    document.getElementsByClassName("map")[0].children[0].children[1].children[14].classList.add("flashing");
+                    document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.add("flashing");
                     break;
                 case 5:
-                    document.getElementsByClassName("map")[0].children[0].children[1].children[14].classList.remove("flashing")
-                    document.getElementsByClassName("map")[0].children[0].children[4].children[4].classList.add("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[4].children[10].classList.add("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[10].children[4].classList.add("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[10].children[10].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing")
+                    document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.add("expanded");
+
+
+                    document.getElementsByClassName("map")[0].children[0].children[3].children[1].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[3].children[17].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[6].children[5].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[6].children[13].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[7].children[7].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[7].children[11].classList.add("expanded");
+
+                    document.getElementsByClassName("map")[0].children[0].children[15].children[1].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[15].children[17].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[12].children[5].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[12].children[13].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[11].children[7].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[11].children[11].classList.add("expanded");
+
+
                     break;
                 case 6:
-                    document.getElementsByClassName("map")[0].children[0].children[4].children[4].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[4].children[10].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[10].children[4].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[10].children[10].classList.remove("expanded");
-                    document.getElementsByClassName("map")[0].children[0].children[7].children[7].classList.add("expanded");
-                    break;
-                case 7:;
-                    props.onVeil();
+                    console.log(map[0]);
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.remove("expanded");
+
+
+                    document.getElementsByClassName("map")[0].children[0].children[3].children[1].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[3].children[17].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[6].children[5].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[6].children[13].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[7].children[7].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[7].children[11].classList.remove("expanded");
+
+                    document.getElementsByClassName("map")[0].children[0].children[15].children[1].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[15].children[17].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[12].children[5].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[12].children[13].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[11].children[7].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[11].children[11].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.add("expanded");
+                    break;
+
+                case 7:
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.add("expanded");
+                    break;
+                case 8:;
+                    props.onVeil();
+                    document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.remove("expanded");
                     break;
                 default:
                     document.getElementsByClassName("tutorial-box")[0].style.display= "none";
