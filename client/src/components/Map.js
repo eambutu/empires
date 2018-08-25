@@ -154,13 +154,10 @@ class Cell extends Component {
             else {
                 divStyle["backgroundImage"] = `url(${base})`;
             }
-            if (square.baseHP === 0) { // dead
+            if (!count) {
                 count = 0;
-            } else if (square.unit) { // has player's own units
-                count += square.baseHP;
-            } else { // doesn't have player's own units
-                count = square.baseHP;
             }
+            count += square.baseHP;
         } else if (square.type === SquareType.WATCHTOWER) {
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
                 divStyle["backgroundImage"] = `url(${defendedeye})`;

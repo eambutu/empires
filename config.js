@@ -27,4 +27,9 @@ module.exports = {
         MOVE_RIGHT: "move_right"
     },
     playerSquareColors: ['red', 'blue', 'green', 'orange'],
+    RoomType: {
+        FFA: "ffa",
+        CUSTOM: "custom",
+        TUTORIAL: "tutorial"
+    }
 };

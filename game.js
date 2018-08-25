@@ -1,4 +1,4 @@
-const {SquareType, UnitType, Costs, HP} = require('./config');
+const {SquareType, UnitType, RoomType, Costs, HP} = require('./config');
 var {generateMap} = require('./map');
 
 const Vision = {
@@ -65,11 +65,11 @@ class Unit {
     }
 }
 
-function initState(room, isTutorial) {
+function initState(room, type) {
     let playerIds = room.clients.map(client => client.playerId);
 
     room.fogOfWar = true;
-    if (isTutorial) {
+    if (type === RoomType.TUTORIAL) {
         room.fogOfWar = false;
         playerIds.push("cpu".toString())
     }
@@ -86,7 +86,7 @@ function initState(room, isTutorial) {
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
-    if (isTutorial) {
+    if (type === RoomType.TUTORIAL) {
         cornerMap[playerIds[0]] = 2;
         cornerMap[playerIds[1]] = 0;
         remainingCornerIndices = [1, 3];
@@ -112,7 +112,7 @@ function initState(room, isTutorial) {
         flags[playerId] = 0;
     });
 
-    if (isTutorial) {
+    if (type === RoomType.TUTORIAL) {
         let realPlayerId = playerIds[0];
         shards[realPlayerId] = 1000;
         queues[realPlayerId]["spawn"] = [
@@ -141,7 +141,11 @@ function initState(room, isTutorial) {
         });
     });
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
-        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
+        if (type === RoomType.FFA) {
+            squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 0});
+        } else {
+            squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
+        }
     });
     genMap.towers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.TOWER});
@@ -365,7 +369,7 @@ function addSpawns(room, spawns) {
 }
 
 function incrementShards(room) {
-    if (room.frameCounter === 0) {
+    if (room.frameCounter % 2 === 0) {
         // increment everyone's shard per turn
         Object.keys(room.shards).forEach((playerId) => {
             room.shards[playerId]++;
@@ -385,7 +389,7 @@ function fetchMoves(room) {
     let moves = [];
     room.clients.forEach(client => {
         Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
-            if (unitQueue.length > 0 && (room.frameCounter === 0)) {
+            if (unitQueue.length > 0 && (room.frameCounter % 2 === 0)) {
                 let move = unitQueue.shift();
                 moves.push(move);
             }
@@ -519,7 +523,7 @@ function updateBasesAndCheckWin(room) {
 }
 
 function spawnFlags(room) {
-    if (room.frameCounter === 0) {
+    if (room.frameCounter % 2 === 0) {
         room.flagSpawns.forEach(([y, x]) => {
             let square = room.squareStates[y][x];
             if (square.type === SquareType.REGULAR && square.currentOwner() === null) {
@@ -544,19 +548,21 @@ function updateFlagsAndCheckWin(room) {
 
     // Take and give flags based on base ownership
     // A tie here is being broken based off of playerId
-    Object.entries(room.playerBases).forEach(([playerId, [y, x]]) => {
-        let unit = room.squareStates[y][x].getUnit();
-        if (unit && (unit.playerId !== playerId)) {
-            if (room.flags[playerId] > 0) {
-                room.flags[playerId]--;
-                room.flags[unit.playerId]++;
-                unit.count--;
-                if (unit.count <= 0) {
-                    room.squareStates[y][x].units = [];
+    if (room.frameCounter === 0) {
+        Object.entries(room.playerBases).forEach(([playerId, [y, x]]) => {
+            let unit = room.squareStates[y][x].getUnit();
+            if (unit && (unit.playerId !== playerId)) {
+                if (room.flags[playerId] > 0) {
+                    room.flags[playerId]--;
+                    room.flags[unit.playerId]++;
+                    unit.count--;
+                    if (unit.count <= 0) {
+                        room.squareStates[y][x].units = [];
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     Object.entries(room.flags).forEach(([playerId, numFlags]) => {
         if (numFlags >= flagWinNum) {
