@@ -74,7 +74,8 @@ class Game extends Component {
             spawnSquare: null,
             isSpawnDefender: false,
             isTutorial: false,
-            insufficientShards: false
+            insufficientShards: false,
+            flags: null
         };
         this.unitSquareMap = null;
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
@@ -344,7 +345,6 @@ class Game extends Component {
     }
 
     render() {
-        console.log(this.state)
         let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain, isSpawnDefender} = this.state;
         if (this.state.isTutorial && squares){
 
@@ -487,7 +487,8 @@ class Game extends Component {
             displayShards: displayShards,
             squares: newState.squares,
             playerStatus: newState.playerStatus,
-            insufficientShards: iShards
+            insufficientShards: iShards,
+            flags: newState.flags
         });
 
         let [cursorY, cursorX, cursorUnitId] = this.state.cursor;

@@ -317,7 +317,7 @@ function getState(room, playerId) {
         squares: visibleSquares,
         playerStatus: playerStatus,
         shards: shards[playerId],
-        flags: flags[playerId]
+        flags: flags
     };
 }
 
