@@ -7,8 +7,8 @@ export default function PlayerBoard(props) {
     const {flags, playerIds, playerStatus} = props;
     console.log(playerStatus)
 
-    let rows = Object.values(playerStatus).map((player, index) => (
-        <PlayerRow color={playerSquareColors[index]} flagcount={flags[playerIds[index]]} key={index} player={player}/>
+    let rows = Object.keys(playerStatus).map((playerId, index) => (
+        <PlayerRow color={playerSquareColors[playerIds.indexOf(playerId)]} flagcount={flags[playerId]} key={index} player={playerStatus[playerId]}/>
     ))
 
     return (
