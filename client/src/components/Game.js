@@ -383,7 +383,6 @@ class Game extends Component {
                 this.setState({
                     'ready': data.ready
                 })
-                console.log(this.state.ready);
             } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,

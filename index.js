@@ -301,7 +301,6 @@ function onMessage(room, ws) {
                 'ready': ws.ready
             }));
         } else if (data.event === 'veil') {
-            console.log('here veil');
             room.fogOfWar = true;
         } else if (data.event === 'exit') {
             ws.close();
