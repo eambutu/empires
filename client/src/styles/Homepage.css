@@ -5,7 +5,7 @@
 
 .back-arrow {
     position: absolute;
-    top: 70%;
+    top: 75%;
     left: 50%;
     transform: translateY(-50%) translateX(-50%);
     text-align: center;
@@ -134,4 +134,8 @@ a, a:visited, a:hover, a:active {
 
 a:hover{
     font-size: 23px;
+}
+
+.rating-text{
+    font-weight: 700;
 }

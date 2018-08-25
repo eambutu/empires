@@ -320,6 +320,20 @@ class Game extends Component {
         this.onReleaseMap = () => {
             downFlag = false;
         }
+
+        this.onPlayerReady = () => {
+            // abhi do your shit here
+
+            // also don't forget you need to pass the names of all the players in the lobby into playerids earlier so i can
+            // render their names and whatnot
+
+            // so do that
+
+            // luv u
+
+            console.log("im ready!");
+
+        }
     }
 
     setUpWebSocket(wsPath) {
@@ -483,7 +497,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby playerStatus={this.state.playerStatus} waitingText={this.state.waitingText} />
+                <Lobby onPlayerReady={this.onPlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }

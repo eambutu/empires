@@ -95,11 +95,11 @@ class Tutorial extends Component {
                     break;
 
                 case 7:
+                    props.onVeil();
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.add("expanded");
                     break;
                 case 8:;
-                    props.onVeil();
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.remove("expanded");
                     break;
                 default:
