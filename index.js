@@ -87,7 +87,7 @@ function onConnect(room, ws) {
     ws.playerId = randString();
     ws.name = `player_${ws.playerId}`;
     ws.secret = randString();
-    console.log(`player ${ws.playerId} connected to ${room.id}`);
+    console.log(`player ${ws.playerId} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
         event: 'connected',
         playerId: ws.playerId,
@@ -99,7 +99,7 @@ function onConnect(room, ws) {
         ws.ponged = true;
     });
     ws.heartbeatInterval = setInterval(() => {
-        if (ws.readyState === 1) {
+        if (ws.readyState === ws.OPEN) {
             if (ws.ponged) {
                 ws.status = ClientStatus.CONNECTED;
                 ws.ponged = false;
@@ -118,6 +118,7 @@ function onConnect(room, ws) {
         if (ws.status === ClientStatus.DISCONNECTED) {
             ws.close();
             clearInterval(ws.heartbeatInterval);
+            checkRoomState(room);
         }
     }, 1000);
 }
@@ -229,8 +230,9 @@ getPerformOneTurn = targetRoom => {
             if (gameEnded) {
                 room.gameStatus = GameStatus.QUEUING;
                 room.clients.forEach(ws => {
-                    if (ws.status === ClientStatus.CONNECTED) {
+                    if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
+                        wd.status = ClientStatus.DISCONNECTED;
                     }
                 });                
                 checkRoomState(room);
@@ -267,7 +269,7 @@ function checkRoomState(room) {
 
 function broadcastStarting(room) {
     room.clients.forEach(ws => {
-        if (ws.readyState === 1) {
+        if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({event: 'starting'}));
         }
     });
@@ -279,7 +281,7 @@ function broadcastInit(room) {
     let spawnSquares = room.spawnSquares;
     let playerIds = room.playerIds;
     room.clients.forEach(ws => {
-        if (ws.readyState === 1) {
+        if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
                 'event': 'init',
                 'playerIds': playerIds,
@@ -294,9 +296,9 @@ function broadcastInit(room) {
 }
 
 function broadcastState(room) {
-    room.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'update', 'state': getState(room, client.playerId)}));
+    room.clients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({'event': 'update', 'state': getState(room, ws.playerId)}));
         }
     });
     // console.log("Sent state");
