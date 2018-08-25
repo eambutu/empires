@@ -1,9 +1,12 @@
 import React, {Component} from 'react';
+import * as Cookies from 'js-cookie';
+
 import Game from './Game.js';
+import HomepageButtons from "./HomepageButtons";
+
+import '../styles/Homepage.css';
 
 import sword from '../sword.svg';
-import '../styles/Homepage.css';
-import HomepageButtons from "./HomepageButtons";
 import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 
@@ -27,13 +30,19 @@ class Homepage extends Component {
             this.setState({ffa: true})
         }
 
-        this.onRegisterUsername = () => {
-            let name = "";
+        this.onRegisterUsername = (onSuccess) => {
+            console.log('onRegisterUsername');
             if (document.getElementById("username")) {
-                name = document.getElementById("username").value;
+                let name = document.getElementById("username").value;
+                let cookieName = Cookies.set('username', name);
+                fetch('/cookies').then(res => res.json()).then(resJson => {
+                    if (resJson.success) {
+                        onSuccess();
+                    } else {
+                        console.log('failed register username');
+                    }
+                });
             }
-            console.log(name);
-            // z do ur shit right here
         }
     }
 
@@ -44,8 +53,8 @@ class Homepage extends Component {
         let arrowicon = null
         if (this.state.menuIndex !== 0 ) {
             arrowicon = (
-                <div id="back-arrow" onMouseLeave={() => {console.log("hi"); document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
-                     onMouseOver={() => {console.log('hover'); document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
+                <div id="back-arrow" onMouseLeave={() => {document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
+                     onMouseOver={() => {document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
                      onClick={this.goToHomeMenu}
                      style={{backgroundImage: `url(${arrow})`}}
                      className={"back-arrow"}>
@@ -59,7 +68,7 @@ class Homepage extends Component {
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
-                            <HomepageButtons onRegisterUsername={this.onRegisterUsername} onClickFFA = {this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
+                            <HomepageButtons onRegisterUsername={this.onRegisterUsername} onClickFFA={this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
                         </div>
                     </div>
                 </div>
