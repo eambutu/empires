@@ -7,8 +7,6 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-var width;
-var height;
 const flagSpawnProbability = 0.002;
 const flagWinNum = 20;
 const framesPerMove = 2;
@@ -190,6 +188,8 @@ function initState(room, type) {
 
 function maskForPlayer(squares, playerId) {
     let visible = squares.map(() => () => 0);
+    let height = squares.length;
+    let width = squares[0].length;
     let fill = (y, x, range) => {
         let yMax = Math.min(height, y + range + 1);
         let xMax = Math.min(width, x + range + 1);
@@ -626,7 +626,5 @@ module.exports = {
     initState: initState,
     getState: getState,
     updateState: updateState,
-    width: width,
-    height: height,
     clearTrimmedAndSpawned: clearTrimmedAndSpawned
 }
