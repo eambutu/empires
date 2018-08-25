@@ -8,8 +8,14 @@ const _ = require('lodash');
 const {initState, getState, updateState, clearTrimmedAndSpawned, width, height} = require('./game');
 const {RoomType} = require('./config');
 
-const ts = 1000 / 10;
+const ts = 1000 / 8;
 const framesPerTurn = 8;
+
+const RoomType = {
+    FFA: "ffa",
+    CUSTOM: "custom",
+    TUTORIAL: "tutorial"
+};
 
 const GameStatus = {
     QUEUING: "queuing",
@@ -228,8 +234,8 @@ getPerformOneTurn = targetRoom => {
         checkRoomState(room);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             let gameEnded = updateState(room, (room.type === RoomType.FFA)) ||
-                            (room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED)).length === 1);
-            room.fogOfWar = (!gameEnded);
+                            ((room.type !== RoomType.TUTORIAL) && (room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED)).length === 1));
+            room.fogOfWar = !((room.type === RoomType.TUTORIAL) || gameEnded);
             incrementFrameCounter(room);
             broadcastState(room);
             clearTrimmedAndSpawned(room);
@@ -286,6 +292,7 @@ function broadcastInit(room) {
     let playerBases = room.playerBases;
     let spawnSquares = room.spawnSquares;
     let playerIds = room.playerIds;
+    let ffa = (room.type === RoomType.FFA);
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
@@ -295,6 +302,7 @@ function broadcastInit(room) {
                 'spawn': spawnSquares[ws.playerId],
                 'width': width,
                 'height': height,
+                'ffa': ffa
             }));
         }
     });
