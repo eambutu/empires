@@ -345,7 +345,8 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain, isSpawnDefender} = this.state;
+        console.log(this.state)
+        let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain, isSpawnDefender, flags} = this.state;
         if (this.state.isTutorial && squares){
 
             return (
@@ -377,7 +378,7 @@ class Game extends Component {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        <PlayerBoard playerStatus={this.state.playerStatus}/>
+                        <PlayerBoard playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                         <Map
                             onReleaseMap={this.onReleaseMap}
@@ -400,7 +401,7 @@ class Game extends Component {
             }
             return (
                 <div id="game-page">
-                    <PlayerBoard playerStatus={this.state.playerStatus}/>
+                    <PlayerBoard playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                     <Map
                         onReleaseMap={this.onReleaseMap}

@@ -2,14 +2,18 @@ import React from "react";
 import '../styles/PlayerBoard.css';
 
 export default function PlayerBoard(props) {
-    const {playerStatus} = props;
-
+    const {flags, playerIds, playerStatus} = props;
+    console.log(playerStatus)
     return (
         <div className={"player-table-holder"}>
             <table className={"player-table"}>
                 <tbody>
-                {Object.values(playerStatus).map((player, playerid) => (
-                    <PlayerRow key={playerid} player={player}/>
+                <tr>
+                    <td>Player</td>
+                    <td>Flags</td>
+                </tr>
+                {Object.values(playerStatus).map((player, index) => (
+                    <PlayerRow flagcount={flags[playerIds[index]]} key={index} player={player}/>
 
                 ))}
                 </tbody>
@@ -21,11 +25,11 @@ export default function PlayerBoard(props) {
 
 
 function PlayerRow(props) {
-    const {player} = props;
+    const {flagcount, player} = props;
     return (
         <tr>
             <td>{player.name}</td>
-            <td>{player.status}</td>
+            <td>{flagcount}</td>
         </tr>
     )
 }
