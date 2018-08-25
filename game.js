@@ -11,6 +11,7 @@ let width = 19;
 let height = 19 ;
 const flagSpawnProbability = 0.002;
 const flagWinNum = 20;
+const framesPerMove = 2;
 
 class SquareState {
     constructor(options = {}) {
@@ -370,7 +371,7 @@ function addSpawns(room, spawns) {
 }
 
 function incrementShards(room) {
-    if (room.frameCounter % 2 === 0) {
+    if (room.frameCounter % framesPerMove === 0) {
         // increment everyone's shard per turn
         Object.keys(room.shards).forEach((playerId) => {
             room.shards[playerId]++;
@@ -390,7 +391,7 @@ function fetchMoves(room) {
     let moves = [];
     room.clients.forEach(client => {
         Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
-            if (unitQueue.length > 0 && (room.frameCounter % 2 === 0)) {
+            if (unitQueue.length > 0 && (room.frameCounter % framesPerMove === 0)) {
                 let move = unitQueue.shift();
                 moves.push(move);
             }
@@ -524,7 +525,7 @@ function updateBasesAndCheckWin(room) {
 }
 
 function spawnFlags(room) {
-    if (room.frameCounter % 2 === 0) {
+    if (room.frameCounter % framesPerMove === 0) {
         room.flagSpawns.forEach(([y, x]) => {
             let square = room.squareStates[y][x];
             if (square.type === SquareType.REGULAR && square.currentOwner() === null) {

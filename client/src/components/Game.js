@@ -141,7 +141,6 @@ class Game extends Component {
 
         this.resetCursorToUnitQueueTail = function(unitId) {
             let [locY, locX] = this.getUnitIdQueueTailLoc(unitId);
-            console.log(locY, locX);
 
             if (locY !== null) {
                 this.setState({
@@ -343,7 +342,7 @@ class Game extends Component {
 
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
-            console.log(data.event);
+            // console.log(data.event);
             if (data.event === 'connected') {
                 let connectedText = 'Connected! Waiting for other players to join.'
                 if (this.props.isTutorial) {
