@@ -8,6 +8,8 @@ const Vision = {
 
 const width = 15;
 const height = 15;
+const flagSpawnProbability = 0.1;
+const flagWinNum = 10;
 
 class SquareState {
     constructor(options = {}) {
@@ -74,6 +76,7 @@ function initState(room) {
     let queues = {};
     let trimmed = {};
     let shards = {};
+    let flags = {};
 
     let corners = [
         [0, 0],
@@ -139,6 +142,7 @@ function initState(room) {
         playerBases[playerId] = corners[cornerIndex];
         spawnSquares[playerId] = spawnChoices[cornerIndex];
         shards[playerId] = 150;
+        flags[playerId] = 0;
     });
 
     if (room.isTutorial) {
@@ -159,6 +163,10 @@ function initState(room) {
             }
         ];
     }
+
+    let flagSpawns = [
+        [7, 8]
+    ];
 
     remainingCornerIndices.forEach(index => {
         towers.push(corners[index]);
@@ -186,9 +194,11 @@ function initState(room) {
     room.playerBases = playerBases;
     room.spawnSquares = spawnSquares;
     room.squareStates = squareStates;
+    room.flagSpawns = flagSpawns;
     room.queues = queues;
     room.trimmed = trimmed;
     room.shards = shards;
+    room.flags = flags;
     room.towers = towers;
     room.gameWonStatus = null;
     room.frameCounter = 0;
@@ -267,6 +277,7 @@ function getState(room, playerId) {
     const squares = room.squareStates;
     const gameWonStatus = room.gameWonStatus;
     const shards = room.shards;
+    const flags = room.flags;
     const queues = room.queues;
     const trimmed = room.trimmed;
     const playerStatus = {};
@@ -305,7 +316,8 @@ function getState(room, playerId) {
         trimmed: trimmed[playerId],
         squares: visibleSquares,
         playerStatus: playerStatus,
-        shards: shards[playerId]
+        shards: shards[playerId],
+        flags: flags[playerId]
     };
 }
 
@@ -535,7 +547,63 @@ function updateBasesAndCheckWin(room) {
     });
 }
 
-function updateState(room) {
+function spawnFlags(room) {
+    if (room.frameCounter === 0) {
+        room.flagSpawns.forEach(([y, x]) => {
+            let square = room.squareStates[y][x];
+            if (square.type === SquareType.REGULAR && square.currentOwner() === null) {
+                if (Math.random() < flagSpawnProbability) {
+                    square.type = SquareType.FLAG;
+                }
+            }
+        })
+    }
+}
+
+function updateFlagsAndCheckWin(room) {
+    // First, give flags to everyone who owns a flag square
+    room.flagSpawns.forEach(([y, x]) => {
+        let square = room.squareStates[y][x];
+        if (square.type === SquareType.FLAG && square.currentOwner() !== null) {
+            room.flags[square.currentOwner()]++;
+            square.type = SquareType.REGULAR;
+        }
+    });
+
+    // Take and give flags based on base ownership
+    // A tie here is being broken based off of playerId
+    Object.entries(room.playerBases).forEach(([playerId, [y, x]]) => {
+        let unit = room.squareStates[y][x].getUnit();
+        if (unit && (unit.playerId !== playerId)) {
+            if (room.flags[playerId] > 0) {
+                room.flags[playerId]--;
+                room.flags[unit.playerId]++;
+                unit.count--;
+                if (unit.count <= 0) {
+                    room.squareStates[y][x].units = [];
+                }
+            }
+        }
+    });
+
+    Object.entries(room.flags).forEach(([playerId, numFlags]) => {
+        if (numFlags >= flagWinNum) {
+            let gameWonStatus = {};
+            room.playerIds.forEach(tempPlayerId => {
+                if (tempPlayerId === playerId) {
+                    gameWonStatus[tempPlayerId] = "won";
+                } else {
+                    gameWonStatus[tempPlayerId] = "lost";
+                }
+            })
+            room.gameWonStatus = gameWonStatus;
+            room.gameEnded = true;
+            return;
+        }
+    });
+}
+
+function updateState(room, isFlag) {
     validateQueues(room);
 
     let spawns = fetchSpawns(room);
@@ -547,9 +615,14 @@ function updateState(room) {
 
     validateQueues(room);
 
-    updateBasesAndCheckWin(room);
-
-    incrementShards(room);
+    if (isFlag) {
+        updateFlagsAndCheckWin(room);
+        spawnFlags(room);
+        console.log(room.flags);
+    } else {
+        updateBasesAndCheckWin(room);
+        incrementShards(room);
+    }
 }
 
 module.exports = {

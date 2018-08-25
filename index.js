@@ -197,7 +197,7 @@ getPerformOneTurn = targetRoom => {
         room = targetRoom;
         resetIfEmpty(room);
         if (!room.gameEnded) {
-            updateState(room);
+            updateState(room, true);
             incrementFrameCounter(room);
             broadcastState(room);
         }

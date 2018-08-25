@@ -5,7 +5,8 @@ module.exports = {
         BASE: 2,
         TOWER: 3,
         WATCHTOWER: 4,
-        RIVER: 5
+        RIVER: 5,
+        FLAG: 6,
     },
     UnitType: {
         ATTACKER: 1,
