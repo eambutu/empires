@@ -66,7 +66,7 @@ class RoomList extends Component {
                             {value['id']}
                         </td>
                         <td className={"room-list-element"}>
-                            {value['numPlayers']} / {value['maxPlayers']}
+                            {value['numPlayersIn']} / {value['numPlayers']}
                         </td>
                         </div>
                     </tr>

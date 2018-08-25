@@ -33,13 +33,16 @@ let queueRoomId = null;
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.get('/room_list', function (req, res) {
-    let temp_rooms = _.cloneDeep(rooms);
-    Object.keys(temp_rooms).map(function (key) {
-        let numPlayers = temp_rooms[key]['clients'].length;
-        temp_rooms[key] = _.pick(temp_rooms[key], ['id', 'full', 'gameEnded', 'isTutorial', 'maxPlayers']);
-        temp_rooms[key]['numPlayers'] = numPlayers;
+    let tempRooms = _.cloneDeep(rooms);
+    Object.keys(tempRooms).forEach(key => {
+        let numPlayersIn = tempRooms[key]['waitingClients'].length;
+        tempRooms[key] = _.pick(tempRooms[key], ['id', 'type', 'gameStatus', 'numPlayers']);
+        tempRooms[key]['numPlayersIn'] = numPlayersIn;
     });
-    res.send(JSON.stringify(temp_rooms));
+    tempRooms = _.pickBy(tempRooms, function(value) {
+        return (value.type === RoomType.CUSTOM && value.gameStatus === GameStatus.QUEUING);
+    });
+    res.send(JSON.stringify(tempRooms));
 });
 
 app.get(['/room', '/room/:roomId', '/tutorial'], function(req, res) {
