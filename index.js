@@ -50,6 +50,10 @@ function randString() {
     return crypto.randomBytes(10).toString('hex').substring(0,7);
 }
 
+function randSecret() {
+    return crypto.randomBytes(10).toString('hex');
+}
+
 function initOrGetRoom(roomId, roomType) {
     if (!(roomId in rooms)) {
         let numPlayers;
@@ -85,8 +89,8 @@ function onConnect(room, ws) {
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
     ws.playerId = randString();
-    ws.name = `player_${ws.playerId}`;
-    ws.secret = randString();
+    ws.name = `${ws.playerId}`;
+    ws.secret = randSecret();
     console.log(`player ${ws.playerId} connected to ${room.id}`);
     ws.send(JSON.stringify({
         event: 'connected',
