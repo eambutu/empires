@@ -212,7 +212,8 @@ function onConnect(room, ws, username, session) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
-    ws.playerId = session;
+    ws.session = session;
+    ws.playerId = randString();
     ws.name = username;
     ws.secret = randSecret();
     console.log(`player ${ws.name} connected to ${room.id} with status ${room.gameStatus}`);
@@ -233,7 +234,7 @@ function onConnect(room, ws, username, session) {
                 ws.ponged = false;
                 ws.missedPongs = 0;
             } else {
-                ws.status = ClientStatus.CONNECTING;
+                ws.status = ClientStatus.RECONNECTING;
                 ws.missedPongs++;
                 if (ws.missedPongs === 10) {
                     ws.status = ClientStatus.DISCONNECTED;

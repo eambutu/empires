@@ -34,7 +34,7 @@ module.exports = {
     },
     ClientStatus: {
         CONNECTED: "connected",
-        CONNECTING: "connecting",
+        RECONNECTING: "reconnecting",
         DISCONNECTED: "disconnected"
     }
 };
