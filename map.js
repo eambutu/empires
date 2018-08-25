@@ -145,11 +145,16 @@ function generateMap() {
     });
 
     let hasEnclosed = true;
-    let tempRivers;
+    let tempRivers = [];
     while(hasEnclosed) {
-        console.log("inside");
-        let tempRiverMaps = riverMaps;
-        tempRivers = rivers;
+        console.log("If you see this a million times, we're stuck in an infinite loop");
+        let tempRiverMaps = [];
+        for (let i=0; i<riverMaps.length; i++) {
+            tempRiverMaps[i] = riverMaps[i].slice();
+        }
+        for (let i=0; i<rivers.length; i++) {
+            tempRivers[i] = rivers[i].slice();
+        }
         for (let i=0; i<19; i++) {
             for (let j=0; j<19; j++) {
                 if (!forbiddenSquaresMap[i][j] && Math.random() < riverProb) {

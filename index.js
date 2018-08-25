@@ -224,7 +224,7 @@ getPerformOneTurn = targetRoom => {
         room = targetRoom;
         checkRoomState(room);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
-            let gameEnded = updateState(room, (room.roomType === RoomType.FFA));
+            let gameEnded = updateState(room, (room.type === RoomType.FFA));
             incrementFrameCounter(room);
             broadcastState(room);
             clearTrimmedAndSpawned(room);

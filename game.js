@@ -10,7 +10,7 @@ const Vision = {
 const width = 19;
 const height = 19;
 const flagSpawnProbability = 0.002;
-const flagWinNum = 10;
+const flagWinNum = 20;
 
 class SquareState {
     constructor(options = {}) {
