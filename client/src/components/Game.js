@@ -72,7 +72,8 @@ class Game extends Component {
             spawnSquare: null,
             isSpawnDefender: false,
             insufficientShards: false,
-            flags: null
+            flags: null,
+            ffa: false,
         };
     }
 
@@ -306,7 +307,8 @@ class Game extends Component {
                     height: data.height,
                     playerIds: data.playerIds,
                     spawnSquare: data.spawn,
-                    cursor: [data.spawn[0], data.spawn[1], null]
+                    cursor: [data.spawn[0], data.spawn[1], null],
+                    ffa: data.ffa
                 });
                 document.addEventListener("keydown", this.keyDownBound);
                 document.addEventListener("keyup", this.keyUpBound);
@@ -338,7 +340,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
+        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, ffa} = this.state;
         if (this.props.isTutorial && squares){
             return (
                 <div id="game-page">
@@ -367,7 +369,7 @@ class Game extends Component {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        <PlayerBoard playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
+                        <PlayerBoard ffa={ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                         <Map
                             onReleaseMap={this.onReleaseMap}
@@ -392,7 +394,7 @@ class Game extends Component {
             }
             return (
                 <div id="game-page">
-                    <PlayerBoard playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
+                    <PlayerBoard ffa={ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                     <Map
                         onReleaseMap={this.onReleaseMap}
