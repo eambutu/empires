@@ -7,8 +7,8 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-let width = 19;
-let height = 19 ;
+var width;
+var height;
 const flagSpawnProbability = 0.002;
 const flagWinNum = 20;
 
@@ -82,7 +82,16 @@ function initState(room, type) {
     let shards = {};
     let flags = {};
 
+    if (type === RoomType.CUSTOM) {
+        height = 15;
+        width = 15;
+    } else {
+        height = 19;
+        width = 19;
+    }
+
     let genMap = generateMap(type);
+    console.log("here");
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
