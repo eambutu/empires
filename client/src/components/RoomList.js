@@ -57,6 +57,7 @@ class RoomList extends Component {
             </div>
             <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
                 </div>
+                    <div className={"room-list-table-holder"}>
             <table>
                 <tbody className={"room-list-table"}>
                 {Object.entries(this.state.data).map(([key, value]) => (
@@ -73,6 +74,7 @@ class RoomList extends Component {
                 ))}
                 </tbody>
             </table>
+                </div>
                 </div>
         )
         } else {

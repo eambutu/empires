@@ -37,10 +37,15 @@
 
 .room-list-title{
     position: absolute;
-    top: 40%;
+    top: 10%;
     left: 50%;
-    transform: translateY(-50%) translateX(-50%);
+    transform: translateX(-50%);
     text-align: center;
     color: white;
     margin-bottom:8px;
+}
+
+.room-list-table-holder {
+    height: 200px;
+    overflow: scroll;
 }
