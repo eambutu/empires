@@ -77,6 +77,7 @@ function initState(room, isTutorial) {
     let spawnSquares = {};
     let queues = {};
     let trimmed = {};
+    let spawned = {};
     let shards = {};
     let flags = {};
 
@@ -140,6 +141,7 @@ function initState(room, isTutorial) {
             spawn: [],
         };
         trimmed[playerId] = {};
+        spawned[playerId] = false;
         let cornerIndex = cornerMap[playerId];
         playerBases[playerId] = corners[cornerIndex];
         spawnSquares[playerId] = spawnChoices[cornerIndex];
@@ -199,6 +201,7 @@ function initState(room, isTutorial) {
     room.flagSpawns = flagSpawns;
     room.queues = queues;
     room.trimmed = trimmed;
+    room.spawned = spawned;
     room.shards = shards;
     room.flags = flags;
     room.towers = towers;
@@ -282,6 +285,7 @@ function getState(room, playerId) {
     const flags = room.flags;
     const queues = room.queues;
     const trimmed = room.trimmed;
+    const spawned = room.spawned;
     const playerStatus = {};
     if (gameWonStatus) {
         room.clients.forEach(client => {
@@ -312,6 +316,7 @@ function getState(room, playerId) {
     return {
         queues: queues[playerId],
         trimmed: trimmed[playerId],
+        spawned: spawned[playerId],
         squares: visibleSquares,
         playerStatus: playerStatus,
         shards: shards[playerId],
@@ -353,11 +358,14 @@ function validateQueues(room) {
     });
 }
 
-function clearTrimmed(room) {
+function clearTrimmedAndSpawned(room) {
     Object.entries(room.trimmed).forEach(([playerId, playerTrimmed]) => {
         Object.keys(playerTrimmed).forEach(unitId => {
             room.trimmed[playerId][unitId] = false;
         });
+    });
+    Object.keys(room.spawned).forEach(playerId => {
+        room.spawned[playerId] = false;
     });
 }
 
@@ -639,5 +647,5 @@ module.exports = {
     updateState: updateState,
     width: width,
     height: height,
-    clearTrimmed: clearTrimmed
+    clearTrimmedAndSpawned: clearTrimmedAndSpawned
 }

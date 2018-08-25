@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const _ = require('lodash');
 
-const {initState, getState, updateState, clearTrimmed, width, height} = require('./game');
+const {initState, getState, updateState, clearTrimmedAndSpawned, width, height} = require('./game');
 
 const ts = 1000 / 10;
 const framesPerTurn = 2;
@@ -140,9 +140,11 @@ function onMessage(room, ws) {
             if (data.secret === ws.secret) {
                 let queues = room.queues;
                 let trimmed = room.trimmed;
+                let spawned = room.spawned;
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
+                    spawned[ws.playerId] = true;
                 } else if (data.move.action.includes("move")) {
                     if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
@@ -225,7 +227,7 @@ getPerformOneTurn = targetRoom => {
             let gameEnded = updateState(room, (room.roomType === RoomType.FFA));
             incrementFrameCounter(room);
             broadcastState(room);
-            clearTrimmed(room);
+            clearTrimmedAndSpawned(room);
             if (gameEnded) {
                 room.gameStatus = GameStatus.QUEUING;
                 room.clients.forEach(ws => {

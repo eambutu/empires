@@ -90,6 +90,13 @@ class Game extends Component {
             });
         }
 
+        this.resetCursorToSpawn = function() {
+            let [spawnY, spawnX] = this.state.spawnSquare;
+            this.setState({
+                cursor: [spawnY, spawnX, null]
+            });
+        }
+
         this.resetCursorToUnit = function() {
             let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
             let [locY, locX] = this.getUnitIdLoc(cursorUnitId);
@@ -176,10 +183,6 @@ class Game extends Component {
                         "target": [y, x],
                         "type": UnitType.ATTACKER
                     };
-                    this.setState({
-                        cursor: [y, x, null],
-                        displayShards: this.state.displayShards - Costs.ATTACKER
-                    });
                     this.sendMove(move);
                 }
                 else {
@@ -302,7 +305,8 @@ class Game extends Component {
                     width: data.width,
                     height: data.height,
                     playerIds: data.playerIds,
-                    spawnSquare: data.spawn
+                    spawnSquare: data.spawn,
+                    cursor: [data.spawn[0], data.spawn[1], null]
                 });
                 document.addEventListener("keydown", this.keyDownBound);
                 document.addEventListener("keyup", this.keyUpBound);
@@ -482,6 +486,10 @@ class Game extends Component {
         let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
         if ((cursorUnitId in newState.trimmed) && newState.trimmed[cursorUnitId]) {
             this.resetCursorToUnit();
+        }
+
+        if (newState.spawned) {
+            this.resetCursorToSpawn();
         }
     }
 
