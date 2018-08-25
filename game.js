@@ -618,11 +618,10 @@ function updateState(room, isFlag) {
     if (isFlag) {
         updateFlagsAndCheckWin(room);
         spawnFlags(room);
-        console.log(room.flags);
     } else {
         updateBasesAndCheckWin(room);
-        incrementShards(room);
     }
+    incrementShards(room);
 }
 
 module.exports = {
