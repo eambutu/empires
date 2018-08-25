@@ -122,25 +122,6 @@ function initState(room, type) {
         flags[playerId] = 0;
     });
 
-    if (type === RoomType.TUTORIAL) {
-        let realPlayerId = playerIds[0];
-        shards[realPlayerId] = 1000;
-        queues[realPlayerId]["spawn"] = [
-            {
-                "action": "spawn",
-                "target": [1, 13],
-                "type": UnitType.ATTACKER,
-                "playerId": realPlayerId
-            },
-            {
-                "action": "spawn",
-                "target": [0, 11],
-                "type": UnitType.DEFENDER,
-                "playerId": realPlayerId
-            }
-        ];
-    }
-
     remainingCornerIndices.forEach(index => {
         genMap.towers.push(genMap.corners[index]);
     });
@@ -166,6 +147,27 @@ function initState(room, type) {
     genMap.rivers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.RIVER});
     });
+
+    if (type === RoomType.TUTORIAL) {
+        let realPlayerId = playerIds[0];
+        shards[realPlayerId] = 1000;
+        queues[realPlayerId]["spawn"] = [
+            {
+                "action": "spawn",
+                "target": [1, 13],
+                "type": UnitType.ATTACKER,
+                "playerId": realPlayerId
+            },
+            {
+                "action": "spawn",
+                "target": [0, 11],
+                "type": UnitType.DEFENDER,
+                "playerId": realPlayerId
+            }
+        ];
+        squareStates[8][8] = new SquareState({pos: [8, 8], type: SquareType.FLAG});
+        squareStates[9][10] = new SquareState({pos: [9, 10], type: SquareType.FLAG});
+    }
 
     room.playerIds = playerIds;
     room.playerBases = playerBases;
