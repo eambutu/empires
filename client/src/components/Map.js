@@ -126,6 +126,14 @@ class Cell extends Component {
         }
 
         let styleClass = "square square-content count-text";
+
+        // players on other people's bases
+        if(square.unit && square.type === SquareType.BASE && square.unit.playerId !== square.baseId){
+            console.log("hi");
+            divStyle["border"] = "solid " + playerSquareColors[playerIds.indexOf(square.baseId)]
+            styleClass += " blink"
+        }
+
         if (highlighted) {
             styleClass += " highlighted"
         }
