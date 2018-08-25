@@ -16,7 +16,8 @@ class Homepage extends Component {
 
         this.state = {
             menuIndex: 0,
-            ffa: false
+            ffa: false,
+            username: null
         }
         this.goToPlayMenu = () => {
             this.setState({menuIndex: 1});
@@ -58,6 +59,13 @@ class Homepage extends Component {
 
     }
 
+    componentDidMount() {
+        let username = Cookies.get('username');
+        if (username) {
+            this.setState({'username': username});
+        }
+    }
+
     render() {
         if (this.state.ffa) {
             return <Game goToHomeMenu={this.goToHomeMenu} ffa={true} />
@@ -80,7 +88,7 @@ class Homepage extends Component {
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
-                            <HomepageButtons onKeyPressNameForm={this.onKeyPressNameForm} onRegisterUsername={this.onRegisterUsername} onClickFFA={this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
+                            <HomepageButtons username={this.state.username} onKeyPressNameForm={this.onKeyPressNameForm} onRegisterUsername={this.onRegisterUsername} onClickFFA={this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
                         </div>
                     </div>
                 </div>
