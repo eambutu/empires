@@ -7,7 +7,7 @@ const _ = require('lodash');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, width, height} = require('./game');
 
-const ts = 1000 / 10;
+const ts = 1000 / 8;
 const framesPerTurn = 2;
 
 const RoomType = {
