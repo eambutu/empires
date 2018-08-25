@@ -4,7 +4,7 @@ import '../styles/Map.css';
 import sword from "../sword.svg";
 import base from "../base.svg";
 import eye from "../eye.svg"
-import shards from "../shard.svg"
+import shards from "../shards.svg"
 import shield from "../shield.svg";
 import defendedshard from "../defendedshard.svg";
 import defendedeye from "../defendedeye.svg";
@@ -108,6 +108,7 @@ class Cell extends Component {
             let [action, id] = actionVisualEntries[0];
             let {icon} = ActionProp[action].visual;
             divStyle["backgroundColor"] = "#505050";
+            divStyle["border"] = "2px solid #505050";
         }
         if (square.isFog) {
             divStyle["opacity"] = 0.2;
@@ -123,6 +124,7 @@ class Cell extends Component {
         }
         if (colorId) {
             divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(colorId)]
+            divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(colorId)];
         }
 
         let styleClass = "square square-content count-text";
@@ -134,6 +136,7 @@ class Cell extends Component {
             divStyle["border"] = "solid " + playerSquareColors[playerIds.indexOf(square.unit.playerId)]
             styleClass += " blinking"
             divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(square.baseId)]
+            divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(square.baseId)];
         }
 
         if (highlighted) {

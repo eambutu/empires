@@ -70,11 +70,11 @@
 .highlighted {
     height: 23px;
     width: 23px;
-    border: 2px solid white;
+    border: 2px solid white !important;
 }
 
 .count-text{
     z-index: 1;
     color: black;
-    font-size: 10px;
+    font-size: 15px;
 }

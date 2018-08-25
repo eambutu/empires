@@ -10,7 +10,7 @@ export default function PlayerBoard(props) {
     let rows = Object.values(playerStatus).map((player, index) => (
         <PlayerRow color={playerSquareColors[index]} flagcount={flags[playerIds[index]]} key={index} player={player}/>
     ))
-    
+
     return (
         <div className={"player-table-holder"}>
             <table className={"player-table"}>
