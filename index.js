@@ -309,7 +309,6 @@ function broadcastState(room) {
             ws.send(JSON.stringify({'event': 'update', 'state': getState(room, ws.playerId)}));
         }
     });
-    // console.log("Sent state");
 }
 
 function incrementFrameCounter(room) {

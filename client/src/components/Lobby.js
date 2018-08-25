@@ -1,5 +1,4 @@
-import React, {Component} from 'react';
-import attacker from '../attacker.svg';
+import React from 'react';
 import '../styles/Lobby.css';
 
 export default function Lobby(props) {

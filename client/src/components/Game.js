@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
@@ -73,7 +72,6 @@ class Game extends Component {
             isSpawnDefender: false,
             insufficientShards: false,
             flags: null,
-            ffa: false,
         };
     }
 
@@ -308,7 +306,6 @@ class Game extends Component {
                     playerIds: data.playerIds,
                     spawnSquare: data.spawn,
                     cursor: [data.spawn[0], data.spawn[1], null],
-                    ffa: data.ffa
                 });
                 document.addEventListener("keydown", this.keyDownBound);
                 document.addEventListener("keyup", this.keyUpBound);
@@ -326,7 +323,7 @@ class Game extends Component {
 
     componentDidMount() {
         let pathname;
-        if (this.props.queuedGame) {
+        if (this.props.ffa) {
             pathname = '/ffa';
         } else {
             pathname = window.location.pathname;
@@ -340,7 +337,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, ffa} = this.state;
+        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
         if (this.props.isTutorial && squares){
             return (
                 <div id="game-page">
@@ -369,7 +366,7 @@ class Game extends Component {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        <PlayerBoard ffa={ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
+                        <PlayerBoard ffa={this.props.ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                         <Map
                             onReleaseMap={this.onReleaseMap}
@@ -394,7 +391,7 @@ class Game extends Component {
             }
             return (
                 <div id="game-page">
-                    <PlayerBoard ffa={ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
+                    <PlayerBoard ffa={this.props.ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                     <Map
                         onReleaseMap={this.onReleaseMap}
@@ -413,7 +410,7 @@ class Game extends Component {
                     <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                 </div>
             );
-        } else if (this.props.queuedGame) {
+        } else if (this.props.ffa) {
             return (
                 <GlobalQueue goToHomeMenu ={this.props.goToHomeMenu} />
             )

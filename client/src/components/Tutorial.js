@@ -1,4 +1,3 @@
-import PlayerBoard from "./PlayerBoard";
 import Map from "./Map";
 import EndGame from "./EndGame";
 import React, {Component} from "react";

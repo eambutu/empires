@@ -1,11 +1,9 @@
 import sword from "../sword.svg";
-import HomepageButtons from "./HomepageButtons";
 import React from "react";
 import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 
 export default function GlobalQueue(props) {
-
     return (
         <div>
             <div className="center">
