@@ -26,6 +26,15 @@ class Homepage extends Component {
         this.onClickFFA = () => {
             this.setState({queuedGame: true})
         }
+
+        this.onRegisterUsername = () => {
+            let name = "";
+            if (document.getElementById("username")) {
+                name = document.getElementById("username").value;
+            }
+            console.log(name);
+            // z do ur shit right here
+        }
     }
 
     render() {
@@ -50,7 +59,7 @@ class Homepage extends Component {
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
-                            <HomepageButtons onClickFFA = {this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
+                            <HomepageButtons onRegisterUsername={this.onRegisterUsername} onClickFFA = {this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
                         </div>
                     </div>
                 </div>
