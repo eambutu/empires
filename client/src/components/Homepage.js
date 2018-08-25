@@ -35,7 +35,10 @@ class Homepage extends Component {
             if (document.getElementById("username")) {
                 let name = document.getElementById("username").value;
                 let cookieName = Cookies.set('username', name);
-                fetch('/cookies').then(res => res.json()).then(resJson => {
+                fetch('/cookies', {
+                    method: 'GET',
+                    credentials: 'include'
+                }).then(res => res.json()).then(resJson => {
                     if (resJson.success) {
                         onSuccess();
                     } else {
