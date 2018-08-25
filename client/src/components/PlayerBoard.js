@@ -5,12 +5,11 @@ import {playerSquareColors} from "./config.js"
 
 export default function PlayerBoard(props) {
     const {ffa, flags, playerIds, playerStatus} = props;
-    console.log(playerStatus)
 
     let rows = Object.keys(playerStatus).map((playerId, index) => (
         <PlayerRow ffa={ffa} color={playerSquareColors[playerIds.indexOf(playerId)]} flagcount={flags[playerId]} key={index} player={playerStatus[playerId]}/>
     ))
-
+    
     return (
         <div className={"player-table-holder"}>
             <table className={"player-table"}>

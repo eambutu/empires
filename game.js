@@ -626,7 +626,7 @@ function updateState(room) {
     incrementShards(room);
 
     let gameEnded;
-    if (room.type === RoomType.FFA) {
+    if (room.type === RoomType.FFA || room.type === RoomType.TUTORIAL) {
         gameEnded = updateFlagsAndCheckWin(room);
         spawnFlags(room);
     } else {

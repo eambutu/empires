@@ -3,6 +3,7 @@ import EndGame from "./EndGame";
 import React, {Component} from "react";
 import TutorialBox from "./TutorialBox";
 import ResourceBoard from "./ResourceBoard";
+import PlayerBoard from "./PlayerBoard";
 
 const tutorialTextMap = {
     0: "Hi! Welcome to Squarecraft.io. Let’s walk you through how to play.",
@@ -113,7 +114,7 @@ class Tutorial extends Component {
         if (this.state.tutorialWon | this.props.playerStatus[this.props.playerId]['status'] === "lost" || this.props.playerStatus[this.props.playerId]['status'] === "won") {
             return (
                 <div>
-                    <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
+                    <PlayerBoard ffa={true} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus}/>
                     <Map
                         onReleaseMap={this.props.onReleaseMap}
                         onDragMap={this.props.onDragMap}
@@ -127,6 +128,7 @@ class Tutorial extends Component {
                         isSpawnDefender={this.props.isSpawnDefender}
                         isInSpawningRange={this.props.isInSpawningRange}
                     />
+                    <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
                     <EndGame exitClick={this.props.exitClick}
                              status={"won"}/>
                 </div>
@@ -134,7 +136,7 @@ class Tutorial extends Component {
         }
             return (
                 <div>
-                    <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
+                    <PlayerBoard ffa={true} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus}/>
                     <TutorialBox nextBox={this.nextBox} text={tutorialTextMap[this.state.textIndex]}/>
                     <Map
                         onReleaseMap={this.props.onReleaseMap}
@@ -149,6 +151,7 @@ class Tutorial extends Component {
                         isSpawnDefender={this.props.isSpawnDefender}
                         isInSpawningRange={this.props.isInSpawningRange}
                     />
+                    <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
                 </div>
             );
     }
