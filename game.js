@@ -154,13 +154,13 @@ function initState(room, type) {
         queues[realPlayerId]["spawn"] = [
             {
                 "action": "spawn",
-                "target": [1, 13],
+                "target": [1, 17],
                 "type": UnitType.ATTACKER,
                 "playerId": realPlayerId
             },
             {
                 "action": "spawn",
-                "target": [0, 11],
+                "target": [2, 16],
                 "type": UnitType.DEFENDER,
                 "playerId": realPlayerId
             }
