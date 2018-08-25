@@ -20,17 +20,26 @@ class Homepage extends Component {
         }
 
         this.goToHomeMenu = () => {
-            this.setState({menuIndex: 0});
+            this.setState({menuIndex: 0, queuedGame: false});
         }
 
         this.onClickFFA = () => {
             this.setState({queuedGame: true})
         }
+
+        this.onRegisterUsername = () => {
+            let name = "";
+            if (document.getElementById("username")) {
+                name = document.getElementById("username").value;
+            }
+            console.log(name);
+            // z do ur shit right here
+        }
     }
 
     render() {
         if (this.state.queuedGame) {
-            return <Game goHome={this.goToHomeMenu} queuedGame={true} />
+            return <Game goToHomeMenu={this.goToHomeMenu} queuedGame={true} />
         }
         let arrowicon = null
         if (this.state.menuIndex !== 0 ) {
@@ -50,7 +59,7 @@ class Homepage extends Component {
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
-                            <HomepageButtons onClickFFA = {this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
+                            <HomepageButtons onRegisterUsername={this.onRegisterUsername} onClickFFA = {this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
                         </div>
                     </div>
                 </div>

@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const _ = require('lodash');
 
-const {initState, getState, updateState, clearTrimmed, width, height} = require('./game');
+const {initState, getState, updateState, clearTrimmedAndSpawned, width, height} = require('./game');
 
 const ts = 1000 / 10;
 const framesPerTurn = 2;
@@ -47,6 +47,10 @@ app.get(['/room', '/room/:roomId', '/tutorial'], function(req, res) {
 });
 
 function randString() {
+    return crypto.randomBytes(10).toString('hex').substring(0,7);
+}
+
+function randSecret() {
     return crypto.randomBytes(10).toString('hex');
 }
 
@@ -86,7 +90,7 @@ function onConnect(room, ws) {
     ws.status = ClientStatus.CONNECTED;
     ws.playerId = randString();
     ws.name = `player_${ws.playerId}`;
-    ws.secret = randString();
+    ws.secret = randSecret();
     console.log(`player ${ws.playerId} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
         event: 'connected',
@@ -141,9 +145,11 @@ function onMessage(room, ws) {
             if (data.secret === ws.secret) {
                 let queues = room.queues;
                 let trimmed = room.trimmed;
+                let spawned = room.spawned;
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
+                    spawned[ws.playerId] = true;
                 } else if (data.move.action.includes("move")) {
                     if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
@@ -223,10 +229,10 @@ getPerformOneTurn = targetRoom => {
         room = targetRoom;
         checkRoomState(room);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
-            let gameEnded = updateState(room, (room.roomType === RoomType.FFA));
+            let gameEnded = updateState(room, (room.type === RoomType.FFA));
             incrementFrameCounter(room);
             broadcastState(room);
-            clearTrimmed(room);
+            clearTrimmedAndSpawned(room);
             if (gameEnded) {
                 room.gameStatus = GameStatus.QUEUING;
                 room.clients.forEach(ws => {
