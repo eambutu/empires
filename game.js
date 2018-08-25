@@ -350,6 +350,7 @@ function addSpawns(room, spawns) {
                 }
                 count = HP.ATTACKER;
                 room.shards[playerId] -= Costs.ATTACKER;
+                room.spawned[playerId] = true;
             } else if (type === UnitType.DEFENDER) {
                 if (Costs.DEFENDER > room.shards[playerId]) {
                     return;
