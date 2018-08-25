@@ -11,11 +11,6 @@ import defendedeye from "../defendedeye.svg";
 import defendedbase from "../defendedbase.svg";
 import flag from "../flag.svg"
 
-import up_arrow from "../up_arrow.svg";
-import down_arrow from "../down_arrow.svg";
-import left_arrow from "../left_arrow.svg";
-import right_arrow from "../right_arrow.svg";
-
 const {SquareType, Action, UnitType, playerSquareColors} = require("./config");
 
 const SquareColor = {
@@ -28,10 +23,10 @@ const SquareColor = {
 };
 
 export const ActionProp = {
-    [Action.MOVE_DOWN]: {dx: 0, dy: 1, visual: {icon: down_arrow}},
-    [Action.MOVE_UP]: {dx: 0, dy: -1, visual: {icon: up_arrow}},
-    [Action.MOVE_LEFT]: {dx: -1, dy: 0, visual: {icon: left_arrow}},
-    [Action.MOVE_RIGHT]: {dx: 1, dy: 0, visual: {icon: right_arrow}}
+    [Action.MOVE_DOWN]: {dx: 0, dy: 1},
+    [Action.MOVE_UP]: {dx: 0, dy: -1},
+    [Action.MOVE_LEFT]: {dx: -1, dy: 0},
+    [Action.MOVE_RIGHT]: {dx: 1, dy: 0}
 }
 
 export default function Map(props) {
@@ -105,8 +100,6 @@ class Cell extends Component {
         };
         let actionVisualEntries = Object.entries(actionVisuals);
         if (actionVisualEntries.length > 0 && square.type !== SquareType.RIVER) {
-            let [action, id] = actionVisualEntries[0];
-            let {icon} = ActionProp[action].visual;
             divStyle["backgroundColor"] = "#505050";
             divStyle["border"] = "2px solid #505050";
         }
@@ -122,22 +115,20 @@ class Cell extends Component {
             divStyle["opacity"] = "0.5";
             colorId = playerId;
         }
-        if (colorId) {
+
+        let styleClass = "square square-content count-text";
+
+
+        // players on other people's bases
+        if(square.unit && square.type === SquareType.BASE && square.unit.playerId !== square.baseId) {
+            divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(square.unit.playerId)]
+            styleClass += " blinking"
+            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(square.baseId)]
+        } else if (colorId) {
             divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(colorId)]
             divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(colorId)];
         }
 
-        let styleClass = "square square-content count-text";
-
-        // players on other people's bases
-        if(square.unit && square.type === SquareType.BASE && square.unit.playerId !== square.baseId){
-            console.log(playerIds.indexOf(square.baseId));
-            console.log(square.unit.playerId)
-            divStyle["border"] = "solid " + playerSquareColors[playerIds.indexOf(square.unit.playerId)]
-            styleClass += " blinking"
-            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(square.baseId)]
-            divStyle["border"] = "2px solid " + playerSquareColors[playerIds.indexOf(square.baseId)];
-        }
 
         if (highlighted) {
             styleClass += " highlighted"
@@ -154,13 +145,10 @@ class Cell extends Component {
             else {
                 divStyle["backgroundImage"] = `url(${base})`;
             }
-            if (square.baseHP === 0) { // dead
+            if (!count) {
                 count = 0;
-            } else if (square.unit) { // has player's own units
-                count += square.baseHP;
-            } else { // doesn't have player's own units
-                count = square.baseHP;
             }
+            count += square.baseHP;
         } else if (square.type === SquareType.WATCHTOWER) {
             if ((square.unit && square.unit.type === UnitType.DEFENDER) || renderSpawnDefender) {
                 divStyle["backgroundImage"] = `url(${defendedeye})`;

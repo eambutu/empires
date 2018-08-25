@@ -6,15 +6,10 @@ const crypto = require('crypto');
 const _ = require('lodash');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, width, height} = require('./game');
+const {RoomType} = require('./config');
 
 const ts = 1000 / 8;
-const framesPerTurn = 2;
-
-const RoomType = {
-    FFA: "ffa",
-    CUSTOM: "custom",
-    TUTORIAL: "tutorial"
-};
+const framesPerTurn = 8;
 
 const GameStatus = {
     QUEUING: "queuing",
@@ -260,7 +255,7 @@ function runGame(room) {
     console.log('start game');
     room.gameStatus = GameStatus.IN_PROGRESS;
     broadcastStarting(room);
-    initState(room, room.type === RoomType.TUTORIAL);
+    initState(room, room.type);
     broadcastInit(room);
     room.gameInterval = setInterval(
         getPerformOneTurn(room),
@@ -317,7 +312,6 @@ function broadcastState(room) {
             ws.send(JSON.stringify({'event': 'update', 'state': getState(room, ws.playerId)}));
         }
     });
-    // console.log("Sent state");
 }
 
 function incrementFrameCounter(room) {
