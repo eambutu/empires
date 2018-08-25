@@ -48,6 +48,15 @@ class Homepage extends Component {
                 });
             }
         }
+
+        this.onKeyPressNameForm = (e) => {
+            if(e.charCode == 13) {
+                e.preventDefault();
+                this.onRegisterUsername(() => {});
+            }
+        }
+
+
     }
 
     componentDidMount() {
@@ -79,7 +88,7 @@ class Homepage extends Component {
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
-                            <HomepageButtons username={this.state.username} onRegisterUsername={this.onRegisterUsername} onClickFFA={this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
+                            <HomepageButtons username={this.state.username} onKeyPressNameForm={this.onKeyPressNameForm} onRegisterUsername={this.onRegisterUsername} onClickFFA={this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
                         </div>
                     </div>
                 </div>
