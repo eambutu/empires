@@ -413,7 +413,7 @@ class Game extends Component {
             );
         } else if (this.props.queuedGame) {
             return (
-                <GlobalQueue goToHomeMenu={this.props.goHome} />
+                <GlobalQueue goToHomeMenu ={this.props.goToHomeMenu} />
             )
         }
         else {
