@@ -1,9 +1,16 @@
 import React from "react";
 import '../styles/PlayerBoard.css';
 
+import {playerSquareColors} from "./config.js"
+
 export default function PlayerBoard(props) {
     const {flags, playerIds, playerStatus} = props;
     console.log(playerStatus)
+
+    let rows = Object.values(playerStatus).map((player, index) => (
+        <PlayerRow color={playerSquareColors[index]} flagcount={flags[playerIds[index]]} key={index} player={player}/>
+    ))
+    
     return (
         <div className={"player-table-holder"}>
             <table className={"player-table"}>
@@ -12,10 +19,7 @@ export default function PlayerBoard(props) {
                     <td>Player</td>
                     <td>Flags</td>
                 </tr>
-                {Object.values(playerStatus).map((player, index) => (
-                    <PlayerRow flagcount={flags[playerIds[index]]} key={index} player={player}/>
-
-                ))}
+                {rows}
                 </tbody>
             </table>
         </div>
@@ -25,10 +29,10 @@ export default function PlayerBoard(props) {
 
 
 function PlayerRow(props) {
-    const {flagcount, player} = props;
+    const {color, flagcount, player} = props;
     return (
         <tr>
-            <td>{player.name}</td>
+            <td style={{backgroundColor: color, color: "white"}}>{player.name}</td>
             <td>{flagcount}</td>
         </tr>
     )

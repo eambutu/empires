@@ -16,7 +16,7 @@ import down_arrow from "../down_arrow.svg";
 import left_arrow from "../left_arrow.svg";
 import right_arrow from "../right_arrow.svg";
 
-const {SquareType, Action, UnitType} = require("./config");
+const {SquareType, Action, UnitType, playerSquareColors} = require("./config");
 
 const SquareColor = {
     [SquareType.UNKNOWN]: 'black',
@@ -26,8 +26,6 @@ const SquareColor = {
     [SquareType.RIVER]: 'white',
     [SquareType.FLAG]: 'gray'
 };
-
-const playerSquareColors = ['red', 'blue', 'green', 'yellow'];
 
 export const ActionProp = {
     [Action.MOVE_DOWN]: {dx: 0, dy: 1, visual: {icon: down_arrow}},
@@ -131,9 +129,11 @@ class Cell extends Component {
 
         // players on other people's bases
         if(square.unit && square.type === SquareType.BASE && square.unit.playerId !== square.baseId){
-            console.log("hi");
-            divStyle["border"] = "solid " + playerSquareColors[playerIds.indexOf(square.baseId)]
-            styleClass += " blink"
+            console.log(playerIds.indexOf(square.baseId));
+            console.log(square.unit.playerId)
+            divStyle["border"] = "solid " + playerSquareColors[playerIds.indexOf(square.unit.playerId)]
+            styleClass += " blinking"
+            divStyle["backgroundColor"] = playerSquareColors[playerIds.indexOf(square.baseId)]
         }
 
         if (highlighted) {
