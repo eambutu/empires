@@ -320,6 +320,14 @@ class Game extends Component {
                     startingText = 'Starting tutorial...'
                 }
                 this.setState({waitingText: startingText})
+            } else if (data.event === 'full') {
+                this.ws.close();
+                let fullText = 'This room is full. Redirecting to lobbies page in 5 seconds...'
+                this.setState({waitingText: fullText});
+                setInterval(
+                    function() {window.location.replace('/room');},
+                    5000
+                );
             }
         });
     }

@@ -190,13 +190,17 @@ function tryStartGame(room) {
 }
 
 function connectToRoom(room, ws) {
-    room.waitingClients.push(ws);
+    if (room.type === RoomType.CUSTOM && room.gameStatus === GameStatus.IN_PROGRESS) {
+        ws.send(JSON.stringify({event: 'full'}));
+        ws.close();
+    } else {
+        room.waitingClients.push(ws);
+        onConnect(room, ws);
+        onClose(room, ws);
 
-    onConnect(room, ws);
-    onClose(room, ws);
-
-    if (room.gameStatus === GameStatus.QUEUING) {
-        tryStartGame(room);
+        if (room.gameStatus === GameStatus.QUEUING) {
+            tryStartGame(room);
+        }
     }
 }
 
