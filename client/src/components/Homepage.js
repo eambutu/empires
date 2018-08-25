@@ -49,10 +49,6 @@ class Homepage extends Component {
         }
 
         this.onKeyPressNameForm = (e) => {
-            console.log("e")
-            console.log(e)
-            // debugger;
-            console.log(e.charCode);
             if(e.charCode == 13) {
                 e.preventDefault();
                 this.onRegisterUsername(() => {});
