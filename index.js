@@ -290,6 +290,7 @@ function broadcastInit(room) {
     let spawnSquares = room.spawnSquares;
     let playerIds = room.playerIds;
     let ffa = (room.type === RoomType.FFA);
+    let [height, width] = room.shape;
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({

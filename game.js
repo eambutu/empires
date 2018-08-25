@@ -82,6 +82,8 @@ function initState(room, type) {
     let spawned = {};
     let shards = {};
     let flags = {};
+    let height;
+    let width;
 
     if (type === RoomType.CUSTOM) {
         height = 15;
@@ -173,6 +175,7 @@ function initState(room, type) {
     room.playerBases = playerBases;
     room.spawnSquares = spawnSquares;
     room.squareStates = squareStates;
+    room.shape = [height, width];
     room.flagSpawns = genMap.flagSpawns;
     room.queues = queues;
     room.trimmed = trimmed;
