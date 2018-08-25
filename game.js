@@ -1,4 +1,5 @@
 const {SquareType, UnitType, Costs, HP} = require('./config');
+var {generateMap} = require('./map');
 
 const Vision = {
     UNIT: 1,
@@ -6,9 +7,9 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-const width = 15;
-const height = 15;
-const flagSpawnProbability = 0.1;
+const width = 19;
+const height = 19;
+const flagSpawnProbability = 0.002;
 const flagWinNum = 10;
 
 class SquareState {
@@ -81,45 +82,7 @@ function initState(room, isTutorial) {
     let shards = {};
     let flags = {};
 
-    let corners = [
-        [0, 0],
-        [14, 0],
-        [0, 14],
-        [14, 14]
-    ];
-
-    let spawnChoices = [
-        [1, 1],
-        [13, 1],
-        [1, 13],
-        [13, 13]
-    ];
-
-    let towers = [
-        [4, 4],
-        [4, 10],
-        [10, 4],
-        [10, 10]
-    ];
-
-    let watchTowers = [
-        [7, 7]
-    ];
-
-    let rivers = [
-        [0, 7],
-        [1, 7],
-        [2, 7],
-        [12, 7],
-        [13, 7],
-        [14, 7],
-        [7, 0],
-        [7, 1],
-        [7, 2],
-        [7, 12],
-        [7, 13],
-        [7, 14]
-    ];
+    let genMap = generateMap();
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
@@ -143,8 +106,8 @@ function initState(room, isTutorial) {
         trimmed[playerId] = {};
         spawned[playerId] = false;
         let cornerIndex = cornerMap[playerId];
-        playerBases[playerId] = corners[cornerIndex];
-        spawnSquares[playerId] = spawnChoices[cornerIndex];
+        playerBases[playerId] = genMap.corners[cornerIndex];
+        spawnSquares[playerId] = genMap.spawnChoices[cornerIndex];
         shards[playerId] = 150;
         flags[playerId] = 0;
     });
@@ -168,12 +131,8 @@ function initState(room, isTutorial) {
         ];
     }
 
-    let flagSpawns = [
-        [7, 8]
-    ];
-
     remainingCornerIndices.forEach(index => {
-        towers.push(corners[index]);
+        genMap.towers.push(genMap.corners[index]);
     });
 
     let squareStates = [...Array(height)].map(y => {
@@ -184,13 +143,13 @@ function initState(room, isTutorial) {
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
     });
-    towers.forEach(([y, x]) => {
+    genMap.towers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.TOWER});
     });
-    watchTowers.forEach(([y, x]) => {
+    genMap.watchTowers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.WATCHTOWER});
     });
-    rivers.forEach(([y, x]) => {
+    genMap.rivers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.RIVER});
     });
 
@@ -198,13 +157,13 @@ function initState(room, isTutorial) {
     room.playerBases = playerBases;
     room.spawnSquares = spawnSquares;
     room.squareStates = squareStates;
-    room.flagSpawns = flagSpawns;
+    room.flagSpawns = genMap.flagSpawns;
     room.queues = queues;
     room.trimmed = trimmed;
     room.spawned = spawned;
     room.shards = shards;
     room.flags = flags;
-    room.towers = towers;
+    room.towers = genMap.towers;
     room.gameWonStatus = null;
     room.frameCounter = 0;
     console.log(`state initialized for ${room.id}`);
