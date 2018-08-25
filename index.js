@@ -11,12 +11,6 @@ const {RoomType} = require('./config');
 const ts = 1000 / 8;
 const framesPerTurn = 8;
 
-const RoomType = {
-    FFA: "ffa",
-    CUSTOM: "custom",
-    TUTORIAL: "tutorial"
-};
-
 const GameStatus = {
     QUEUING: "queuing",
     IN_PROGRESS: "inProgress"
