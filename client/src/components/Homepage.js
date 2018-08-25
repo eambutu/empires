@@ -20,7 +20,7 @@ class Homepage extends Component {
         }
 
         this.goToHomeMenu = () => {
-            this.setState({menuIndex: 0});
+            this.setState({menuIndex: 0, queuedGame: false});
         }
 
         this.onClickFFA = () => {
@@ -30,7 +30,7 @@ class Homepage extends Component {
 
     render() {
         if (this.state.queuedGame) {
-            return <Game goHome={this.goToHomeMenu} queuedGame={true} />
+            return <Game goToHomeMenu={this.goToHomeMenu} queuedGame={true} />
         }
         let arrowicon = null
         if (this.state.menuIndex !== 0 ) {
