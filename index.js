@@ -233,8 +233,8 @@ getPerformOneTurn = targetRoom => {
         checkRoomState(room);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             let gameEnded = updateState(room, (room.type === RoomType.FFA)) ||
-                            (room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED)).length === 1);
-            room.fogOfWar = (!gameEnded);
+                            ((room.type !== RoomType.TUTORIAL) && (room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED)).length === 1));
+            room.fogOfWar = !((room.type === RoomType.TUTORIAL) || gameEnded);
             incrementFrameCounter(room);
             broadcastState(room);
             clearTrimmedAndSpawned(room);
