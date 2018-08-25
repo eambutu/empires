@@ -39,7 +39,7 @@ export default function Map(props) {
     var actionVisuals = {};
     queue.forEach((action) => {
         if (action.action.includes("move")) {
-            let [y, x] = action.source;
+            let [y, x] = action.target;
             if (!(y in actionVisuals)) {
                 actionVisuals[y] = {};
             }
