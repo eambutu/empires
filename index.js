@@ -10,8 +10,24 @@ const {initState, getState, updateState, clearTrimmed, width, height} = require(
 const ts = 1000 / 10;
 const framesPerTurn = 2;
 
-var rooms = {};
-let queueRooms = {};
+const RoomType = {
+    FFA: "ffa",
+    CUSTOM: "custom",
+    TUTORIAL: "tutorial"
+};
+
+const GameStatus = {
+    QUEUING: "queuing",
+    IN_PROGRESS: "inProgress"
+};
+
+const ClientStatus = {
+    CONNECTED: "connected",
+    CONNECTING: "connecting",
+    DISCONNECTED: "disconnected"
+};
+
+let rooms = {};
 let queueRoomId = null;
 
 app.use(express.static(path.join(__dirname, 'client/build')));
@@ -30,76 +46,89 @@ app.get(['/room', '/room/:roomId', '/tutorial'], function(req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-function initOrGetRoom(roomId, rooms, ws, maxPlayers, isTutorial) {
+function randString() {
+    return crypto.randomBytes(10).toString('hex');
+}
+
+function initOrGetRoom(roomId, roomType) {
     if (!(roomId in rooms)) {
+        let numPlayers;
+        switch (roomType) {
+            case RoomType.FFA:
+                numPlayers = 4;
+                break;
+            case RoomType.CUSTOM:
+                numPlayers = 2;
+                break;
+            case RoomType.TUTORIAL:
+                numPlayers = 1;
+                break;
+            default:
+                numPlayers = null;
+        }
         rooms[roomId] = {
             id: roomId,
+            type: roomType,
             clients: [],
-            full: false,
-            gameEnded: false,
+            waitingClients: [],
             gameInterval: null,
-            heartbeatInterval: null,
             frameCounter: 0,
-            isTutorial: isTutorial,
-            maxPlayers: maxPlayers
-        }
+            gameStatus: GameStatus.QUEUING,
+            numPlayers: numPlayers
+        };
     }
-    rooms[roomId].clients.push(ws);
     return rooms[roomId];
 }
 
-const OnConnectStatus = {
-    WAITING: 1,
-    STARTING: 2,
-    EXCLUDED: 3
-}
-
 function onConnect(room, ws) {
-    if (!room.full && (room.clients.length <= room.maxPlayers)) {
-        ws.ponged = true;
-        ws.isAlive = true;
-        ws.playerId = room.clients.length.toString();
-        ws.name = `player_${ws.playerId}`;
-        ws.secret = Math.floor(Math.random() * 10000);
+    ws.ponged = true;
+    ws.missedPongs = 0;
+    ws.status = ClientStatus.CONNECTED;
+    ws.playerId = randString();
+    ws.name = `player_${ws.playerId}`;
+    ws.secret = randString();
+    console.log(`player ${ws.playerId} connected to ${room.id}`);
+    ws.send(JSON.stringify({
+        event: 'connected',
+        playerId: ws.playerId,
+        secret: ws.secret
+    }));
 
-        ws.send(JSON.stringify({
-            event: 'connected',
-            playerId: ws.playerId,
-            secret: ws.secret,
-            isTutorial: room.isTutorial
-        }));
-        console.log(`player ${ws.playerId} connected to ${room.id}`);
-
-        if (room.clients.length === room.maxPlayers) {
-            return OnConnectStatus.STARTING;
-        }
-        return OnConnectStatus.WAITING;
-    } else {
-        ws.send(JSON.stringify({
-            event: 'full',
-        }));
-        ws.close();
-        return OnConnectStatus.EXCLUDED;
-    }
-}
-
-function onPong(ws) {
+    // ping pong for client status
     ws.on('pong', () => {
         ws.ponged = true;
     });
+    ws.heartbeatInterval = setInterval(() => {
+        if (ws.readyState === 1) {
+            if (ws.ponged) {
+                ws.status = ClientStatus.CONNECTED;
+                ws.ponged = false;
+                ws.missedPongs = 0;
+            } else {
+                ws.status = ClientStatus.CONNECTING;
+                ws.missedPongs++;
+                if (ws.missedPongs === 10) {
+                    ws.status = ClientStatus.DISCONNECTED;
+                }
+            }
+            ws.ping();
+        } else {
+            ws.status = ClientStatus.DISCONNECTED;
+        }
+        if (ws.status === ClientStatus.DISCONNECTED) {
+            ws.close();
+            clearInterval(ws.heartbeatInterval);
+        }
+    }, 1000);
 }
 
 function onClose(room, ws) {
-    ws.on('close', function () {
-        room.clients = room.clients.filter(client => (client.readyState === 1));
-        if (ws.playerId) {
-            console.log(`player ${ws.playerId} disconnected from ${room.id}`);
-            room.clients.forEach(client => {
-                client.send(JSON.stringify({'event': 'noPlayAgain'}))
-            });
-        } else {
-            console.log(`client attempted connect to ${room.id}`);
-        }
+    ws.on('close', () => {
+        room.clients = room.clients.filter(client => (client !== ws));
+        room.waitingClients = room.waitingClients.filter(client => (client !== ws));
+        ws.status = ClientStatus.DISCONNECTED;
+        checkRoomState(room);
+        console.log(ws.playerId + ' closed connection');
     });
 }
 
@@ -129,158 +158,133 @@ function onMessage(room, ws) {
                 }
             }
         } else if (data.event === 'veil') {
-            room.isTutorial = false;
-        } else if (data.event === 'reset') {
-            resetGame(room);
-            runGame(room);
+            room.fogOfWar = true;
         } else if (data.event === 'exit') {
-            ws.send(JSON.stringify({'event': 'redirect'}));
-            room.clients.forEach(client => {
-                client.send(JSON.stringify({'event': 'noPlayAgain'}))
-            })
             ws.close();
         }
     });
 }
 
-app.ws('/queue', function (ws, req) {
+function tryStartGame(room) {
+    // only keep connected clients
+    let connectedClients = room.waitingClients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
+    if (connectedClients.length >= room.numPlayers) {
+        room.clients = connectedClients.slice(0, room.numPlayers);
+        connectedClients = connectedClients.slice(room.numPlayers, connectedClients.length);
+
+        // set message handlers
+        room.clients.forEach(client => onMessage(room, client));
+        runGame(room);
+    }
+    room.waitingClients = connectedClients;
+}
+
+function connectToRoom(room, ws) {
+    room.waitingClients.push(ws);
+
+    onConnect(room, ws);
+    onClose(room, ws);
+
+    if (room.gameStatus === GameStatus.QUEUING) {
+        tryStartGame(room);
+    }
+}
+
+app.ws('/ffa', function (ws, req) {
     if (!queueRoomId) {
-        queueRoomId = crypto.randomBytes(10).toString('hex');
+        queueRoomId = 'ffa-' + randString();
     }
-    let queueRoom = initOrGetRoom(queueRoomId, queueRooms, ws, 2, false);
-    let onConnectStatus = onConnect(queueRoom, ws);
-    if (onConnectStatus !== OnConnectStatus.EXCLUDED) {
-        onMessage(queueRoom, ws);
-        onPong(ws);
-        onClose(queueRoom, ws);
-    }
-    if (onConnectStatus === OnConnectStatus.STARTING) {
+    let room = initOrGetRoom(queueRoomId, RoomType.FFA);
+    connectToRoom(room, ws);
+    if (room.gameStatus === GameStatus.IN_PROGRESS) {
         queueRoomId = null;
-        queueRoom.full = true;
-        runGame(queueRoom);
     }
 });
 
 app.ws('/room/:roomId', function (ws, req) {
     let roomId = req.params.roomId;
-    let room = initOrGetRoom(roomId, rooms, ws, 2, false);
-
-    let onConnectStatus = onConnect(room, ws);
-    if (onConnectStatus !== OnConnectStatus.EXCLUDED) {
-        onMessage(room, ws);
-        onPong(ws);
-        onClose(room, ws);
-    }
-    if (onConnectStatus === OnConnectStatus.STARTING) {
-        room.full = true;
-        runGame(room);
-    }
+    let room = initOrGetRoom(roomId, RoomType.CUSTOM);
+    connectToRoom(room, ws);
 });
 
 app.ws('/tutorial', function (ws, req) {
-    if (!ws.tutorialRoomId) {
-        ws.tutorialRoomId = 'tutorial-'.concat(Math.floor(10000000*Math.random()).toString());
-    }
-    let room = initOrGetRoom(ws.tutorialRoomId, ws, 1, true);
-
-    onConnect(room, ws);
-    onMessage(room, ws);
-    onPong(ws);
-    onClose(room, ws);
+    let tutorialRoomId = 'tutorial-' + randString();
+    let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
+    connectToRoom(room, ws);
 });
 
 app.listen(5000, function () {
     console.log('App listening on port 5000!');
 });
 
-
 getPerformOneTurn = targetRoom => {
     return function performOneTurn() {
         room = targetRoom;
-        resetIfEmpty(room);
-        if (!room.gameEnded) {
-            updateState(room, true);
+        checkRoomState(room);
+        if (room.gameStatus === GameStatus.IN_PROGRESS) {
+            let gameEnded = updateState(room, (room.roomType === RoomType.FFA));
             incrementFrameCounter(room);
             broadcastState(room);
             clearTrimmed(room);
+            if (gameEnded) {
+                room.gameStatus = GameStatus.QUEUING;
+                room.clients.forEach(ws => {
+                    if (ws.status === ClientStatus.CONNECTED) {
+                        ws.close();
+                    }
+                });                
+                checkRoomState(room);
+            }
         }
     };    
 };
 
-getPingPlayers = targetRoom => {
-    return function pingPlayers() {
-        room = targetRoom;
-        room.clients.forEach(client => {
-            if (client.readyState === 1) {
-                client.isAlive = client.ponged;
-                client.ponged = false;
-                client.ping();
-            }
-        });
-    }    
-};
 
 function runGame(room) {
+    console.log('start game');
+    room.gameStatus = GameStatus.IN_PROGRESS;
     broadcastStarting(room);
-    initState(room);
+    initState(room, room.type === RoomType.TUTORIAL);
     broadcastInit(room);
     room.gameInterval = setInterval(
         getPerformOneTurn(room),
         ts
     );
-    room.heartbeatInterval = setInterval(
-        getPingPlayers(room),
-        1000
-    );
 }
 
-function resetIfEmpty(room) {
-    room.clients = room.clients.filter(client => (client.readyState === 1));
-    if (room.clients.length === 0) {
-        if (room.isTutorial) {
+function checkRoomState(room) {
+    let clients = room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
+    if (clients.length === 0) {
+        clearInterval(room.gameInterval);
+        tryStartGame(room);
+        if (room.gameStatus === GameStatus.QUEUING && room.waitingClients.length === 0) {
+            delete rooms[room.id];
             delete room;
-        } else {
-            openRoom(room);
+            console.log("deleting room with id " + room.id);
         }
     }
 }
 
-function resetGame(room) {
-    clearInterval(room.gameInterval);
-    clearInterval(room.heartbeatInterval);
-    room.gameEnded = false;
-}
-
-function openRoom(room) {
-    console.log('RESTART GAME');
-    resetGame(room);
-    setTimeout(
-        function () {room.full = false;},
-        1000
-    );
-}
-
 function broadcastStarting(room) {
-    room.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify({'event': 'starting'}));
+    room.clients.forEach(ws => {
+        if (ws.readyState === 1) {
+            ws.send(JSON.stringify({event: 'starting'}));
         }
     });
     console.log(`sent starting to ${room.id}`);
 }
 
 function broadcastInit(room) {
-    // Things that get broadcast in the beginning of the game
     let playerBases = room.playerBases;
     let spawnSquares = room.spawnSquares;
     let playerIds = room.playerIds;
-    room.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify({
+    room.clients.forEach(ws => {
+        if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
                 'event': 'init',
                 'playerIds': playerIds,
-                'base': playerBases[client.playerId],
-                'spawn': spawnSquares[client.playerId],
+                'base': playerBases[ws.playerId],
+                'spawn': spawnSquares[ws.playerId],
                 'width': width,
                 'height': height,
             }));

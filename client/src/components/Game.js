@@ -56,9 +56,8 @@ class Game extends Component {
         return false;
     }
 
-    constructor(props) {
-        super(props);
-        this.state = {
+    getInitialState() {
+        return {
             playerIds: [],
             playerId: null,
             secret: null,
@@ -70,13 +69,16 @@ class Game extends Component {
             height: 0,
             cursor: [null, null, null],
             waitingText: '',
-            canPlayAgain: true,
             spawnSquare: null,
             isSpawnDefender: false,
-            isTutorial: false,
             insufficientShards: false,
             flags: null
         };
+    }
+
+    constructor(props) {
+        super(props);
+        this.state = this.getInitialState();
         this.unitSquareMap = null;
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
@@ -266,17 +268,15 @@ class Game extends Component {
     setUpWebSocket(wsPath) {
         this.ws = new WebSocket(wsPath);
 
-        this.onReset = e => {
-            if (this.props.queuedGame) {
-                this.onExit();
-                this.setUpWebSocket(wsPath); // wsPath is still the queued game
-            } else {
-                this.ws.send(JSON.stringify({'event': 'reset'}));
-            }
+        this.onPlayAgain = e => {
+            this.ws.close();
+            this.setState(this.getInitialState());
+            this.setUpWebSocket(wsPath); // wsPath is still the queued game
         };
 
         this.onExit = e => {
-            this.ws.send(JSON.stringify({'event': 'exit'}));
+            this.ws.close();
+            window.location.replace('/');
         };
 
         this.onVeil = () => {
@@ -285,18 +285,17 @@ class Game extends Component {
 
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
+            console.log(data.event);
             if (data.event === 'connected') {
-
                 let connectedText = 'Connected! Waiting for other players to join.'
-                if (data.isTutorial) {
+                if (this.props.isTutorial) {
                     connectedText = 'Connected! Welcome to the tutorial.'
                 }
 
                 this.setState({
                     playerId: data.playerId,
                     secret: data.secret,
-                    waitingText: connectedText,
-                    isTutorial: data.isTutorial
+                    waitingText: connectedText
                 });
             } else if (data.event === 'init') {
                 this.setState({
@@ -309,22 +308,12 @@ class Game extends Component {
                 document.addEventListener("keyup", this.keyUpBound);
             } else if (data.event === 'update') {
                 this.updateGame(data.state);
-            } else if (data.event === 'full') {
-                let fullText = 'Lobby is full. Check back again later.'
-                if (this.state.isTutorial) {
-                    fullText = 'This tutorial is full. Refresh and try again.'
-                }
-                this.setState({waitingText: fullText})
             } else if (data.event === 'starting') {
                 let startingText = 'Starting game...'
-                if (this.state.isTutorial) {
+                if (this.props.isTutorial) {
                     startingText = 'Starting tutorial...'
                 }
                 this.setState({waitingText: startingText})
-            } else if (data.event === 'redirect') {
-                window.location.replace('/')
-            } else if (data.event === 'noPlayAgain') {
-                this.setState({canPlayAgain: false})
             }
         });
     }
@@ -332,7 +321,7 @@ class Game extends Component {
     componentDidMount() {
         let pathname;
         if (this.props.queuedGame) {
-            pathname = '/queue';
+            pathname = '/ffa';
         } else {
             pathname = window.location.pathname;
         }
@@ -345,10 +334,8 @@ class Game extends Component {
     }
 
     render() {
-        console.log(this.state)
-        let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain, isSpawnDefender, flags} = this.state;
-        if (this.state.isTutorial && squares){
-
+        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
+        if (this.props.isTutorial && squares){
             return (
                 <div id="game-page">
                     <Tutorial
@@ -370,8 +357,6 @@ class Game extends Component {
                         isInSpawningRange={this.isInSpawningRange.bind(this)}
                     />
                 </div>
-
-
             );
         }
         if (squares) {
@@ -394,8 +379,10 @@ class Game extends Component {
                             isInSpawningRange={this.isInSpawningRange.bind(this)}
                         />
 
-                        <EndGame resetClick={this.onReset} exitClick={this.onExit}
-                                 status={playerStatus[playerId]['status']} canPlayAgain={canPlayAgain}/>
+                        <EndGame resetClick={this.onPlayAgain}
+                                 exitClick={this.onExit}
+                                 status={playerStatus[playerId]['status']}
+                                 canPlayAgain={!this.props.isTutorial} />
                     </div>
                 );
             }
@@ -420,9 +407,9 @@ class Game extends Component {
                     <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                 </div>
             );
-        } else if (this.props.queuedGame){
+        } else if (this.props.queuedGame) {
             return (
-                <GlobalQueue goToHomeMenu ={this.props.goHome} />
+                <GlobalQueue goToHomeMenu={this.props.goHome} />
             )
         }
         else {
