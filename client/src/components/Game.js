@@ -38,7 +38,8 @@ let downFlag = false;
 
 class Game extends Component {
     isInBound(y, x) {
-        return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width) && ((this.state.squares[y][x].type !== SquareType.RIVER));
+        let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
+        return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width) && (!cursorUnitId || (this.state.squares[y][x].type !== SquareType.RIVER));
     }
 
     isInSpawningRange(y, x) {
@@ -85,7 +86,7 @@ class Game extends Component {
 
         this.validateUnitIdQueue = function() {
             let cleanUnitIdQueue = this.state.unitIdQueue.filter(unitId => {
-                return this.getUnitIdLoc(unitId)[0]
+                return (this.getUnitIdLoc(unitId)[0] !== null);
             });
             this.setState({
                 unitIdQueue: cleanUnitIdQueue
@@ -111,7 +112,6 @@ class Game extends Component {
         }
 
         this.cycleUnitIdQueueAndMoveCursor = function() {
-            console.log(this.state.unitIdQueue);
             let newUnitIdQueue = this.state.unitIdQueue;
             if (newUnitIdQueue.length > 0) {
                 let currentUnitId = newUnitIdQueue.shift();
@@ -119,7 +119,7 @@ class Game extends Component {
                 this.setState({
                     unitIdQueue: newUnitIdQueue
                 });
-                this.resetCursorToUnit(newUnitIdQueue[0]);
+                this.resetCursorToUnitQueueTail(newUnitIdQueue[0]);
             } else {
                 this.freeCursor();
             }
@@ -139,14 +139,26 @@ class Game extends Component {
             });
         }
 
-        this.resetCursorToUnit = function(unitId) {
-            let [locY, locX] = this.getUnitIdLoc(unitId);
-            if (locY && this.state.squares[locY][locX].unit.playerId === this.state.playerId) {
+        this.resetCursorToUnitQueueTail = function(unitId) {
+            let [locY, locX] = this.getUnitIdQueueTailLoc(unitId);
+
+            if (locY !== null) {
                 this.setState({
                     cursor: [locY, locX, unitId]
                 });
             } else {
                 this.freeCursor();
+            }
+        }
+
+        this.getUnitIdQueueTailLoc = function(unitId) {
+            let unitIdQueue = this.state.queue.filter(move => {
+                return move.unitId === unitId;
+            })
+            if (unitIdQueue.length > 0) {
+                return unitIdQueue[unitIdQueue.length - 1].target;
+            } else {
+                return this.getUnitIdLoc(unitId);
             }
         }
 
@@ -330,7 +342,7 @@ class Game extends Component {
 
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
-            console.log(data.event);
+            // console.log(data.event);
             if (data.event === 'connected') {
                 let connectedText = 'Connected! Waiting for other players to join.'
                 if (this.props.isTutorial) {
@@ -535,7 +547,7 @@ class Game extends Component {
 
         let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
         if ((cursorUnitId in newState.trimmed) && newState.trimmed[cursorUnitId]) {
-            this.resetCursorToUnit(cursorUnitId);
+            this.resetCursorToUnitQueueTail(cursorUnitId);
         }
 
         if (newState.spawned) {
