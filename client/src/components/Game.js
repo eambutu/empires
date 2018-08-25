@@ -85,7 +85,12 @@ class Game extends Component {
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
 
-        this.validateUnitIdQueue = function() {
+        this.goToHomeMenuAndClose = e => {
+            this.ws.close();
+            props.goToHomeMenu();
+        }
+
+        this.validateUnitIdQueue = e => {
             let cleanUnitIdQueue = this.state.unitIdQueue.filter(unitId => {
                 return (this.getUnitIdLoc(unitId)[0] !== null);
             });
@@ -94,7 +99,7 @@ class Game extends Component {
             });
         }
 
-        this.updateUnitIdQueue = function(unitId) {
+        this.updateUnitIdQueue = unitId => {
             if (unitId) {
                 let newUnitIdQueue = this.state.unitIdQueue;
                 let ix = newUnitIdQueue.indexOf(unitId);
@@ -112,7 +117,7 @@ class Game extends Component {
             }
         }
 
-        this.cycleUnitIdQueueAndMoveCursor = function() {
+        this.cycleUnitIdQueueAndMoveCursor = e => {
             let newUnitIdQueue = this.state.unitIdQueue;
             if (newUnitIdQueue.length > 0) {
                 let currentUnitId = newUnitIdQueue.shift();
@@ -126,21 +131,21 @@ class Game extends Component {
             }
         }
 
-        this.freeCursor = function() {
+        this.freeCursor = e => {
             let [y, x, cursorUnitId] = this.state.cursor;
             this.setState({
                 cursor: [y, x, null]
             });
         }
 
-        this.resetCursorToSpawn = function() {
+        this.resetCursorToSpawn = e => {
             let [spawnY, spawnX] = this.state.spawnSquare;
             this.setState({
                 cursor: [spawnY, spawnX, null]
             });
         }
 
-        this.resetCursorToUnitQueueTail = function(unitId) {
+        this.resetCursorToUnitQueueTail = unitId => {
             let [locY, locX] = this.getUnitIdQueueTailLoc(unitId);
 
             if (locY !== null) {
@@ -152,7 +157,7 @@ class Game extends Component {
             }
         }
 
-        this.getUnitIdQueueTailLoc = function(unitId) {
+        this.getUnitIdQueueTailLoc = unitId => {
             let unitIdQueue = this.state.queue.filter(move => {
                 return move.unitId === unitId;
             })
@@ -163,7 +168,7 @@ class Game extends Component {
             }
         }
 
-        this.getUnitIdLoc = function(unitId) {
+        this.getUnitIdLoc = unitId => {
             let locY = null;
             let locX = null
             this.state.squares.forEach((row, y) => {
@@ -318,23 +323,8 @@ class Game extends Component {
             }
         }
 
-        this.onReleaseMap = () => {
+        this.onReleaseMap = e => {
             downFlag = false;
-        }
-
-        this.onPlayerReady = () => {
-            // abhi do your shit here
-
-            // also don't forget you need to pass the names of all the players in the lobby into playerids earlier so i can
-            // render their names and whatnot
-
-
-            // so do that
-
-            // luv u
-
-            console.log("im ready!");
-
         }
     }
 
@@ -351,6 +341,19 @@ class Game extends Component {
             };
         }
 
+        this.onPlayerReady = () => {
+            this.ws.send(JSON.stringify({'event': 'ready'}));
+            // abhi do your shit here
+
+            // also don't forget you need to pass the names of all the players in the lobby into playerids earlier so i can
+            // render their names and whatnot
+
+
+            // so do that
+
+            // luv u
+        }
+
         this.onPlayAgain = e => {
             this.ws.close();
             this.setState(this.getInitialState());
@@ -364,7 +367,7 @@ class Game extends Component {
             window.location.replace('/');
         };
 
-        this.onVeil = () => {
+        this.onVeil = e => {
             this.ws.send(JSON.stringify({'event': 'veil'}));
         }
 
@@ -375,6 +378,8 @@ class Game extends Component {
                 let connectedText = 'Connected! Waiting for other players to join.'
                 if (this.props.isTutorial) {
                     connectedText = 'Connected! Welcome to the tutorial.'
+                } else if (this.props.ffa) {
+                    connectedText = 'Connected! Currently in Queue...'
                 }
 
                 this.setState({
@@ -505,7 +510,7 @@ class Game extends Component {
             );
         } else if (this.props.ffa) {
             return (
-                <GlobalQueue goToHomeMenu ={this.props.goToHomeMenu} />
+                <GlobalQueue waitingText={this.state.waitingText} goToHomeMenu={this.goToHomeMenuAndClose} />
             )
         }
         else {
