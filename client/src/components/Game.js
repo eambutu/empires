@@ -22,8 +22,8 @@ const MoveKeyMap = {
     d: Action.MOVE_RIGHT
 };
 
-let backsize = 42;
-let squaresize = 52;
+let backsize = 25;
+let squaresize = 35;
 
 let mousepos = {
     x: null,
