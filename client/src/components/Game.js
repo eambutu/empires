@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import logo from '../logo.svg';
 import '../styles/Game.css';
 import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
@@ -73,7 +72,7 @@ class Game extends Component {
             isSpawnDefender: false,
             insufficientShards: false,
             flags: null,
-            ffa: false,
+            unitIdQueue: []
         };
     }
 
@@ -83,6 +82,48 @@ class Game extends Component {
         this.unitSquareMap = null;
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
+
+        this.validateUnitIdQueue = function() {
+            let cleanUnitIdQueue = this.state.unitIdQueue.filter(unitId => {
+                return this.getUnitIdLoc(unitId)[0]
+            });
+            this.setState({
+                unitIdQueue: cleanUnitIdQueue
+            });
+        }
+
+        this.updateUnitIdQueue = function(unitId) {
+            if (unitId) {
+                let newUnitIdQueue = this.state.unitIdQueue;
+                let ix = newUnitIdQueue.indexOf(unitId);
+
+                if (ix > -1) {
+                    newUnitIdQueue.splice(ix, 1)
+                    newUnitIdQueue = [unitId].concat(newUnitIdQueue);
+                } else {
+                    newUnitIdQueue.unshift(unitId);
+                }
+
+                this.setState({
+                    unitIdQueue: newUnitIdQueue
+                });
+            }
+        }
+
+        this.cycleUnitIdQueueAndMoveCursor = function() {
+            console.log(this.state.unitIdQueue);
+            let newUnitIdQueue = this.state.unitIdQueue;
+            if (newUnitIdQueue.length > 0) {
+                let currentUnitId = newUnitIdQueue.shift();
+                newUnitIdQueue.push(currentUnitId);
+                this.setState({
+                    unitIdQueue: newUnitIdQueue
+                });
+                this.resetCursorToUnit(newUnitIdQueue[0]);
+            } else {
+                this.freeCursor();
+            }
+        }
 
         this.freeCursor = function() {
             let [y, x, cursorUnitId] = this.state.cursor;
@@ -98,12 +139,11 @@ class Game extends Component {
             });
         }
 
-        this.resetCursorToUnit = function() {
-            let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
-            let [locY, locX] = this.getUnitIdLoc(cursorUnitId);
+        this.resetCursorToUnit = function(unitId) {
+            let [locY, locX] = this.getUnitIdLoc(unitId);
             if (locY && this.state.squares[locY][locX].unit.playerId === this.state.playerId) {
                 this.setState({
-                    cursor: [locY, locX, cursorUnitId]
+                    cursor: [locY, locX, unitId]
                 });
             } else {
                 this.freeCursor();
@@ -173,6 +213,7 @@ class Game extends Component {
                         unitId: unitId
                     };
                     this.setState({cursor: [targetY, targetX, unitId]});
+                    this.updateUnitIdQueue(unitId);
                     this.sendMove(move);
                 }
             } else if (e.key === " " || e.key === "Spacebar") {
@@ -191,6 +232,8 @@ class Game extends Component {
                         insufficientShards: true,
                     });
                 }
+            } else if (e.key === "e") {
+                this.cycleUnitIdQueueAndMoveCursor();
             } else if (e.key === "q") {
                 let [y, x, cursorUnitId] = this.state.cursor;
                 let move = {
@@ -227,9 +270,6 @@ class Game extends Component {
                             "target": [y, x],
                             "type": UnitType.DEFENDER
                         };
-                        this.setState({
-                            displayShards: this.state.displayShards - Costs.DEFENDER
-                        });
                         this.sendMove(move);
                     }
                 }
@@ -240,6 +280,7 @@ class Game extends Component {
                 }
             } else if (this.unitSquareMap[y][x]) {
                 this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
+                this.updateUnitIdQueue(this.unitSquareMap[y][x]);
             }
         };
 
@@ -308,7 +349,6 @@ class Game extends Component {
                     playerIds: data.playerIds,
                     spawnSquare: data.spawn,
                     cursor: [data.spawn[0], data.spawn[1], null],
-                    ffa: data.ffa
                 });
                 document.addEventListener("keydown", this.keyDownBound);
                 document.addEventListener("keyup", this.keyUpBound);
@@ -320,13 +360,21 @@ class Game extends Component {
                     startingText = 'Starting tutorial...'
                 }
                 this.setState({waitingText: startingText})
+            } else if (data.event === 'full') {
+                this.ws.close();
+                let fullText = 'This room is full. Redirecting to lobbies page in 5 seconds...'
+                this.setState({waitingText: fullText});
+                setInterval(
+                    function() {window.location.replace('/room');},
+                    5000
+                );
             }
         });
     }
 
     componentDidMount() {
         let pathname;
-        if (this.props.queuedGame) {
+        if (this.props.ffa) {
             pathname = '/ffa';
         } else {
             pathname = window.location.pathname;
@@ -340,7 +388,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, ffa} = this.state;
+        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
         if (this.props.isTutorial && squares){
             return (
                 <div id="game-page">
@@ -369,7 +417,7 @@ class Game extends Component {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        <PlayerBoard ffa={ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
+                        <PlayerBoard ffa={this.props.ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                         <Map
                             onReleaseMap={this.onReleaseMap}
@@ -394,7 +442,7 @@ class Game extends Component {
             }
             return (
                 <div id="game-page">
-                    <PlayerBoard ffa={ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
+                    <PlayerBoard ffa={this.props.ffa} playerIds={playerIds} flags={flags} playerStatus={this.state.playerStatus}/>
 
                     <Map
                         onReleaseMap={this.onReleaseMap}
@@ -413,7 +461,7 @@ class Game extends Component {
                     <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                 </div>
             );
-        } else if (this.props.queuedGame) {
+        } else if (this.props.ffa) {
             return (
                 <GlobalQueue goToHomeMenu ={this.props.goToHomeMenu} />
             )
@@ -487,12 +535,14 @@ class Game extends Component {
 
         let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
         if ((cursorUnitId in newState.trimmed) && newState.trimmed[cursorUnitId]) {
-            this.resetCursorToUnit();
+            this.resetCursorToUnit(cursorUnitId);
         }
 
         if (newState.spawned) {
             this.resetCursorToSpawn();
         }
+
+        this.validateUnitIdQueue();
     }
 
     sendMove(move) {

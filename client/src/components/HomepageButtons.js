@@ -1,5 +1,4 @@
 import React from "react";
-import arrow from "../arrow.svg";
 
 export default function HomepageButtons(props) {
     const {onRegisterUsername, onClickFFA, goToPlayMenu, menuIndex} = props;
@@ -30,6 +29,8 @@ export default function HomepageButtons(props) {
                     <button id="custom-game-button" className="homepage-button" onClick={() => {window.location = "/room/"}}>Custom Game</button>
                 </div>
             )
+        default:
+            return null;
     }
 
 }

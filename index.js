@@ -147,7 +147,6 @@ function onMessage(room, ws) {
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
-                    spawned[ws.playerId] = true;
                 } else if (data.move.action.includes("move")) {
                     if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
@@ -185,13 +184,17 @@ function tryStartGame(room) {
 }
 
 function connectToRoom(room, ws) {
-    room.waitingClients.push(ws);
+    if (room.type === RoomType.CUSTOM && room.gameStatus === GameStatus.IN_PROGRESS) {
+        ws.send(JSON.stringify({event: 'full'}));
+        ws.close();
+    } else {
+        room.waitingClients.push(ws);
+        onConnect(room, ws);
+        onClose(room, ws);
 
-    onConnect(room, ws);
-    onClose(room, ws);
-
-    if (room.gameStatus === GameStatus.QUEUING) {
-        tryStartGame(room);
+        if (room.gameStatus === GameStatus.QUEUING) {
+            tryStartGame(room);
+        }
     }
 }
 
@@ -309,7 +312,6 @@ function broadcastState(room) {
             ws.send(JSON.stringify({'event': 'update', 'state': getState(room, ws.playerId)}));
         }
     });
-    // console.log("Sent state");
 }
 
 function incrementFrameCounter(room) {

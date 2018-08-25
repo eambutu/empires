@@ -13,18 +13,18 @@ class Homepage extends Component {
 
         this.state = {
             menuIndex: 0,
-            queuedGame: false
+            ffa: false
         }
         this.goToPlayMenu = () => {
             this.setState({menuIndex: 1});
         }
 
         this.goToHomeMenu = () => {
-            this.setState({menuIndex: 0, queuedGame: false});
+            this.setState({menuIndex: 0, ffa: false});
         }
 
         this.onClickFFA = () => {
-            this.setState({queuedGame: true})
+            this.setState({ffa: true})
         }
 
         this.onRegisterUsername = () => {
@@ -38,8 +38,8 @@ class Homepage extends Component {
     }
 
     render() {
-        if (this.state.queuedGame) {
-            return <Game goToHomeMenu={this.goToHomeMenu} queuedGame={true} />
+        if (this.state.ffa) {
+            return <Game goToHomeMenu={this.goToHomeMenu} ffa={true} />
         }
         let arrowicon = null
         if (this.state.menuIndex !== 0 ) {
