@@ -7,8 +7,8 @@ const Vision = {
     WATCHTOWER: 4,
 };
 
-const width = 19;
-const height = 19;
+let width = 19;
+let height = 19 ;
 const flagSpawnProbability = 0.002;
 const flagWinNum = 20;
 
@@ -108,7 +108,7 @@ function initState(room, isTutorial) {
         let cornerIndex = cornerMap[playerId];
         playerBases[playerId] = genMap.corners[cornerIndex];
         spawnSquares[playerId] = genMap.spawnChoices[cornerIndex];
-        shards[playerId] = 150;
+        shards[playerId] = 20;
         flags[playerId] = 0;
     });
 
