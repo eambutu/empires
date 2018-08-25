@@ -1,7 +1,7 @@
 .endgame {
     padding: 30px;
     text-align: center;
-    background-color: #aaaaaa;
+    background-color: rgba(170,170,170,0.9);
     z-index: 100;
     border-radius: 30px;
 }
