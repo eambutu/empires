@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const _ = require('lodash');
 
-const {initState, getState, updateState, width, height} = require('./game');
+const {initState, getState, updateState, clearTrimmed, width, height} = require('./game');
 
 const ts = 1000 / 10;
 const framesPerTurn = 2;
@@ -110,6 +110,7 @@ function onMessage(room, ws) {
             // console.log('received', data);
             if (data.secret === ws.secret) {
                 let queues = room.queues;
+                let trimmed = room.trimmed;
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
@@ -119,10 +120,11 @@ function onMessage(room, ws) {
                     }
                 } else if (data.move.action === "cancelUnitQueue") {
                     queues[ws.playerId][data.move.unitId] = [];
+                    trimmed[ws.playerId][data.move.unitId] = true;
                 } else if (data.move.action === "cancelPlayerQueues") {
-                    let unitQueues = queues[ws.playerId];
-                    Object.keys(unitQueues).forEach(key => {
-                        unitQueues[key] = [];
+                    Object.keys(queues[ws.playerId]).forEach(unitId => {
+                        queues[ws.playerId][unitId] = [];
+                        trimmed[ws.playerId][unitId] = true;
                     });
                 }
             }
@@ -200,6 +202,7 @@ getPerformOneTurn = targetRoom => {
             updateState(room, true);
             incrementFrameCounter(room);
             broadcastState(room);
+            clearTrimmed(room);
         }
     };    
 };

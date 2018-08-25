@@ -322,10 +322,8 @@ function getState(room, playerId) {
 }
 
 function validateQueues(room) {
-    let trimmed = {}
     Object.entries(room.queues).forEach(([playerId, unitQueues]) => {
         [spawnY, spawnX] = room.spawnSquares[playerId];
-        trimmed[playerId] = {}
         Object.entries(unitQueues).forEach(([unitId, queue]) => {
             // Don't need to validate spawn queue, because they're always cleared
             if (unitId === "spawn") {
@@ -342,20 +340,27 @@ function validateQueues(room) {
             let startingLength = queue.length;
             unitQueues[unitId] = queue.filter(move => {
                 if (move.action.includes("move")) {
-                    let [y, x] = move.source;
-                    if (isPlayerAndUnit[y][x]) {
-                        isPlayerAndUnit[y][x] = false;
-                        let [newY, newX] = move.target;
-                        isPlayerAndUnit[newY][newX] = true;
+                    let [sY, sX] = move.source;
+                    let [tY, tX] = move.target;
+                    if (isPlayerAndUnit[sY][sX] && room.squareStates[tY][tX].type !== SquareType.RIVER) {
+                        isPlayerAndUnit[sY][sX] = false;
+                        isPlayerAndUnit[tY][tX] = true;
                         return true;
                     }
                 }
                 return false;
             });
-            trimmed[playerId][unitId] = (unitQueues[unitId].length !== startingLength);
+            room.trimmed[playerId][unitId] = (room.trimmed[playerId][unitId] || (unitQueues[unitId].length !== startingLength));
         });
     });
-    room.trimmed = trimmed;
+}
+
+function clearTrimmed(room) {
+    Object.entries(room.trimmed).forEach(([playerId, playerTrimmed]) => {
+        Object.keys(playerTrimmed).forEach(unitId => {
+            room.trimmed[playerId][unitId] = false;
+        });
+    });
 }
 
 function fetchSpawns(room) {
@@ -629,5 +634,6 @@ module.exports = {
     getState: getState,
     updateState: updateState,
     width: width,
-    height: height
+    height: height,
+    clearTrimmed: clearTrimmed
 }

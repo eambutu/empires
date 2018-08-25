@@ -39,7 +39,7 @@ let downFlag = false;
 
 class Game extends Component {
     isInBound(y, x) {
-        return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width);
+        return (0 <= y && y < this.state.height) && (0 <= x && x < this.state.width) && ((this.state.squares[y][x].type !== SquareType.RIVER));
     }
 
     isInSpawningRange(y, x) {
@@ -88,28 +88,30 @@ class Game extends Component {
             });
         }
 
-        this.resetUnitQueueCursor = function() {
+        this.resetCursorToUnit = function() {
             let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
-            let newY = null;
-            let newX = null;
-
-            this.state.squares.forEach((row, y) => {
-                row.forEach((square, x) => {
-                    if (square.unit && square.unit.id === cursorUnitId){
-                        newY = y;
-                        newX = x;
-                    }
-                })
-            })
-
-            if (newY && this.state.squares[newY][newX].unit.playerId === this.state.playerId) {
+            let [locY, locX] = this.getUnitIdLoc(cursorUnitId);
+            if (locY && this.state.squares[locY][locX].unit.playerId === this.state.playerId) {
                 this.setState({
-                    cursor: [newY, newX, cursorUnitId]
+                    cursor: [locY, locX, cursorUnitId]
                 });
             } else {
                 this.freeCursor();
             }
+        }
 
+        this.getUnitIdLoc = function(unitId) {
+            let locY = null;
+            let locX = null
+            this.state.squares.forEach((row, y) => {
+                row.forEach((square, x) => {
+                    if (square.unit && square.unit.id === unitId){
+                        locY = y;
+                        locX = x;
+                    }
+                })
+            })
+            return [locY, locX];
         }
 
         this.keyDownBound = e => {
@@ -184,7 +186,6 @@ class Game extends Component {
                     });
                 }
             } else if (e.key === "q") {
-                this.resetUnitQueueCursor();
                 let [y, x, cursorUnitId] = this.state.cursor;
                 let move = {
                     action:"cancelUnitQueue",
@@ -192,7 +193,6 @@ class Game extends Component {
                 }
                 this.sendMove(move);
             } else if (e.key === "c") {
-                this.freeCursor();
                 let move = {
                     action: "cancelPlayerQueues"
                 };
@@ -493,12 +493,12 @@ class Game extends Component {
 
         let [cursorY, cursorX, cursorUnitId] = this.state.cursor;
         if ((cursorUnitId in newState.trimmed) && newState.trimmed[cursorUnitId]) {
-            this.resetUnitQueueCursor();
+            this.resetCursorToUnit();
         }
     }
 
     sendMove(move) {
-        console.log("Sent move", move);
+        // console.log("Sent move", move);
         this.ws.send(JSON.stringify(
             {
                 'event': 'move',
