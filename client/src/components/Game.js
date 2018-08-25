@@ -344,6 +344,7 @@ class Game extends Component {
     }
 
     render() {
+        console.log(this.state)
         let {squares, queue, playerStatus, playerId, playerIds, cursor, canPlayAgain, isSpawnDefender} = this.state;
         if (this.state.isTutorial && squares){
 

@@ -9,6 +9,7 @@ import shield from "../shield.svg";
 import defendedshard from "../defendedshard.svg";
 import defendedeye from "../defendedeye.svg";
 import defendedbase from "../defendedbase.svg";
+import flag from "../flag.svg"
 
 import up_arrow from "../up_arrow.svg";
 import down_arrow from "../down_arrow.svg";
@@ -22,7 +23,8 @@ const SquareColor = {
     [SquareType.REGULAR]: 'gray',
     [SquareType.TOWER]: 'gray',
     [SquareType.WATCHTOWER]: 'gray',
-    [SquareType.RIVER]: 'white'
+    [SquareType.RIVER]: 'white',
+    [SquareType.FLAG]: 'gray'
 };
 
 const playerSquareColors = ['red', 'blue', 'green', 'yellow'];
@@ -51,7 +53,7 @@ export default function Map(props) {
         }
     });
     return (
-        <table className={"map"} onMouseDown={onClickMap} onMouseUp={onReleaseMap} onMouseMove={onDragMap}>
+        <table className={"map"} onMouseDown={onClickMap} onMouseLeave={onReleaseMap} onMouseUp={onReleaseMap} onMouseMove={onDragMap}>
             <tbody>
             {squares.map((row, y) => (
                 <tr key={y}>
@@ -170,6 +172,9 @@ class Cell extends Component {
             else {
                 divStyle["backgroundImage"] = `url(${shards})`;
             }
+
+        } else if (square.type === SquareType.FLAG) {
+            divStyle["backgroundImage"] = `url(${flag})`;
         } else if (square.unit) {
             if (square.unit.type === UnitType.DEFENDER){
                 divStyle["backgroundImage"] = `url(${shield})`;
