@@ -48,7 +48,7 @@ class Homepage extends Component {
                         console.log(resJson)
                         console.log(this.state)
                         onSuccess();
-                        if (!(this.state.username && this.state.rating && this.state.ranking)) {
+                        if (!(this.state.username && this.state.rating !== 0 && this.state.ranking !== 'the worst')) {
                             console.log("setstate")
                             this.setState({
                                 username: resJson.username,
