@@ -140,6 +140,49 @@ app.get('/cookies', function(req, res) {
     handleCookies(req, res);
 });
 
+app.get('/ranking', function(req, res) {
+    console.log(req.param('username'));
+    users.aggregate(
+        [{ "$sort": { "ratingFFA": -1 } },
+        {
+            "$group": {
+                "_id": false,
+                "rankedUsers": {
+                    "$push": {
+                        "username": "$username",
+                        "session": "$session",
+                        "ratingFFA": "$ratingFFA"
+                    }
+                }
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$rankedUsers",
+                "includeArrayIndex": "ranking"
+            }
+        },
+        {
+            "$match": {
+                "rankedUsers.username": req.param('username')
+            }
+        }], function (err, data) {
+            if (err) {
+                throw err;
+            } else {
+                data.get(function (err, result) {
+                    if (result && result[0]) {
+                        res.send(JSON.stringify({
+                            rating: result[0].rankedUsers.ratingFFA,
+                            ranking: result[0].ranking + 1
+                        }));
+                    }
+                })
+            }
+        }
+    );
+})
+
 app.get('/room_list', function (req, res) {
     let tempRooms = _.cloneDeep(rooms);
     Object.keys(tempRooms).forEach(key => {

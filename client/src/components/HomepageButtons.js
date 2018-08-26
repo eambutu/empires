@@ -3,7 +3,7 @@ import React from "react";
 import "../styles/Homepage.css";
 
 export default function HomepageButtons(props) {
-    const {onKeyPressNameForm, onRegisterUsername, onClickFFA, goToPlayMenu, menuIndex, username} = props;
+    const {onKeyPressNameForm, onRegisterUsername, onClickFFA, goToPlayMenu, menuIndex, username, rating, ranking} = props;
     console.log(menuIndex);
     switch(menuIndex) {
         case 0:
@@ -11,10 +11,10 @@ export default function HomepageButtons(props) {
                 <div id={"homepage-buttons"}>
                     <div>
                         <div className={"rating-text"}>
-                        Rating: 1000 <br/>
+                        Rating: {rating} <br/>
                         </div>
-                        <div style={{fontSize: "10px"}}>
-                        (Rank 200)
+                        <div style={{fontSize: "20px"}}>
+                        (Rank {ranking})
                         </div>
                         <form onKeyPress={onKeyPressNameForm} onSubmit={onRegisterUsername(() => {})} action="#">
                             <input type="text" id="username" placeholder="Username" value={username}/> <br/>

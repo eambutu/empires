@@ -17,7 +17,9 @@ class Homepage extends Component {
         this.state = {
             menuIndex: 0,
             ffa: false,
-            username: null
+            username: null,
+            rating: 0,
+            ranking: 'the worst'
         }
         this.goToPlayMenu = () => {
             this.setState({menuIndex: 1});
@@ -64,6 +66,17 @@ class Homepage extends Component {
         if (username) {
             this.setState({'username': username});
         }
+
+        if (username) {
+            fetch('/ranking?username=' + username, {
+                method: 'GET'
+            }).then(res => res.json()).then(resJson => {
+                this.setState({
+                    rating: resJson['rating'],
+                    ranking: resJson['ranking']
+                });
+            });
+        }
     }
 
     render() {
@@ -88,7 +101,16 @@ class Homepage extends Component {
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
-                            <HomepageButtons username={this.state.username} onKeyPressNameForm={this.onKeyPressNameForm} onRegisterUsername={this.onRegisterUsername} onClickFFA={this.onClickFFA} goToPlayMenu={this.goToPlayMenu} menuIndex = {this.state.menuIndex} />
+                            <HomepageButtons
+                                username={this.state.username}
+                                onKeyPressNameForm={this.onKeyPressNameForm}
+                                onRegisterUsername={this.onRegisterUsername}
+                                onClickFFA={this.onClickFFA}
+                                goToPlayMenu={this.goToPlayMenu}
+                                menuIndex = {this.state.menuIndex}
+                                ranking = {this.state.ranking}
+                                rating = {this.state.rating}
+                            />
                         </div>
                     </div>
                 </div>
