@@ -50,18 +50,10 @@
 #gameTypeButton{
     font-size: 0.8em;
     min-height: 10px;
-    min-width: 15px;
-    max-width: 200px;
+    min-width: 250px;
+    max-width: 250px;
     border-width: 1px;
     width: 40%;
-}
-
-#gameTypeButton:hover{
-    width: 200%;
-    min-height: 60px;
-    background-color: transparent;
-    color: #ff4136;
-    cursor: default;
 }
 
 .custom-lobby-title {

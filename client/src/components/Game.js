@@ -89,14 +89,26 @@ class Game extends Component {
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
 
-        this.onMouseOverChangeGameType = () => {
-            console.log("hihihihi")
-            document.getElementById("gameTypeButton").innerText = "Duel: Take over your opponent's base to win."
+        this.onMouseOverDuel = () => {
+            console.log("onmouseoverd")
+            document.getElementById("gamedescription").innerText = "Duel: Take over your opponent's base to win."
+            document.getElementById("gamedescription").style.visibility = "visible";
         }
 
-        this.onMouseAwayChangeGameType = () => {
-            console.log("hihihihsdgkjslkdgjlsi")
-            document.getElementById("gameTypeButton").innerText = "Duel"
+        this.onMouseAwayDuel = () => {
+            console.log("onmouseawayd")
+            document.getElementById("gamedescription").style.visibility = "hidden";
+        }
+
+        this.onMouseOverCTF = () => {
+            console.log("onmouseoverc")
+            document.getElementById("gamedescription").innerText = "Capture The Flag: Capture the flags to win"
+            document.getElementById("gamedescription").style.visibility = "visible";
+        }
+
+        this.onMouseAwayCTF = () => {
+            console.log("onmouseawayc")
+            document.getElementById("gamedescription").style.visibility = "hidden";
         }
 
         this.goToHomeMenuAndClose = e => {
@@ -529,7 +541,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby onMouseAwayChangeGameType={this.onMouseAwayChangeGameType} onMouseOverChangeGameType={this.onMouseOverChangeGameType} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }

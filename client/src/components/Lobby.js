@@ -4,7 +4,7 @@ import sword from "../sword.svg";
 import {ReadyType} from "./config"
 
 export default function Lobby(props) {
-    const {onMouseAwayChangeGameType, onMouseOverChangeGameType, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
+    const {onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
     let roomName = window.location.href.split("/").pop()
     console.log(active)
     console.log(playerId)
@@ -62,7 +62,17 @@ export default function Lobby(props) {
                 <img src={sword} className="App-logo" alt="logo"/>
                 <div className="title">{roomName}</div>
             </div>
-            <div style={{margin:"50px"}}> Game Type: <br/> <button onMouseLeave={onMouseAwayChangeGameType} onMouseEnter={onMouseOverChangeGameType} id={"gameTypeButton"}> Duel </button> </div>
+            <div style={{margin:"50px"}}> Game Type: <br/>
+
+                <div className={"customGameButtons"}>
+                    <button onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"gameTypeButton"}> Duel </button>
+                    <button onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"gameTypeButton"}> Capture The Flag </button>
+                </div>
+                <div id={"gamedescription"} style={{fontSize: "15px", visibility:"hidden"}}>
+                    Duel: Take over your opponent's base to win.
+                </div>
+
+            </div>
                 {waitingText}
                 <br/>
                 <table className={"lobby-player-table"}>
