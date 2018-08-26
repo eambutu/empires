@@ -638,9 +638,44 @@ function updateState(room) {
     return gameEnded;
 }
 
+function ratingQ(rawRating) {
+    // This means that every 400 elo points, one is expected to win two times as often
+    return Math.pow(2, rawRating / 400);
+}
+
+function calculateNewRatings(room) {
+    if (room.type === RoomType.FFA) {
+        let ratingQs = {};
+        room.clients.forEach(client => {
+            console.log("rating", client.rating);
+            ratingQs[client.playerId] = ratingQ(client.rating);
+            console.log("ratingQ", ratingQ(client.rating));
+        });
+        let expectedPoints = {};
+        let actualPoints = {};
+        room.clients.forEach(client => {
+            expectedPoints[client.playerId] = 0;
+            actualPoints[client.playerId] = 0;
+            room.clients.forEach(clientTemp => {
+                expectedPoints[client.playerId] += ratingQs[client.playerId] / (ratingQs[client.playerId] + ratingQs[clientTemp.playerId]);
+                if (room.flags[client.playerId] > room.flags[clientTemp.playerId]) {
+                    actualPoints[client.playerId] += 1;
+                } else if (room.flags[client.playerId] === room.flags[clientTemp.playerId]) {
+                    actualPoints[client.playerId] += 0.5;
+                }
+            });
+        });
+        // 32 is a random constant, determines how much the rating changes
+        room.clients.forEach(client => {
+            client.rating += 32 * (actualPoints[client.playerId] - expectedPoints[client.playerId]);
+        });
+    }
+}
+
 module.exports = {
     initState: initState,
     getState: getState,
     updateState: updateState,
-    clearTrimmedAndSpawned: clearTrimmedAndSpawned
+    clearTrimmedAndSpawned: clearTrimmedAndSpawned,
+    calculateNewRatings: calculateNewRatings
 }

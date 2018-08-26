@@ -8,7 +8,7 @@ const MongoClient = require('mongodb').MongoClient;
 const cookieParser = require('cookie-parser');
 var getRandomName = require('node-random-name');
 
-const {initState, getState, updateState, clearTrimmedAndSpawned} = require('./game');
+const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
 const {RoomType, ClientStatus} = require('./config');
 
 const ts = 1000 / 8;
@@ -49,7 +49,8 @@ app.use(cookieParser());
 
 function createNewUserSession(res) {
     console.log('Create new user session');
-    let query = {username: getRandomName()};
+    let username = getRandomName();
+    let query = {username: username};
     users.findOne(query, (err, data) => {
         if (err) {
             console.log(err);
@@ -98,6 +99,7 @@ function insertNewUsername(username, res) {
         } else {
             console.log('Found data', data)
             query.session = randKey();
+            query.ratingFFA = 1000;
             users.insertOne(query);
             res.cookie('session', query.session);
             res.json({success: true});
@@ -222,6 +224,19 @@ function onConnect(room, ws, username, session) {
         playerId: ws.playerId,
         secret: ws.secret
     }));
+
+    users.findOne({username: username}, (err, data) => {
+        if (err) {
+            console.log(err);
+            res(err);
+        } else if (data) {
+            console.log("found data ", data);
+            ws.rating = data.ratingFFA;
+        } else {
+            console.log("no data found");
+            ws.rating = 0;
+        }
+    });
 
     // ping pong for client status
     ws.on('pong', () => {
@@ -368,6 +383,18 @@ getPerformOneTurn = targetRoom => {
             broadcastState(room);
             clearTrimmedAndSpawned(room);
             if (gameEnded) {
+                if (room.type === RoomType.FFA) {
+                    calculateNewRatings(room);
+                    room.clients.forEach(client => {
+                        console.log("new rating", client.rating);
+                        let query = {username: client.name};
+                        let newValues = { $set: {ratingFFA: client.rating}};
+
+                        users.updateOne(query, newValues, function(err, res) {
+                            if (err) throw err;
+                        });
+                    });
+                }
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
