@@ -336,7 +336,7 @@ function tryStartGame(room) {
 }
 
 function connectToRoom(room, ws, username, session, autoReady) {
-    if (room.type === RoomType.CUSTOM && room.gameStatus === GameStatus.IN_PROGRESS) {
+    if (room.type === RoomType.CUSTOM && (room.waitingClients.length === room.numPlayers ||room.gameStatus === GameStatus.IN_PROGRESS)) {
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
