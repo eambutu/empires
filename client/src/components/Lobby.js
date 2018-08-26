@@ -3,9 +3,26 @@ import '../styles/Lobby.css';
 import sword from "../sword.svg";
 
 export default function Lobby(props) {
-    const {togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
+    const {statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
     let roomName = window.location.href.split("/").pop()
     console.log(active)
+
+    console.log(statuses)
+    let rows = Object.keys(statuses).map((name, index) => (
+        <tr>
+            <td style={{minWidth: "100px", textAlign: "left"}}>
+                <div className={"lobby-display-name"}>
+                    {name}
+                </div>
+            </td>
+            <td style={{minWidth: "100px", textAlign: "right"}}>
+                <button className={statuses[name] ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
+                    <div>{statuses[name] ? "ready" : "ready up"}
+                    </div>
+                </button>
+            </td>
+        </tr>
+    ));
     return (
         <div className={"center"}>
             <div className={"lobby-title"}>
@@ -17,20 +34,7 @@ export default function Lobby(props) {
                 <br/>
                 <table className={"lobby-player-table"}>
                     <tbody>
-                    <tr>
-                        <td style={{minWidth: "100px", textAlign: "left"}}>
-                            <div className={"lobby-display-name"}>
-                                Name 1
-                            </div>
-                        </td>
-                        <td style={{minWidth: "100px", textAlign: "right"}}>
-                            <button className={active ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
-                                <div>{active ? "ready" : "ready up"}
-                                </div>
-                            </button>
-                        </td>
-
-                    </tr>
+                        {rows}
                     </tbody>
                 </table>
         </div>

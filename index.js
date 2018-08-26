@@ -311,6 +311,7 @@ function onMessage(room, ws) {
             } else {
                 ws.ready = ReadyType.NOT_READY;
             }
+            broadcastWaitingClientStatus(room);
             ws.send(JSON.stringify({
                 'event': 'setReady',
                 'ready': ws.ready

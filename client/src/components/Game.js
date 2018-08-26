@@ -436,7 +436,7 @@ class Game extends Component {
     }
 
     render() {
-        let {squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
+        let {waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
         if (this.props.isTutorial && squares){
             return (
                 <div id="game-page">
@@ -517,7 +517,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }
