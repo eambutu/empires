@@ -43,6 +43,7 @@ module.exports = {
     },
     ReadyType: {
         NOT_READY: 0,
-        READY: 1
+        READY: 1,
+        PLAYING: 2
     }
 };

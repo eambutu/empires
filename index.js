@@ -336,7 +336,7 @@ function onClose(room, ws) {
         clearInterval(ws.heartbeatInterval);
         broadcastWaitingClientStatus(room);
         let checkRoomStateFn = e => {checkRoomState(room)};
-        setInterval(
+        setTimeout(
             checkRoomStateFn,
             1000
         );
@@ -488,6 +488,9 @@ getPerformOneTurn = targetRoom => {
 
 function runGame(room) {
     room.gameStatus = GameStatus.IN_PROGRESS;
+    room.clients.forEach(client => {
+        client.ready = ReadyType.PLAYING;
+    });
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
@@ -517,6 +520,14 @@ function getWaitingClientStatus(room) {
             waitingClientStatus[ws.playerId] = {
                 'name': ws.name,
                 'ready': ws.ready
+            }
+        }
+    });
+    room.clients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            waitingClientStatus[ws.playerId] = {
+                'name': ws.name,
+                'ready': ReadyType.PLAYING
             }
         }
     });

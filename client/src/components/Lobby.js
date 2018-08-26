@@ -11,6 +11,17 @@ export default function Lobby(props) {
     console.log(statuses)
     let rows = Object.keys(statuses).map((id, index) => {
         console.log(id)
+
+        let otherPlayerStatusStr;
+        if (statuses[id]['ready'] === ReadyType.NOT_READY) {
+            otherPlayerStatusStr = "Not yet ready"
+        } else if (statuses[id]['ready'] === ReadyType.READY) {
+            otherPlayerStatusStr = "Ready";
+        } else if (statuses[id]['ready'] === ReadyType.PLAYING) {
+            otherPlayerStatusStr = "Playing";
+        }
+
+
         if (id === playerId) {
             console.log("HIIII")
             return (
@@ -21,8 +32,8 @@ export default function Lobby(props) {
                         </div>
                     </td>
                     <td style={{minWidth: "100px", textAlign: "right"}}>
-                        <button className={statuses[id]['ready'] === ReadyType.READY ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
-                            <div>{statuses[id]['ready'] === ReadyType.READY ? "ready" : "ready up"}
+                        <button className={statuses[id]['ready'] === ReadyType.NOT_READY ? "ready-up-button" : "ready-up-button-active"} onClick={togglePlayerReady}>
+                            <div>{statuses[id]['ready'] === ReadyType.NOT_READY ? "Ready up" : "Ready"}
                             </div>
                         </button>
                     </td>
@@ -38,7 +49,7 @@ export default function Lobby(props) {
                 </td>
                 <td style={{minWidth: "100px", textAlign: "right"}}>
                     <button className={'other-player-ready-status-button'}>
-                        <div>{statuses[id]['ready'] === ReadyType.READY ? "ready" : "Not yet ready"}
+                        <div>{otherPlayerStatusStr}
                         </div>
                     </button>
                 </td>
