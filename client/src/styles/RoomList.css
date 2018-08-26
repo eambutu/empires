@@ -46,6 +46,9 @@
 }
 
 .room-list-table-holder {
-    height: 200px;
+
+}
+
+body {
     overflow: scroll;
 }
