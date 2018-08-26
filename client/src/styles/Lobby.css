@@ -38,3 +38,12 @@
     border-width: 1px;
     width: 40%;
 }
+
+.custom-lobby-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    text-align: center;
+    color: white;
+}

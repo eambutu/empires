@@ -24,7 +24,7 @@ export default function Lobby(props) {
         </tr>
     ));
     return (
-        <div className={"center"}>
+        <div className={"custom-lobby-title"}>
             <div className={"lobby-title"}>
                 <img src={sword} className="App-logo" alt="logo"/>
                 <div className="title">{roomName}</div>
