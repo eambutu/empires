@@ -12,6 +12,16 @@
     width: 100%;
 }
 
+.ready-up-button-active {
+    font-size: 0.8em;
+    min-height: 10px;
+    min-width: 15px;
+    border-width: 1px;
+    width: 100%;
+    background-color: #ff4136;
+    color: white;
+}
+
 .lobby-player-table {
     margin: auto;
     margin-top: 40px;

@@ -4,11 +4,13 @@ import sword from "../sword.svg";
 
 export default function Lobby(props) {
     const {togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
+    let roomName = window.location.href.split("/").pop()
+    console.log(active)
     return (
         <div className={"center"}>
             <div className={"lobby-title"}>
                 <img src={sword} className="App-logo" alt="logo"/>
-                <div className="title">Lobby Name</div>
+                <div className="title">{roomName}</div>
             </div>
             <div style={{margin:"50px"}}> Game Type: <br/> <button id={"gameTypeButton"}> Duel </button> </div>
                 {waitingText}
@@ -23,7 +25,7 @@ export default function Lobby(props) {
                         </td>
                         <td style={{minWidth: "100px", textAlign: "right"}}>
                             <button className={active ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
-                                <div>ready up!
+                                <div>{active ? "ready" : "ready up"}
                                 </div>
                             </button>
                         </td>

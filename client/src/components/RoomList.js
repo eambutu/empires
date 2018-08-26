@@ -47,6 +47,8 @@ class RoomList extends Component {
 
     render() {
         if (this.state.data) {
+            // make sure that full lobbies aren't shown
+            const filtered_data = Object.entries(this.state.data).filter(value => value[1]['numPlayersIn'] !== value[1]['numPlayers'])
             return (
                 <div className={"room-list-title"}>
             <img src={sword} className="App-logo" alt="logo"/>
@@ -57,9 +59,10 @@ class RoomList extends Component {
             </div>
             <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
                 </div>
+                    <div className={"room-list-table-holder"}>
             <table>
                 <tbody className={"room-list-table"}>
-                {Object.entries(this.state.data).map(([key, value]) => (
+                {filtered_data.map(([key, value]) => (
                     <tr onClick={this.onClickRoom(value["id"])} className={"room-list-row-container"}>
                         <div className={"room-list-row"}>
                         <td className={"room-list-element"}>
@@ -73,6 +76,7 @@ class RoomList extends Component {
                 ))}
                 </tbody>
             </table>
+                </div>
                 </div>
         )
         } else {

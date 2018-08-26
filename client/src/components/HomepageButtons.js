@@ -36,7 +36,7 @@ export default function HomepageButtons(props) {
                         (Rank 200)
                     </div>
                     <div>
-                        <input type="text" id="room_id" placeholder="Username"/> <br/>
+                        <input type="text" id="room_id" placeholder="Username" value={username}/> <br/>
                     </div>
                     <button id="ffa-game-button" className="homepage-button" onClick={onClickFFA}>FFA</button>
                     <br/>
