@@ -1,4 +1,4 @@
-const {RoomType} = require('./config');
+const {RoomType, GameType} = require('./config');
 
 class MapSchema {
     constructor(options = {}) {
@@ -43,7 +43,7 @@ function isEnclosed(squaresMap) {
     return false;
 }
 
-function generateMap(type) {
+function generateMap(roomType, gameType) {
     let corners;
     let spawnChoices;
     let towers;
@@ -52,7 +52,7 @@ function generateMap(type) {
     let flagSpawns;
     let tempRivers
 
-    if (type === RoomType.CUSTOM) {
+    if (gameType === GameType.DUEL) {
         corners = [
             [0, 0],
             [14, 0],
@@ -138,7 +138,7 @@ function generateMap(type) {
             }
         }
 
-        if (type === RoomType.TUTORIAL) {
+        if (roomType === RoomType.TUTORIAL) {
             let hardcodedRivers = [
                 [0, 6],
                 [0, 12],

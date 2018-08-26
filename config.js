@@ -32,6 +32,10 @@ module.exports = {
         CUSTOM: "custom",
         TUTORIAL: "tutorial"
     },
+    GameType: {
+        CTF: "ctf",
+        DUEL: "duel"
+    },
     ClientStatus: {
         CONNECTED: "connected",
         RECONNECTING: "reconnecting",

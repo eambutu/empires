@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 var getRandomName = require('node-random-name');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
-const {RoomType, ClientStatus, ReadyType} = require('./config');
+const {RoomType, ClientStatus, ReadyType, GameType} = require('./config');
 
 const ts = 1000 / 8;
 const framesPerTurn = 8;
@@ -166,22 +166,27 @@ function initOrGetRoom (roomId, roomType) {
     if (!(roomId in rooms)) {
         let maxNumPlayers;
         let minNumPlayers;
+        let gameType;
         switch (roomType) {
             case RoomType.FFA:
                 minNumPlayers = 4;
                 maxNumPlayers = 4;
+                gameType = GameType.CTF;
                 break;
             case RoomType.CUSTOM:
                 minNumPlayers = 2;
                 maxNumPlayers = 4;
+                gameType = GameType.DUEL;
                 break;
             case RoomType.TUTORIAL:
                 minNumPlayers = 1;
                 maxNumPlayers = 1;
+                gameType = GameType.CTF;
                 break;
             default:
                 minNumPlayers = null;
                 maxNumPlayers = null;
+                gameType = null;
                 break;
         }
         rooms[roomId] = {
@@ -193,7 +198,8 @@ function initOrGetRoom (roomId, roomType) {
             frameCounter: 0,
             gameStatus: GameStatus.QUEUING,
             minNumPlayers: minNumPlayers,
-            maxNumPlayers: maxNumPlayers
+            maxNumPlayers: maxNumPlayers,
+            gameType: gameType
         };
     }
     return rooms[roomId];
@@ -230,7 +236,8 @@ function onConnect(room, ws, username, session, autoReady) {
     ws.send(JSON.stringify({
         event: 'connected',
         playerId: ws.playerId,
-        secret: ws.secret
+        secret: ws.secret,
+        gameType: room.gameType
     }));
     onMessage(room, ws);
 
@@ -285,7 +292,11 @@ function onClose(room, ws) {
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
         broadcastWaitingClientStatus(room);
-        checkRoomState(room);
+        let checkRoomStateFn = e => {checkRoomState(room)};
+        setInterval(
+            checkRoomStateFn,
+            1000
+        );
     });
 }
 
@@ -343,7 +354,9 @@ function tryStartGame(room) {
     let numConnectedClients = connectedClients.length;
     let numReadyClients = readyClients.length;
 
-    if (numReadyClients >= room.minNumPlayers && numReadyClients === numConnectedClients) {
+    if (numReadyClients >= room.minNumPlayers && 
+            numReadyClients === numConnectedClients && 
+                room.gameStatus === GameStatus.QUEUING) {
         room.clients = readyClients.slice(0, numReadyClients);
         connectedClients = readyClients.slice(numReadyClients, connectedClients.length);
         runGame(room);
@@ -433,7 +446,7 @@ getPerformOneTurn = targetRoom => {
 function runGame(room) {
     room.gameStatus = GameStatus.IN_PROGRESS;
     broadcastStarting(room);
-    initState(room, room.type);
+    initState(room);
     broadcastInit(room);
     room.gameInterval = setInterval(
         getPerformOneTurn(room),

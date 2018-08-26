@@ -77,7 +77,8 @@ class Game extends Component {
             unitIdQueue: [],
             ready: ReadyType.NOT_READY,
             playerStatus: {},
-            waitingClientStatus: {}
+            waitingClientStatus: {},
+            gameType: null
         };
     }
 
@@ -379,7 +380,8 @@ class Game extends Component {
                 this.setState({
                     playerId: data.playerId,
                     secret: data.secret,
-                    waitingText: connectedText
+                    waitingText: connectedText,
+                    gameType: data.gameType
                 });
             } else if (data.event === 'setReady') {
                 this.setState({
@@ -466,7 +468,7 @@ class Game extends Component {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
-                        <PlayerBoard ffa={this.props.ffa} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
+                        <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
 
                         <Map
                             onReleaseMap={this.onReleaseMap}
@@ -491,7 +493,7 @@ class Game extends Component {
             }
             return (
                 <div id="game-page">
-                    <PlayerBoard ffa={this.props.ffa} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
+                    <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
 
                     <Map
                         onReleaseMap={this.onReleaseMap}

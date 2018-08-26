@@ -1,4 +1,4 @@
-const {SquareType, ClientStatus, UnitType, RoomType, Costs, HP} = require('./config');
+const {SquareType, ClientStatus, UnitType, RoomType, Costs, HP, GameType} = require('./config');
 var {generateMap} = require('./map');
 
 const Vision = {
@@ -64,11 +64,13 @@ class Unit {
     }
 }
 
-function initState(room, type) {
+function initState(room) {
     let playerIds = room.clients.map(client => client.playerId);
+    let roomType = room.type;
+    let gameType = room.gameType;
 
     room.fogOfWar = true;
-    if (type === RoomType.TUTORIAL) {
+    if (roomType === RoomType.TUTORIAL) {
         room.fogOfWar = false;
         playerIds.push("cpu".toString())
     }
@@ -83,7 +85,7 @@ function initState(room, type) {
     let height;
     let width;
 
-    if (type === RoomType.CUSTOM) {
+    if (gameType === GameType.DUEL) {
         height = 15;
         width = 15;
     } else {
@@ -91,12 +93,12 @@ function initState(room, type) {
         width = 19;
     }
 
-    let genMap = generateMap(type);
+    let genMap = generateMap(roomType, gameType);
     console.log("here");
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
-    if (type === RoomType.TUTORIAL) {
+    if (roomType === RoomType.TUTORIAL) {
         cornerMap[playerIds[0]] = 2;
         cornerMap[playerIds[1]] = 0;
         remainingCornerIndices = [1, 3];
@@ -132,7 +134,7 @@ function initState(room, type) {
         });
     });
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
-        if (type === RoomType.FFA) {
+        if (roomType === RoomType.FFA) {
             squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 0});
         } else {
             squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
@@ -148,7 +150,7 @@ function initState(room, type) {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.RIVER});
     });
 
-    if (type === RoomType.TUTORIAL) {
+    if (roomType === RoomType.TUTORIAL) {
         let realPlayerId = playerIds[0];
         shards[realPlayerId] = 1000;
         queues[realPlayerId]["spawn"] = [
@@ -631,7 +633,7 @@ function updateState(room) {
     incrementShards(room);
 
     let gameEnded;
-    if (room.type === RoomType.FFA || room.type === RoomType.TUTORIAL) {
+    if (room.gameType === GameType.CTF) {
         gameEnded = updateFlagsAndCheckWin(room);
         spawnFlags(room);
     } else {

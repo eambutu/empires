@@ -1,13 +1,13 @@
 import React from "react";
 import '../styles/PlayerBoard.css';
 
-import {playerSquareColors} from "./config.js"
+import {playerSquareColors, GameType} from "./config.js"
 
 export default function PlayerBoard(props) {
-    const {ffa, flags, playerIds, playerStatus} = props;
+    const {gameType, flags, playerIds, playerStatus} = props;
 
     let rows = Object.keys(playerStatus).map((playerId, index) => (
-        <PlayerRow ffa={ffa} color={playerSquareColors[playerIds.indexOf(playerId)]} flagcount={flags[playerId]} key={index} player={playerStatus[playerId]}/>
+        <PlayerRow gameType={gameType} color={playerSquareColors[playerIds.indexOf(playerId)]} flagcount={flags[playerId]} key={index} player={playerStatus[playerId]}/>
     ))
     
     return (
@@ -16,7 +16,7 @@ export default function PlayerBoard(props) {
                 <tbody>
                 <tr>
                     <td>Player</td>
-                    {ffa && <td>Flags</td>}
+                    {gameType === GameType.CTF && <td>Flags</td>}
                 </tr>
                 {rows}
                 </tbody>
@@ -28,11 +28,11 @@ export default function PlayerBoard(props) {
 
 
 function PlayerRow(props) {
-    const {ffa, color, flagcount, player} = props;
+    const {gameType, color, flagcount, player} = props;
     return (
         <tr>
             <td style={{backgroundColor: color, color: "white"}}>{player.name}</td>
-            {ffa && <td>{flagcount}</td>}
+            {gameType === GameType.CTF && <td>{flagcount}</td>}
         </tr>
     )
 }
