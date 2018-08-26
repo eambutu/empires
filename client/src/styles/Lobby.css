@@ -4,6 +4,15 @@
     margin-bottom:8px;
 }
 
+
+.other-player-ready-status-button{
+    font-size: 0.8em;
+    min-height: 10px;
+    min-width: 15px;
+    width: 100%;
+    border-width: 0;
+}
+
 .ready-up-button {
     font-size: 0.8em;
     min-height: 10px;
