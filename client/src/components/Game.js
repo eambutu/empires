@@ -88,6 +88,16 @@ class Game extends Component {
         this.turnsInsufficientShards = 0;  // Number of turns the shards have flashed red
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
 
+        this.onMouseOverChangeGameType = () => {
+            console.log("hihihihi")
+            document.getElementById("gameTypeButton").innerText = "Duel: Take over your opponent's base to win."
+        }
+
+        this.onMouseAwayChangeGameType = () => {
+            console.log("hihihihsdgkjslkdgjlsi")
+            document.getElementById("gameTypeButton").innerText = "Duel"
+        }
+
         this.goToHomeMenuAndClose = e => {
             this.ws.close();
             props.goToHomeMenu();
@@ -517,7 +527,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby onMouseAwayChangeGameType={this.onMouseAwayChangeGameType} onMouseOverChangeGameType={this.onMouseOverChangeGameType} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }

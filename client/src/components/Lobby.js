@@ -4,7 +4,7 @@ import sword from "../sword.svg";
 import {ReadyType} from "./config"
 
 export default function Lobby(props) {
-    const {playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
+    const {onMouseAwayChangeGameType, onMouseOverChangeGameType, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
     let roomName = window.location.href.split("/").pop()
     console.log(active)
     console.log(playerId)
@@ -51,7 +51,7 @@ export default function Lobby(props) {
                 <img src={sword} className="App-logo" alt="logo"/>
                 <div className="title">{roomName}</div>
             </div>
-            <div style={{margin:"50px"}}> Game Type: <br/> <button id={"gameTypeButton"}> Duel </button> </div>
+            <div style={{margin:"50px"}}> Game Type: <br/> <button onMouseLeave={onMouseAwayChangeGameType} onMouseEnter={onMouseOverChangeGameType} id={"gameTypeButton"}> Duel </button> </div>
                 {waitingText}
                 <br/>
                 <table className={"lobby-player-table"}>
