@@ -447,7 +447,10 @@ function getWaitingClientStatus(room) {
     waitingClientStatus = {};
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
-            waitingClientStatus[ws.name] = ws.ready;
+            waitingClientStatus[ws.playerId] = {
+                'name': ws.name,
+                'ready': ws.ready
+            }
         }
     });
     return waitingClientStatus;
