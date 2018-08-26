@@ -8,16 +8,16 @@ export default function Lobby(props) {
     console.log(active)
 
     console.log(statuses)
-    let rows = Object.keys(statuses).map((name, index) => (
+    let rows = Object.keys(statuses).map((id, index) => (
         <tr>
             <td style={{minWidth: "100px", textAlign: "left"}}>
                 <div className={"lobby-display-name"}>
-                    {name}
+                    {statuses[id]['name']}
                 </div>
             </td>
             <td style={{minWidth: "100px", textAlign: "right"}}>
-                <button className={statuses[name] ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
-                    <div>{statuses[name] ? "ready" : "ready up"}
+                <button className={statuses[id]['status'] ? "ready-up-button-active" : "ready-up-button"} onClick={togglePlayerReady}>
+                    <div>{statuses[id]['status'] ? "ready" : "ready up"}
                     </div>
                 </button>
             </td>
