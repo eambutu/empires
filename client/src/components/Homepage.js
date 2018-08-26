@@ -124,7 +124,7 @@ class Homepage extends Component {
                 </div>
                 {arrowicon}
                 <div className="footer">
-                    {<a href={"contact@squarecraft.io"}>Contact Us!</a>}
+                    {<a href={"mailto:contact@squarecraft.io"}>Contact Us!</a>}
                 </div>
             </div>
         );
