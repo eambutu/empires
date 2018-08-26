@@ -51,32 +51,32 @@ class RoomList extends Component {
             const filtered_data = Object.entries(this.state.data).filter(value => value[1]['numPlayersIn'] !== value[1]['numPlayers'])
             return (
                 <div className={"room-list-title"}>
-            <img src={sword} className="App-logo" alt="logo"/>
-            <div className="title">Lobbies</div>
-                    <div className={"create-lobby"}>
-            <div className={"join-room-text"}>
-                Create or join a room: <br/><input type="text" id="room_id"/> <br/>
-            </div>
-            <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
-                </div>
-                    <div className={"room-list-table-holder"}>
-            <table>
-                <tbody className={"room-list-table"}>
-                {filtered_data.map(([key, value]) => (
-                    <tr onClick={this.onClickRoom(value["id"])} className={"room-list-row-container"}>
-                        <div className={"room-list-row"}>
-                        <td className={"room-list-element"}>
-                            {value['id']}
-                        </td>
-                        <td className={"room-list-element"}>
-                            {value['numPlayersIn']} / {value['numPlayers']}
-                        </td>
+                    <img src={sword} className="App-logo" alt="logo"/>
+                    <div className="title">Lobbies</div>
+                        <div className={"create-lobby"}>
+                            <div className={"join-room-text"}>
+                                Create or join a room: <br/><input type="text" id="room_id"/> <br/>
+                            </div>
+                            <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
                         </div>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-                </div>
+                        <div className={"room-list-table-holder"}>
+                            <table>
+                                <tbody className={"room-list-table"}>
+                                    {filtered_data.map(([key, value]) => (
+                                        <tr onClick={this.onClickRoom(value["id"])} className={"room-list-row-container"}>
+                                            <div className={"room-list-row"}>
+                                            <td className={"room-list-element"}>
+                                                {value['id']}
+                                            </td>
+                                            <td className={"room-list-element"}>
+                                                {value['numPlayersIn']} / {value['numPlayers']}
+                                            </td>
+                                            </div>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                 </div>
         )
         } else {
