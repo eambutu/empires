@@ -329,10 +329,11 @@ function connectToRoom(room, ws, username, session, autoReady) {
 
         onConnect(room, ws, username, session, autoReady);
         onClose(room, ws);
+        broadcastWaitingClientStatus(room);
 
-        if (room.gameStatus === GameStatus.QUEUING) {
-            tryStartGame(room);
-        }
+        // if (room.gameStatus === GameStatus.QUEUING) {
+        //     tryStartGame(room);
+        // }
     }
 }
 
@@ -412,6 +413,28 @@ function checkRoomState(room) {
             console.log("deleting room with id " + room.id);
         }
     }
+}
+
+function getWaitingClientStatus(room) {
+    waitingClientStatus = {};
+    room.waitingClients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            waitingClientStatus[ws.name] = ws.ready;
+        }
+    });
+    return waitingClientStatus;
+}
+
+function broadcastWaitingClientStatus(room) {
+    room.waitingClients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                'event': 'setWaitingClientStatus',
+                'waitingClientStatus': getWaitingClientStatus(room)
+            }));
+        }
+    });
+    console.log(`sent waitingClientStatus to ${room.id}`);
 }
 
 function broadcastStarting(room) {

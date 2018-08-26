@@ -75,7 +75,9 @@ class Game extends Component {
             insufficientShards: false,
             flags: null,
             unitIdQueue: [],
-            ready: ReadyType.NOT_READY
+            ready: ReadyType.NOT_READY,
+            playerStatus: {},
+            waitingClientStatus: {}
         };
     }
 
@@ -367,11 +369,11 @@ class Game extends Component {
             let data = JSON.parse(event.data);
             // console.log(data.event);
             if (data.event === 'connected') {
-                let connectedText = 'Connected! Waiting for other players to join.'
+                let connectedText = 'Connected! Waiting for other players to ready up.'
                 if (this.props.isTutorial) {
                     connectedText = 'Connected! Welcome to the tutorial.'
                 } else if (this.props.ffa) {
-                    connectedText = 'Connected! Currently in Queue...'
+                    connectedText = 'Connected! Currently in queue...'
                 }
 
                 this.setState({
@@ -382,7 +384,11 @@ class Game extends Component {
             } else if (data.event === 'setReady') {
                 this.setState({
                     'ready': data.ready
-                })
+                });
+            } else if (data.event === 'setWaitingClientStatus') {
+                this.setState({
+                    'waitingClientStatus': data.waitingClientStatus
+                });
             } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,

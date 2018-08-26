@@ -256,19 +256,12 @@ function isInSpawningRange(room, y, x, playerId, type) {
     return false;
 }
 
-function getState(room, playerId) {
-    const squares = room.squareStates;
-    const gameWonStatus = room.gameWonStatus;
-    const shards = room.shards;
-    const flags = room.flags;
-    const queues = room.queues;
-    const trimmed = room.trimmed;
-    const spawned = room.spawned;
-    const playerStatus = {};
-    if (gameWonStatus) {
+function getPlayerStatus(room) {
+    let playerStatus = {};
+    if (room.gameWonStatus) {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
-                playerStatus[client.playerId] = {'name': client.name, 'status': gameWonStatus[client.playerId]};
+                playerStatus[client.playerId] = {'name': client.name, 'status': room.gameWonStatus[client.playerId]};
             }
         });
     } else {
@@ -278,6 +271,18 @@ function getState(room, playerId) {
             }
         });
     }
+    return playerStatus;
+}
+
+function getState(room, playerId) {
+    const squares = room.squareStates;
+    const gameWonStatus = room.gameWonStatus;
+    const shards = room.shards;
+    const flags = room.flags;
+    const queues = room.queues;
+    const trimmed = room.trimmed;
+    const spawned = room.spawned;
+    const playerStatus = getPlayerStatus(room);
 
     let visibleSquares = squares;
     if (room.fogOfWar) {
