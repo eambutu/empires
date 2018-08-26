@@ -102,7 +102,7 @@ function insertNewUsername(username, res) {
             query.ratingFFA = 1000;
             users.insertOne(query);
             res.cookie('session', query.session);
-            res.json({success: true});
+            res.json({success: true, ratingFFA: query.ratingFFA, ranking: 'noob', username: username});
         }
     });
 }

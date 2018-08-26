@@ -43,7 +43,13 @@ class Homepage extends Component {
                     credentials: 'include'
                 }).then(res => res.json()).then(resJson => {
                     if (resJson.success) {
+                        console.log(resJson)
                         onSuccess();
+                        this.setState({
+                            username: resJson.username,
+                            rating: resJson.ratingFFA,
+                            ranking: resJson.ranking
+                        });
                     } else {
                         console.log('failed register username');
                     }
@@ -52,7 +58,9 @@ class Homepage extends Component {
         }
 
         this.onKeyPressNameForm = (e) => {
+            console.log("key press")
             if(e.charCode == 13) {
+                console.log("key press enter")
                 e.preventDefault();
                 this.onRegisterUsername(() => {});
             }
