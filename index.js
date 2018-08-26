@@ -75,8 +75,8 @@ function queryExistingSession(session, res) {
         if (err || !data) {
             console.log(err);
             res.clearCookie('session');
+            //res.json({success: false});
             res.redirect('/');
-            res.json({success: false});
         } else {
             console.log('Found data', data)
             res.cookie('username', data.username);
