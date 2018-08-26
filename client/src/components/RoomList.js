@@ -48,7 +48,7 @@ class RoomList extends Component {
     render() {
         if (this.state.data) {
             // make sure that full lobbies aren't shown
-            const filtered_data = Object.entries(this.state.data).filter(value => value[1]['numPlayersIn'] !== value[1]['numPlayers'])
+            const filtered_data = Object.entries(this.state.data).filter(value => true || value[1]['numPlayersIn'] !== value[1]['maxNumPlayers']);
             return (
                 <div className={"room-list-title"}>
                     <img src={sword} className="App-logo" alt="logo"/>
@@ -69,7 +69,7 @@ class RoomList extends Component {
                                                 {value['id']}
                                             </td>
                                             <td className={"room-list-element"}>
-                                                {value['numPlayersIn']} / {value['numPlayers']}
+                                                {value['numPlayersIn']} / {value['maxNumPlayers']}
                                             </td>
                                             </div>
                                         </tr>

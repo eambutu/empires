@@ -143,12 +143,12 @@ app.get('/cookies', function(req, res) {
 app.get('/room_list', function (req, res) {
     let tempRooms = _.cloneDeep(rooms);
     Object.keys(tempRooms).forEach(key => {
-        let numPlayersIn = tempRooms[key]['waitingClients'].length;
-        tempRooms[key] = _.pick(tempRooms[key], ['id', 'type', 'gameStatus', 'numPlayers']);
+        let numPlayersIn = tempRooms[key]['waitingClients'].length + tempRooms[key]['clients'].length;
+        tempRooms[key] = _.pick(tempRooms[key], ['id', 'type', 'gameStatus', 'maxNumPlayers']);
         tempRooms[key]['numPlayersIn'] = numPlayersIn;
     });
     tempRooms = _.pickBy(tempRooms, function(value) {
-        return (value.type === RoomType.CUSTOM && value.gameStatus === GameStatus.QUEUING);
+        return (value.type === RoomType.CUSTOM);
     });
     res.send(JSON.stringify(tempRooms));
 });
@@ -164,19 +164,25 @@ app.get(['/room', '/tutorial'], function (req, res) {
 
 function initOrGetRoom (roomId, roomType) {
     if (!(roomId in rooms)) {
-        let numPlayers;
+        let maxNumPlayers;
+        let minNumPlayers;
         switch (roomType) {
             case RoomType.FFA:
-                numPlayers = 4;
+                minNumPlayers = 4;
+                maxNumPlayers = 4;
                 break;
             case RoomType.CUSTOM:
-                numPlayers = 2;
+                minNumPlayers = 2;
+                maxNumPlayers = 4;
                 break;
             case RoomType.TUTORIAL:
-                numPlayers = 1;
+                minNumPlayers = 1;
+                maxNumPlayers = 1;
                 break;
             default:
-                numPlayers = null;
+                minNumPlayers = null;
+                maxNumPlayers = null;
+                break;
         }
         rooms[roomId] = {
             id: roomId,
@@ -186,7 +192,8 @@ function initOrGetRoom (roomId, roomType) {
             gameInterval: null,
             frameCounter: 0,
             gameStatus: GameStatus.QUEUING,
-            numPlayers: numPlayers
+            minNumPlayers: minNumPlayers,
+            maxNumPlayers: maxNumPlayers
         };
     }
     return rooms[roomId];
@@ -265,6 +272,10 @@ function onConnect(room, ws, username, session, autoReady) {
             ws.close();
         }
     }, 1000);
+
+    if (autoReady) {
+        tryStartGame(room);
+    }
 }
 
 function onClose(room, ws) {
@@ -273,6 +284,7 @@ function onClose(room, ws) {
         room.waitingClients = room.waitingClients.filter(client => (client !== ws));
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
+        broadcastWaitingClientStatus(room);
         checkRoomState(room);
     });
 }
@@ -328,16 +340,19 @@ function tryStartGame(room) {
     // only keep connected clients
     let connectedClients = room.waitingClients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
     let readyClients = connectedClients.filter(client => (client.ready === ReadyType.READY));
-    if (readyClients.length >= room.numPlayers) {
-        room.clients = readyClients.slice(0, room.numPlayers);
-        connectedClients = readyClients.slice(room.numPlayers, connectedClients.length);
+    let numConnectedClients = connectedClients.length;
+    let numReadyClients = readyClients.length;
+
+    if (numReadyClients >= room.minNumPlayers && numReadyClients === numConnectedClients) {
+        room.clients = readyClients.slice(0, numReadyClients);
+        connectedClients = readyClients.slice(numReadyClients, connectedClients.length);
         runGame(room);
     }
     room.waitingClients = connectedClients;
 }
 
 function connectToRoom(room, ws, username, session, autoReady) {
-    if (room.type === RoomType.CUSTOM && (room.waitingClients.length === room.numPlayers ||room.gameStatus === GameStatus.IN_PROGRESS)) {
+    if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
@@ -346,10 +361,6 @@ function connectToRoom(room, ws, username, session, autoReady) {
         onConnect(room, ws, username, session, autoReady);
         onClose(room, ws);
         broadcastWaitingClientStatus(room);
-
-        // if (room.gameStatus === GameStatus.QUEUING) {
-        //     tryStartGame(room);
-        // }
     }
 }
 
