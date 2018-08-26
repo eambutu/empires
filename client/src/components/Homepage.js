@@ -26,7 +26,9 @@ class Homepage extends Component {
         }
 
         this.goToHomeMenu = () => {
+            console.log(this.state)
             this.setState({menuIndex: 0, ffa: false});
+            console.log(this.state)
         }
 
         this.onClickFFA = () => {
@@ -44,12 +46,16 @@ class Homepage extends Component {
                 }).then(res => res.json()).then(resJson => {
                     if (resJson.success) {
                         console.log(resJson)
+                        console.log(this.state)
                         onSuccess();
-                        this.setState({
-                            username: resJson.username,
-                            rating: resJson.ratingFFA,
-                            ranking: resJson.ranking
-                        });
+                        if (!(this.state.username && this.state.rating && this.state.ranking)) {
+                            console.log("setstate")
+                            this.setState({
+                                username: resJson.username,
+                                rating: resJson.ratingFFA,
+                                ranking: resJson.ranking
+                            });
+                        }
                     } else {
                         console.log('failed register username');
                     }
@@ -79,10 +85,13 @@ class Homepage extends Component {
             fetch('/ranking?username=' + username, {
                 method: 'GET'
             }).then(res => res.json()).then(resJson => {
-                this.setState({
-                    rating: resJson['rating'],
-                    ranking: resJson['ranking']
-                });
+                if (!(this.state.rating && this.state.ranking)) {
+                    console.log("setstate")
+                    this.setState({
+                        rating: resJson['rating'],
+                        ranking: resJson['ranking']
+                    });
+                }
             });
         }
     }
