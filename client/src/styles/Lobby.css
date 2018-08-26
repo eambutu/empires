@@ -13,6 +13,13 @@
     border-width: 0;
 }
 
+
+.other-player-ready-status-button:hover {
+    background-color: transparent; /* Green */
+    color: #ff4136;
+    cursor: default;
+}
+
 .ready-up-button {
     font-size: 0.8em;
     min-height: 10px;
