@@ -26,7 +26,9 @@ class Homepage extends Component {
         }
 
         this.goToHomeMenu = () => {
+            console.log(this.state)
             this.setState({menuIndex: 0, ffa: false});
+            console.log(this.state)
         }
 
         this.onClickFFA = () => {
@@ -43,7 +45,17 @@ class Homepage extends Component {
                     credentials: 'include'
                 }).then(res => res.json()).then(resJson => {
                     if (resJson.success) {
+                        console.log(resJson)
+                        console.log(this.state)
                         onSuccess();
+                        if (!(this.state.username && this.state.rating && this.state.ranking)) {
+                            console.log("setstate")
+                            this.setState({
+                                username: resJson.username,
+                                rating: resJson.ratingFFA,
+                                ranking: resJson.ranking
+                            });
+                        }
                     } else {
                         console.log('failed register username');
                     }
@@ -52,7 +64,9 @@ class Homepage extends Component {
         }
 
         this.onKeyPressNameForm = (e) => {
+            console.log("key press")
             if(e.charCode == 13) {
+                console.log("key press enter")
                 e.preventDefault();
                 this.onRegisterUsername(() => {});
             }
@@ -71,10 +85,13 @@ class Homepage extends Component {
             fetch('/ranking?username=' + username, {
                 method: 'GET'
             }).then(res => res.json()).then(resJson => {
-                this.setState({
-                    rating: resJson['rating'],
-                    ranking: resJson['ranking']
-                });
+                if (!(this.state.rating && this.state.ranking)) {
+                    console.log("setstate")
+                    this.setState({
+                        rating: resJson['rating'],
+                        ranking: resJson['ranking']
+                    });
+                }
             });
         }
     }
@@ -116,7 +133,7 @@ class Homepage extends Component {
                 </div>
                 {arrowicon}
                 <div className="footer">
-                    {<a href={"contact@squarecraft.io"}>Contact Us!</a>}
+                    {<a href={"mailto:contact@squarecraft.io"}>Contact Us!</a>}
                 </div>
             </div>
         );

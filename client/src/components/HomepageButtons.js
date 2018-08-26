@@ -16,7 +16,7 @@ export default function HomepageButtons(props) {
                         <div style={{fontSize: "20px"}}>
                         (Rank: {ranking})
                         </div>
-                        <form onKeyPress={onKeyPressNameForm} onSubmit={onRegisterUsername(() => {})} action="#">
+                        <form onKeyPress={onKeyPressNameForm} onSubmit={() => onRegisterUsername(() => {})} action="#">
                             <input type="text" id="username" placeholder="Username" value={username}/> <br/>
                         </form>
                     </div>
