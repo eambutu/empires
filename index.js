@@ -197,7 +197,7 @@ app.get('/room_list', function (req, res) {
 });
 
 app.get('/room/:roomId', function (req, res) {
-    handleCookies(req, res);
+    //handleCookies(req, res);
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
