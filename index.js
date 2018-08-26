@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 var getRandomName = require('node-random-name');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
-const {RoomType, ClientStatus} = require('./config');
+const {RoomType, ClientStatus, ReadyType} = require('./config');
 
 const ts = 1000 / 8;
 const framesPerTurn = 8;
@@ -210,7 +210,7 @@ function verifyWs(ws, onVerify) {
     });
 }
 
-function onConnect(room, ws, username, session) {
+function onConnect(room, ws, username, session, autoReady) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
@@ -218,12 +218,14 @@ function onConnect(room, ws, username, session) {
     ws.playerId = randString();
     ws.name = username;
     ws.secret = randSecret();
+    ws.ready = autoReady ? ReadyType.READY : ReadyType.NOT_READY;
     console.log(`player ${ws.name} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
         event: 'connected',
         playerId: ws.playerId,
         secret: ws.secret
     }));
+    onMessage(room, ws);
 
     users.findOne({username: username}, (err, data) => {
         if (err) {
@@ -302,6 +304,17 @@ function onMessage(room, ws) {
                     });
                 }
             }
+        } else if (data.event === 'toggleReady') {
+            if (ws.ready === ReadyType.NOT_READY) {
+                ws.ready = ReadyType.READY;
+                tryStartGame(room);
+            } else {
+                ws.ready = ReadyType.NOT_READY;
+            }
+            ws.send(JSON.stringify({
+                'event': 'setReady',
+                'ready': ws.ready
+            }));
         } else if (data.event === 'veil') {
             room.fogOfWar = true;
         } else if (data.event === 'exit') {
@@ -313,25 +326,23 @@ function onMessage(room, ws) {
 function tryStartGame(room) {
     // only keep connected clients
     let connectedClients = room.waitingClients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
-    if (connectedClients.length >= room.numPlayers) {
-        room.clients = connectedClients.slice(0, room.numPlayers);
-        connectedClients = connectedClients.slice(room.numPlayers, connectedClients.length);
-
-        // set message handlers
-        room.clients.forEach(client => onMessage(room, client));
+    let readyClients = connectedClients.filter(client => (client.ready === ReadyType.READY));
+    if (readyClients.length >= room.numPlayers) {
+        room.clients = readyClients.slice(0, room.numPlayers);
+        connectedClients = readyClients.slice(room.numPlayers, connectedClients.length);
         runGame(room);
     }
     room.waitingClients = connectedClients;
 }
 
-function connectToRoom(room, ws, username, session) {
+function connectToRoom(room, ws, username, session, autoReady) {
     if (room.type === RoomType.CUSTOM && room.gameStatus === GameStatus.IN_PROGRESS) {
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
         room.waitingClients.push(ws);
 
-        onConnect(room, ws, username, session);
+        onConnect(room, ws, username, session, autoReady);
         onClose(room, ws);
 
         if (room.gameStatus === GameStatus.QUEUING) {
@@ -346,7 +357,7 @@ app.ws('/ffa', function (ws, req) {
             queueRoomId = 'ffa-' + randString();
         }
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
-        connectToRoom(room, ws, username, session);
+        connectToRoom(room, ws, username, session, true);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             queueRoomId = null;
         }
@@ -358,7 +369,7 @@ app.ws('/room/:roomId', function (ws, req) {
     let onVerify = (username, session) => {
         let roomId = req.params.roomId;
         let room = initOrGetRoom(roomId, RoomType.CUSTOM);
-        connectToRoom(room, ws, username, session);
+        connectToRoom(room, ws, username, session, false);
     };
     verifyWs(ws, onVerify)
 });
@@ -366,7 +377,7 @@ app.ws('/room/:roomId', function (ws, req) {
 app.ws('/tutorial', function (ws, req) {
     let tutorialRoomId = 'tutorial-' + randString();
     let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
-    connectToRoom(room, ws, 'tutorial', 'tutorial-playerId');
+    connectToRoom(room, ws, 'tutorial', 'tutorial-playerId', true);
 });
 
 app.listen(5000, function () {

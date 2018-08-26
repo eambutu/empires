@@ -36,5 +36,9 @@ module.exports = {
         CONNECTED: "connected",
         RECONNECTING: "reconnecting",
         DISCONNECTED: "disconnected"
+    },
+    ReadyType: {
+        NOT_READY: 0,
+        READY: 1
     }
 };

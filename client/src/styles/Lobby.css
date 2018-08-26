@@ -1,0 +1,30 @@
+.lobby-title {
+    text-align: center;
+    color: white;
+    margin-bottom:8px;
+}
+
+.ready-up-button {
+    font-size: 0.8em;
+    min-height: 10px;
+    min-width: 15px;
+    border-width: 1px;
+    width: 100%;
+}
+
+.lobby-player-table {
+    margin: auto;
+    margin-top: 40px;
+}
+
+.lobby-display-name{
+
+}
+
+#gameTypeButton{
+    font-size: 0.8em;
+    min-height: 10px;
+    min-width: 15px;
+    border-width: 1px;
+    width: 40%;
+}
