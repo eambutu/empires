@@ -14,7 +14,7 @@ export default function HomepageButtons(props) {
                         Rating: {rating} <br/>
                         </div>
                         <div style={{fontSize: "20px"}}>
-                        (Rank {ranking})
+                        (Rank: {ranking})
                         </div>
                         <form onKeyPress={onKeyPressNameForm} onSubmit={onRegisterUsername(() => {})} action="#">
                             <input type="text" id="username" placeholder="Username" value={username}/> <br/>
@@ -30,10 +30,10 @@ export default function HomepageButtons(props) {
             return (
                 <div id={"play-buttons"}>
                     <div className={"rating-text"}>
-                        Rating: 1000 <br/>
+                        Rating: {rating} <br/>
                     </div>
-                    <div style={{fontSize: "10px"}}>
-                        (Rank 200)
+                    <div style={{fontSize: "20px"}}>
+                        (Rank: {ranking})
                     </div>
                     <div>
                         <input type="text" id="room_id" placeholder="Username" value={username}/> <br/>
