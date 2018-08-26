@@ -338,7 +338,7 @@ function onClose(room, ws) {
         let checkRoomStateFn = e => {checkRoomState(room)};
         setTimeout(
             checkRoomStateFn,
-            1000
+            30000
         );
     });
 }
@@ -373,7 +373,6 @@ function onMessage(room, ws) {
         } else if (data.event === 'toggleReady') {
             if (ws.ready === ReadyType.NOT_READY) {
                 ws.ready = ReadyType.READY;
-                tryStartGame(room);
             } else {
                 ws.ready = ReadyType.NOT_READY;
             }
@@ -382,6 +381,10 @@ function onMessage(room, ws) {
                 'event': 'setReady',
                 'ready': ws.ready
             }));
+
+            if (ws.ready === ReadyType.READY) {
+                tryStartGame(room);
+            }
         } else if (data.event === 'veil') {
             room.fogOfWar = true;
         } else if (data.event === 'exit') {
