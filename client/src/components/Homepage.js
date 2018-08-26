@@ -45,14 +45,12 @@ class Homepage extends Component {
                     credentials: 'include'
                 }).then(res => res.json()).then(resJson => {
                     if (resJson.success) {
-                        console.log(resJson)
-                        console.log(this.state)
                         onSuccess();
-                        if (!(this.state.username && this.state.rating !== 0 && this.state.ranking !== 'the worst')) {
-                            console.log("setstate")
+                        console.log(resJson)
+                        if ((resJson.username && resJson.ratingFFA && resJson.ranking)) {
                             this.setState({
                                 username: resJson.username,
-                                rating: resJson.ratingFFA,
+                                rating: Math.floor(resJson.ratingFFA),
                                 ranking: resJson.ranking
                             });
                         }
@@ -85,10 +83,10 @@ class Homepage extends Component {
             fetch('/ranking?username=' + username, {
                 method: 'GET'
             }).then(res => res.json()).then(resJson => {
-                if (!(this.state.rating && this.state.ranking)) {
-                    console.log("setstate")
+                console.log(resJson)
+                if ((resJson['rating'] && resJson['ranking'])) {
                     this.setState({
-                        rating: resJson['rating'],
+                        rating: Math.floor(resJson['rating']),
                         ranking: resJson['ranking']
                     });
                 }
