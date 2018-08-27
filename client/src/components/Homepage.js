@@ -21,8 +21,13 @@ class Homepage extends Component {
             rating: 0,
             ranking: 'the worst'
         }
+        this.onFocusUsername = () => {
+            document.getElementById("usernameTakenText").style.visibility = "visible"
+        }
+
         this.goToPlayMenu = () => {
             this.setState({menuIndex: 1});
+            // document.getElementById("username").disabled = true;
         }
 
         this.goToHomeMenu = () => {
@@ -56,6 +61,7 @@ class Homepage extends Component {
                         }
                     } else {
                         console.log('failed register username');
+                        document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
                     }
                 });
             }
@@ -74,9 +80,11 @@ class Homepage extends Component {
     }
 
     componentDidMount() {
+        console.log("remounting")
         let username = Cookies.get('username');
         if (username) {
             this.setState({'username': username});
+            document.getElementById("username").disabled = true;
         }
 
         if (username) {
@@ -118,6 +126,7 @@ class Homepage extends Component {
                         <div className="button-area">
                             <HomepageButtons
                                 username={this.state.username}
+                                onFocusUsername={this.onFocusUsername}
                                 onKeyPressNameForm={this.onKeyPressNameForm}
                                 onRegisterUsername={this.onRegisterUsername}
                                 onClickFFA={this.onClickFFA}

@@ -3,7 +3,7 @@ import React from "react";
 import "../styles/Homepage.css";
 
 export default function HomepageButtons(props) {
-    const {onKeyPressNameForm, onRegisterUsername, onClickFFA, goToPlayMenu, menuIndex, username, rating, ranking} = props;
+    const {onFocusUsername, onKeyPressNameForm, onRegisterUsername, onClickFFA, goToPlayMenu, menuIndex, username, rating, ranking} = props;
     console.log(menuIndex);
     switch(menuIndex) {
         case 0:
@@ -16,9 +16,12 @@ export default function HomepageButtons(props) {
                         <div style={{fontSize: "20px"}}>
                         (Rank: {ranking})
                         </div>
-                        <form onKeyPress={onKeyPressNameForm} onSubmit={() => onRegisterUsername(() => {})} action="#">
-                            <input type="text" id="username" placeholder="Username" value={username}/> <br/>
+                        <form onKeyPress={onKeyPressNameForm} onSubmit={() => onRegisterUsername(() => {document.getElementById("username").disabled = true;})} action="#">
+                            <input disabled={username ? true : false} autocomplete="off" onFocus={onFocusUsername} type="text" id="username" placeholder="Username" value={username}/> <br/>
                         </form>
+                        <div id={"usernameTakenText"} style={{visibility:"hidden", fontSize: "12px", color: "#ff4136"}}>
+                            Careful! You can only set your username once.
+                        </div>
                     </div>
                     <button className="homepage-button" onClick={() => {onRegisterUsername(goToPlayMenu);}}>Play!</button>
                     <br/>
@@ -36,7 +39,10 @@ export default function HomepageButtons(props) {
                         (Rank: {ranking})
                     </div>
                     <div>
-                        <input type="text" id="room_id" placeholder="Username" value={username}/> <br/>
+                        <input disabled={username ? true : false} type="text" id="room_id" placeholder="Username" value={username}/> <br/>
+                    </div>
+                    <div id={"usernameTakenText"} style={{visibility: "hidden", fontSize: "12px", color: "#ff4136"}}>
+                        Careful! You can only set your username once.
                     </div>
                     <button id="ffa-game-button" className="homepage-button" onClick={onClickFFA}>FFA</button>
                     <br/>
