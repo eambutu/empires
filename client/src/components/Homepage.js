@@ -14,7 +14,8 @@ import globe from "../globe.svg";
 let HomePageOption = {
     HOME_PAGE: "home page",
     PLAY_PAGE: "play page",
-    FFA_PAGE: "ffa page"
+    FFA_PAGE: "ffa page",
+    TUTORIAL_PAGE: "tutorial page"
 };
 
 class Homepage extends Component {
@@ -104,6 +105,8 @@ class Homepage extends Component {
                     // user has session but is not in database, cookie has been cleared by server
                 }
             });
+        } else {
+            this.setPage(HomePageOption.TUTORIAL_PAGE);
         }
 
         fetch('/leaderboard', {
@@ -119,6 +122,8 @@ class Homepage extends Component {
     render() {
         if (this.state.page === HomePageOption.FFA_PAGE) {
             return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} ffa={true} />
+        } else if (this.state.page === HomePageOption.TUTORIAL_PAGE) {
+            return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} isTutorial={true} />
         }
         let arrowicon = null
         if (this.state.page === HomePageOption.PLAY_PAGE) {
@@ -136,8 +141,6 @@ class Homepage extends Component {
                 <div id={"leaderboard"} className="leaderboard center" style={{display: "none"}}>
                     <Leaderboard hideLeaderboard={this.hideLeaderboard} leaderboard={this.state.leaderboard}/>
                 </div>
-
-
 
                 <div className="center">
                     <img src={sword} className="App-logo" alt="logo"/>
@@ -209,7 +212,7 @@ function HomepageButtons(props) {
                     </div>
                     <button className="homepage-button" onClick={onPlayClick}>Play!</button>
                     <br/>
-                    <button className="homepage-button" onClick={() => {window.location = "/tutorial/";}}>Tutorial</button>
+                    <button className="homepage-button" onClick={() => setPage(HomePageOption.TUTORIAL_PAGE)}>Tutorial</button>
                 </div>
             )
 

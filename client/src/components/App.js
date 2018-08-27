@@ -13,7 +13,6 @@ class App extends Component {
                     <Route exact path="/" component={Homepage}/>
                     <Route exact path="/room" component={RoomList}/>
                     <Route exact path="/room/:number" component={Game}/>
-                    <Route exact path="/tutorial" render={() => <Game isTutorial={true} />}/>
                 </Switch>
             </div>
         )

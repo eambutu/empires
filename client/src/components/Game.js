@@ -455,6 +455,8 @@ class Game extends Component {
         let pathname;
         if (this.props.ffa) {
             pathname = '/ffa';
+        } else if (this.props.isTutorial) {
+            pathname = '/tutorial'
         } else {
             pathname = window.location.pathname;
         }
@@ -479,7 +481,7 @@ class Game extends Component {
                         displayShards={this.state.displayShards}
                         insufficientShards={this.state.insufficientShards}
                         onVeil={this.onVeil}
-                        exitClick={this.onExit}
+                        exitClick={this.goToHomeMenuAndClose}
                         playerId={playerId}
                         playerIds={playerIds}
                         playerStatus={playerStatus}

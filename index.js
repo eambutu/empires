@@ -183,7 +183,7 @@ app.get('/room_list', function (req, res) {
     res.send(JSON.stringify(tempRooms));
 });
 
-app.get(['/room', '/room/:roomId', '/tutorial'], function (req, res) {
+app.get(['/room', '/room/:roomId'], function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
