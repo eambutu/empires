@@ -19,7 +19,8 @@ class Homepage extends Component {
             ffa: false,
             username: null,
             rating: 0,
-            ranking: 'the worst'
+            ranking: 'the worst',
+            leaderboard: []
         }
         this.onFocusUsername = () => {
             document.getElementById("usernameTakenText").style.visibility = "visible"
@@ -100,6 +101,15 @@ class Homepage extends Component {
                 }
             });
         }
+
+        fetch('/leaderboard', {
+            method: 'GET'
+        }).then(res => res.json()).then(resJson => {
+            console.log("leaderboard", resJson);
+            this.setState({
+                leaderboard: resJson
+            });
+        });
     }
 
     render() {

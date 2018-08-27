@@ -181,7 +181,43 @@ app.get('/ranking', function(req, res) {
             }
         }
     );
-})
+});
+
+app.get('/leaderboard', function (req, res) {
+    users.aggregate(
+        [{ "$sort": { "ratingFFA": -1 } },
+            {
+                "$group": {
+                    "_id": false,
+                    "rankedUsers": {
+                        "$push": {
+                            "username": "$username",
+                            "session": "$session",
+                            "ratingFFA": "$ratingFFA"
+                        }
+                    }
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$rankedUsers",
+                    "includeArrayIndex": "ranking"
+                }
+            }], function (err, data) {
+            if (err) {
+                throw err;
+            } else {
+                data.get(function (err, result) {
+                    let toReturn = result.map(entry => entry.rankedUsers);
+                    console.log(toReturn)
+                    if (toReturn) {
+                        res.send(JSON.stringify(toReturn));
+                    }
+                })
+            }
+        }
+    );
+});
 
 app.get('/room_list', function (req, res) {
     let tempRooms = _.cloneDeep(rooms);
