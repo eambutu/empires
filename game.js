@@ -587,20 +587,22 @@ function updateFlagsAndCheckWin(room) {
         });
     }
 
-    Object.entries(room.flags).forEach(([playerId, numFlags]) => {
-        if (numFlags >= flagWinNum) {
-            let gameWonStatus = {};
-            room.playerIds.forEach(tempPlayerId => {
-                if (tempPlayerId === playerId) {
-                    gameWonStatus[tempPlayerId] = "won";
-                } else {
-                    gameWonStatus[tempPlayerId] = "lost";
-                }
-            })
-            room.gameWonStatus = gameWonStatus;
-            gameEnded = true;
-        }
-    });
+    if (room.type !== RoomType.TUTORIAL) {
+        Object.entries(room.flags).forEach(([playerId, numFlags]) => {
+            if (numFlags >= flagWinNum) {
+                let gameWonStatus = {};
+                room.playerIds.forEach(tempPlayerId => {
+                    if (tempPlayerId === playerId) {
+                        gameWonStatus[tempPlayerId] = "won";
+                    } else {
+                        gameWonStatus[tempPlayerId] = "lost";
+                    }
+                })
+                room.gameWonStatus = gameWonStatus;
+                gameEnded = true;
+            }
+        });
+    }
     return gameEnded;
 }
 
