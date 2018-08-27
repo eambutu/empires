@@ -536,7 +536,7 @@ class Game extends Component {
             );
         } else if (this.props.ffa) {
             return (
-                <GlobalQueue waitingText={this.state.waitingText} goToHomeMenu={this.goToHomeMenuAndClose} />
+                <GlobalQueue waitingText={this.state.waitingText} statuses={waitingClientStatus} goToHomeMenu={this.goToHomeMenuAndClose} />
             )
         }
         else {
