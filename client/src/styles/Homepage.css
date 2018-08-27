@@ -139,3 +139,19 @@ a:hover{
 .rating-text{
     font-weight: 700;
 }
+
+.queue-people-icons{
+    background-repeat: no-repeat;
+    width: 100%;
+    text-align: center;
+    height: 40px;
+    margin: auto;
+}
+
+.queue-people-icons-container{
+    margin:auto;
+    display: flex;
+    margin-top: 40px;
+    width: 50%;
+}
+
