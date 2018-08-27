@@ -67,7 +67,10 @@ class Homepage extends Component {
     componentDidMount() {
         let session = Cookies.get('session');
         if (session) {
-            fetch('user_info').then(res => res.json()).then(resJson => {
+            fetch('user_info', {
+                method: 'GET',
+                credentials: 'include'
+            }).then(res => res.json()).then(resJson => {
                 if (resJson.success) {
                     console.log(resJson);
                     this.setState({

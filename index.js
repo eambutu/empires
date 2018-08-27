@@ -56,6 +56,7 @@ app.get('/user_info', (req, res) => {
         } else if (data) {
             res.json({success: true, username: data.username, ratingFFA: data.ratingFFA, ranking: data.ranking});
         } else {
+            res.clearCookie('session');
             res.json({success: false});
         }
     });
