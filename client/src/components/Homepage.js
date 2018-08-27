@@ -2,12 +2,15 @@ import React, {Component} from 'react';
 import * as Cookies from 'js-cookie';
 
 import Game from './Game.js';
-
+import HomepageButtons from "./HomepageButtons";
+import Leaderboard from "./Leaderboard"
 import '../styles/Homepage.css';
 
 import sword from '../sword.svg';
 import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
+import redglobe from "../redglobe.svg";
+import globe from "../globe.svg";
 
 let HomePageOption = {
     HOME_PAGE: "home page",
@@ -26,16 +29,36 @@ class Homepage extends Component {
             rating: null,
             ranking: null,
             usernameFocus: false
-        }
+        };
+
+        this.onLeaveGlobe = () => {
+            document.getElementById("globe").style.backgroundImage = `url(${globe})`
+        };
+
+        this.onHoverGlobe = () => {
+            document.getElementById("globe").style.backgroundImage = `url(${redglobe})`
+        };
+
+        this.hideLeaderboard = () =>{
+            document.getElementById("leaderboard").style.display = "none"
+        };
+
+        this.showLeaderboard = () => {
+            document.getElementById("leaderboard").style.display = "block"
+        };
+
+        this.onFocusUsername = () => {
+            document.getElementById("usernameTakenText").style.visibility = "visible"
+        };
 
         this.setFocusUsername = (focus) => {
             this.setState({usernameFocus: focus});
-        }
+        };
 
         this.setPage = (page) => {
             console.log(page)
             this.setState({page: page});
-        }
+        };
 
         this.checkOrRegisterUser = () => {
             console.log('checkOrRegisterUser');
@@ -111,12 +134,21 @@ class Homepage extends Component {
         }
         return (
             <div>
+                <div id={"leaderboard"} className="leaderboard center" style={{display: "none"}}>
+                    <Leaderboard hideLeaderboard={this.hideLeaderboard} leaderboard={this.state.leaderboard}/>
+                </div>
+
+
+
                 <div className="center">
                     <img src={sword} className="App-logo" alt="logo"/>
                     <div className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
                             <HomepageButtons
+                                onLeaveGlobe={this.onLeaveGlobe}
+                                onHoverGlobe={this.onHoverGlobe}
+                                showLeaderboard={this.showLeaderboard}
                                 username={this.state.username}
                                 setFocusUsername={this.setFocusUsername}
                                 checkOrRegisterUser={this.checkOrRegisterUser}
