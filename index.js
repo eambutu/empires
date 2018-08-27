@@ -396,7 +396,7 @@ function connectToRoom(room, ws, username, session, autoReady) {
 }
 
 function verifyWs(ws) {
-    return new Promise((resolve, reject) => { // TODO add timeout
+    return new Promise((resolve, reject) => {
         ws.on('message', function (msg) {
             let data = JSON.parse(msg);
             if (data.event === 'verify' && data.session) {
@@ -429,7 +429,9 @@ app.ws('/ffa', (ws, req) => {
             queueRoomId = null;
         }
     }).catch((session) => { // session not found in database, redirect
-        ws.close();
+        if (ws.readyState === ws.OPEN) {
+            ws.close();
+        }
     });
 });
 
@@ -440,7 +442,9 @@ app.ws('/room/:roomId', (ws, req) => {
         connectToRoom(room, ws, username, session, false);
     }).catch((session) => { // session not found in database, redirect
         ws.send(JSON.stringify({event: 'noSession'}));
-        ws.close();
+        if (ws.readyState === ws.OPEN) {
+            ws.close();
+        }
     });
 });
 
