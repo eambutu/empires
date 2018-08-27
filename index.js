@@ -47,97 +47,47 @@ let queueRoomId = null;
 app.use(express.static(path.join(__dirname, 'client/build')));
 app.use(cookieParser());
 
-function createNewUserSession(res) {
-    console.log('Create new user session');
-    let username = getRandomName();
-    let query = {username: username};
+app.get('/user_info', (req, res) => {
+    let query = {session: req.cookies.session};
     users.findOne(query, (err, data) => {
         if (err) {
             console.log(err);
-            res(err);
-        } else if (!data) {
-            query.session = randKey();
-            users.insertOne(query);
-            console.log("Creating new user ", query);
-            res.cookie('username', query.username);
-            res.cookie('session', query.session);
-            res.json({success: true});
-        } else {
-            createNewUserSession(res);
-        }
-    });
-}
-
-function queryExistingSession(session, res) {
-    console.log('Querying existing session', session);
-    let query = {session: session};
-    users.findOne(query, (err, data) => {
-        if (err || !data) {
-            console.log(err);
-            res.clearCookie('session');
-            //res.json({success: false});
-            res.redirect('/');
-        } else {
-            console.log('Found data', data)
-            res.cookie('username', data.username);
-            res.json({success: true});
-        }
-    });
-}
-
-function insertNewUsername(username, res) {
-    console.log('Insert new username', username);
-    let query = {username: username};
-    users.findOne(query, (err, data) => {
-        if (err) {
-            console.log(err)
             res(err);
         } else if (data) {
-            res.clearCookie('session');
-            res.clearCookie('username');
-            res.json({success: false});
+            res.json({success: true, username: data.username, ratingFFA: data.ratingFFA, ranking: data.ranking});
         } else {
-            console.log('Found data', data)
-            query.session = randKey();
-            query.ratingFFA = 1000;
-            users.insertOne(query);
-            res.cookie('session', query.session);
-            res.json({success: true, ratingFFA: query.ratingFFA, ranking: 'noob', username: username});
+            res.json({success: false});
         }
     });
-}
+});
 
-function handleCookies(req, res) {
-    let cookies = req.cookies;
-    console.log('Received cookies', cookies);
-    if (!cookies.username && !cookies.session) {
-        createNewUserSession(res);
-    } else if (cookies.session) {
-        queryExistingSession(cookies.session, res);
-    } else {
-        insertNewUsername(cookies.username, res);
+function getNewUser(username) {
+    return {
+        username: username,
+        session: randKey(),
+        ratingFFA: 1000,
+        ranking: 'noob'
     }
 }
 
-function verifyCookies(req, res, callback) {
-    let cookies = req.cookies;
-    if (cookies.username && cookies.session) {
-        let query = {username: cookies.username, session: cookies.session};
-        users.findOne(query, (err, data) => {
-            if (err) {
-                console.log(err);
-                res(err);
-            } else if (data) {
-                callback();
-            } else {
-                res.redirect('/');
-            }
-        });
-    }
-}
-
-app.get('/cookies', function(req, res) {
-    handleCookies(req, res);
+app.get('/set_username', function(req, res) {
+    let username = req.query.username;
+    let query = {username: username}
+    users.findOne(query, (err, data) => {
+        if (err) {
+            console.log(err);
+            res(err);
+        } else if (data) {
+            res.json({success: false});
+            console.log('Found existing user with name', username);
+        } else {
+            let user = getNewUser(username);
+            users.insertOne(user);
+            res.cookie('session', user.session);
+            res.json(Object.assign({success: true}, user));
+            console.log('Created new user with name', username, 'and key', user.session);
+        }
+    });
 });
 
 app.get('/ranking', function(req, res) {
@@ -232,12 +182,7 @@ app.get('/room_list', function (req, res) {
     res.send(JSON.stringify(tempRooms));
 });
 
-app.get('/room/:roomId', function (req, res) {
-    //handleCookies(req, res);
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
-
-app.get(['/room', '/tutorial'], function (req, res) {
+app.get(['/room', '/room/:roomId', '/tutorial'], function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
@@ -282,24 +227,6 @@ function initOrGetRoom (roomId, roomType) {
         };
     }
     return rooms[roomId];
-}
-
-function verifyWs(ws, onVerify) {
-    ws.on('message', function (msg) {
-        let data = JSON.parse(msg);
-        if (data.event === 'verify' && data.session) {
-            console.log('Verifying ', data.session);
-            let query = {session: data.session};
-            users.findOne(query, (err, data) => {
-                if (err || !data) {
-                    console.log(err);
-                } else {
-                    console.log('Verify success with username', data.username, 'session', data.session);
-                    onVerify(data.username, data.session);
-                }
-            });
-        }
-    });
 }
 
 function onConnect(room, ws, username, session, autoReady) {
@@ -459,8 +386,31 @@ function connectToRoom(room, ws, username, session, autoReady) {
     }
 }
 
-app.ws('/ffa', function (ws, req) {
-    let onVerify = (username, session) => {
+function verifyWs(ws) {
+    return new Promise((resolve, reject) => { // TODO add timeout
+        ws.on('message', function (msg) {
+            let data = JSON.parse(msg);
+            if (data.event === 'verify' && data.session) {
+                console.log('Verifying ', data.session);
+                let query = {session: data.session};
+                users.findOne(query, (err, data) => {
+                    if (err || !data) {
+                        console.log(err);
+                        reject(data.session);
+                    } else {
+                        console.log('Verify success with username', data.username, 'session', data.session);
+                        resolve(data.username, data.session)
+                    }
+                });
+            } else {
+                reject(null);
+            }
+        });
+    });
+}
+
+app.ws('/ffa', (ws, req) => {
+    verifyWs(ws).then((username, session) => {
         if (!queueRoomId) {
             queueRoomId = 'ffa-' + randString();
         }
@@ -469,20 +419,23 @@ app.ws('/ffa', function (ws, req) {
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             queueRoomId = null;
         }
-    };
-    verifyWs(ws, onVerify)
+    }).catch((session) => { // session not found in database, redirect
+        ws.close();
+    });
 });
 
-app.ws('/room/:roomId', function (ws, req) {
-    let onVerify = (username, session) => {
+app.ws('/room/:roomId', (ws, req) => {
+    verifyWs(ws).then((username, session) => {
         let roomId = req.params.roomId;
         let room = initOrGetRoom(roomId, RoomType.CUSTOM);
         connectToRoom(room, ws, username, session, false);
-    };
-    verifyWs(ws, onVerify)
+    }).catch((session) => { // session not found in database, redirect
+        ws.send(JSON.stringify({event: 'noSession'}));
+        ws.close();
+    });
 });
 
-app.ws('/tutorial', function (ws, req) {
+app.ws('/tutorial', (ws, req) => {
     let tutorialRoomId = 'tutorial-' + randString();
     let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
     connectToRoom(room, ws, 'tutorial', 'tutorial-playerId', true);

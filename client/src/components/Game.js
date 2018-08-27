@@ -439,6 +439,14 @@ class Game extends Component {
                     function() {window.location.replace('/room');},
                     5000
                 );
+            } else if (data.event === 'noSession') {
+                this.ws.close();
+                let fullText = 'A username is required. Redirecting to front page in 5 seconds...'
+                this.setState({waitingText: fullText});
+                setInterval(
+                    function() {window.location.replace('/');},
+                    5000
+                );
             }
         });
     }
