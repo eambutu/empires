@@ -73,22 +73,27 @@ function getNewUser(username) {
 
 app.get('/set_username', function(req, res) {
     let username = req.query.username;
-    let query = {username: username}
-    users.findOne(query, (err, data) => {
-        if (err) {
-            console.log(err);
-            res(err);
-        } else if (data) {
-            res.json({success: false});
-            console.log('Found existing user with name', username);
-        } else {
-            let user = getNewUser(username);
-            users.insertOne(user);
-            res.cookie('session', user.session);
-            res.json(Object.assign({success: true}, user));
-            console.log('Created new user with name', username, 'and key', user.session);
-        }
-    });
+    if (username) { // make sure not empty string
+        let query = {username: username}
+        users.findOne(query, (err, data) => {
+            if (err) {
+                console.log(err);
+                res(err);
+            } else if (data) {
+                res.json({success: false});
+                console.log('Found existing user with name', username);
+            } else {
+                let user = getNewUser(username);
+                users.insertOne(user);
+                res.cookie('session', user.session);
+                res.json(Object.assign({success: true}, user));
+                console.log('Created new user with name', username, 'and key', user.session);
+            }
+        });
+    } else {
+        res.json({success: false});
+        console.log('Empty username');
+    }
 });
 
 app.get('/ranking', function(req, res) {

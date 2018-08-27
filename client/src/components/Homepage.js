@@ -64,23 +64,28 @@ class Homepage extends Component {
             console.log('checkOrRegisterUser');
             if (!this.state.username) {
                 let newName = document.getElementById("username").value;
-                return fetch('/set_username?username=' + newName).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
-                    if (resJson.success) { // successfully registered
-                        console.log(resJson);
-                        if ((resJson.username && resJson.ratingFFA && resJson.ranking)) {
-                            this.setState({
-                                username: resJson.username,
-                                rating: Math.round(resJson.ratingFFA),
-                                ranking: resJson.ranking
-                            });
-                            document.getElementById("username").disabled = true;
-                            return true;
+                if (newName) {
+                    return fetch('/set_username?username=' + newName).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
+                        if (resJson.success) { // successfully registered
+                            console.log(resJson);
+                            if ((resJson.username && resJson.ratingFFA && resJson.ranking)) {
+                                this.setState({
+                                    username: resJson.username,
+                                    rating: Math.round(resJson.ratingFFA),
+                                    ranking: resJson.ranking
+                                });
+                                document.getElementById("username").disabled = true;
+                                return true;
+                            }
+                        } else { // failed to register
+                            document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
+                            return false;
                         }
-                    } else { // failed to register
-                        document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
-                        return false;
-                    }
-                });
+                    });
+                } else {
+                    document.getElementById("usernameTakenText").innerText = "Username cannot be empty!";
+                    return Promise.resolve(false);
+                }
             } else { // user is already found
                 return Promise.resolve(true);
             }
