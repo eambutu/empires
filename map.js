@@ -19,18 +19,20 @@ function isEnclosed(squaresMap) {
     let processQueue = [[0, 0]];
     while (processQueue.length > 0) {
         let [y, x] = processQueue.pop();
-        seen[y][x] = true;
-        if (y - 1 >= 0 && !squaresMap[y - 1][x] && !seen[y - 1][x]) {
-            processQueue.push([y - 1, x]);
-        }
-        if (y + 1 < height && !squaresMap[y + 1][x] && !seen[y + 1][x]) {
-            processQueue.push([y + 1, x]);
-        }
-        if (x - 1 >= 0 && !squaresMap[y][x - 1] && !seen[y][x - 1]) {
-            processQueue.push([y, x - 1]);
-        }
-        if (x + 1 < width && !squaresMap[y][x + 1] && !seen[y][x + 1]) {
-            processQueue.push([y, x + 1]);
+        if (!seen[y][x]) {
+            seen[y][x] = true;
+            if (y - 1 >= 0 && !squaresMap[y - 1][x] && !seen[y - 1][x]) {
+                processQueue.push([y - 1, x]);
+            }
+            if (y + 1 < height && !squaresMap[y + 1][x] && !seen[y + 1][x]) {
+                processQueue.push([y + 1, x]);
+            }
+            if (x - 1 >= 0 && !squaresMap[y][x - 1] && !seen[y][x - 1]) {
+                processQueue.push([y, x - 1]);
+            }
+            if (x + 1 < width && !squaresMap[y][x + 1] && !seen[y][x + 1]) {
+                processQueue.push([y, x + 1]);
+            }
         }
     }
     for (let i=0; i<height; i++) {
@@ -50,7 +52,7 @@ function generateMap(roomType, gameType) {
     let watchTowers;
     let rivers;
     let flagSpawns;
-    let tempRivers
+    let tempRivers;
 
     if (gameType === GameType.DUEL) {
         corners = [
@@ -190,7 +192,7 @@ function generateMap(roomType, gameType) {
                     validTowerQuads.push([i, j]);
                 }
             }
-            let riverProb = 0.1;
+            let riverProb = 0.2;
 
             let randIdxs = [Math.floor(validTowerQuads.length * Math.random()), Math.floor(validTowerQuads.length * Math.random())];
             while (randIdxs[0] === randIdxs[1]) {
@@ -242,6 +244,7 @@ function generateMap(roomType, gameType) {
             while(hasEnclosed) {
                 console.log("If you see this a million times, we're stuck in an infinite loop");
                 let tempRiverMaps = [];
+                tempRivers = [];
                 for (let i=0; i<riverMaps.length; i++) {
                     tempRiverMaps[i] = riverMaps[i].slice();
                 }
