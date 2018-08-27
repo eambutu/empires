@@ -6,7 +6,7 @@ export default function Leaderboard(props) {
     console.log(leaderboard)
     let leaders = leaderboard.map((leader, index) => (
         <tr key={index}>
-            <td> {index} </td>
+            <td> {index + 1} </td>
             <td> {leader.username} </td>
             <td> {leader.ratingFFA} </td>
         </tr>
