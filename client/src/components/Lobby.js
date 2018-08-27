@@ -1,17 +1,17 @@
 import React from 'react';
 import '../styles/Lobby.css';
 import sword from "../sword.svg";
-import {ReadyType} from "./config"
+import {ReadyType, GameType} from "./config"
 
 export default function Lobby(props) {
-    const {onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
+    const {gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
     let roomName = window.location.href.split("/").pop()
-    console.log(active)
-    console.log(playerId)
-    console.log(statuses)
+    let duelButtonClass = "";
+    let ctfButtonClass  = "";
+    console.log(gameType)
+
     let rows = Object.keys(statuses).map((id, index) => {
         console.log(id)
-
         let otherPlayerStatusStr;
         if (statuses[id]['ready'] === ReadyType.NOT_READY) {
             otherPlayerStatusStr = "Not yet ready"
@@ -61,11 +61,11 @@ export default function Lobby(props) {
                 <img src={sword} className="App-logo" alt="logo"/>
                 <div className="title">{roomName}</div>
             </div>
-            <div style={{margin:"50px"}}> Game Type: <br/>
+            <div style={{marginBottom:"15px"}}> Game Type: <br/>
 
-                <div className={"customGameButtons"}>
-                    <button onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"gameTypeButton"}> Duel </button>
-                    <button onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"gameTypeButton"}> Capture The Flag </button>
+                <div className={"custom-game-buttons"}>
+                    <button className={"active"} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"duelButton"}> Duel </button>
+                    <button onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"ctfButton"}> Capture The Flag </button>
                 </div>
                 <div id={"gamedescription"} style={{fontSize: "15px", visibility:"hidden"}}>
                     Duel: Take over your opponent's base to win.

@@ -358,6 +358,9 @@ function onMessage(room, ws) {
             room.fogOfWar = true;
         } else if (data.event === 'exit') {
             ws.close();
+        } else if (data.event === 'changeGame') {
+            room.gameType = data.gameType;
+            broadcastChangeGameType(room);
         }
     });
 }
@@ -530,6 +533,17 @@ function getWaitingClientStatus(room) {
         }
     });
     return waitingClientStatus;
+}
+
+function broadcastChangeGameType(room) {
+    room.waitingClients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                'event': 'setGameType',
+                'gameType': room.gameType,
+            }));
+        }
+    });
 }
 
 function broadcastWaitingClientStatus(room) {

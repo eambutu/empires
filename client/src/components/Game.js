@@ -9,7 +9,7 @@ import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
 import GlobalQueue from "./GlobalQueue";
 
-const {SquareType, Costs, UnitType, Action, ReadyType} = require("./config");
+const {SquareType, Costs, UnitType, Action, ReadyType, GameType} = require("./config");
 
 const MoveKeyMap = {
     ArrowDown: Action.MOVE_DOWN,
@@ -371,6 +371,10 @@ class Game extends Component {
             this.ws.send(JSON.stringify({'event': 'toggleReady'}));
         }
 
+        this.changeGameType = type => {
+            this.ws.send(JSON.stringify({'event': 'changeGame', 'gameType' : type}))
+        }
+
         this.onPlayAgain = e => {
             this.ws.close();
             this.setState(this.getInitialState());
@@ -413,6 +417,18 @@ class Game extends Component {
                 this.setState({
                     'waitingClientStatus': data.waitingClientStatus
                 });
+            } else if (data.event === 'setGameType'){
+                this.setState({'gameType' : data.gameType});
+                console.log("setting game type")
+                console.log(data.gameType)
+                if (data.gameType === GameType.DUEL) {
+                    document.getElementById("duelButton").classList.add("active")
+                    document.getElementById("ctfButton").classList.remove("active")
+                }
+                else if (data.gameType === GameType.CTF) {
+                    document.getElementById("ctfButton").classList.add("active")
+                    document.getElementById("duelButton").classList.remove("active")
+                }
             } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,
@@ -551,7 +567,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby gameType={this.state.gameType} changeGameType={this.changeGameType} onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             )
         }
     }
