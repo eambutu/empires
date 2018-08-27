@@ -155,3 +155,40 @@ a:hover{
     width: 50%;
 }
 
+
+/** leaderboard stuff **/
+
+
+.leaderboard {
+    width: 400px;
+    top: 50%;
+    background-color: white;
+    z-index: 10;
+    box-shadow: 3px 3px #ff4136;
+    padding-bottom: 15px;
+}
+
+.leaders {
+    color: black;
+    width: 250px;
+    margin: auto;
+}
+
+.leader-table-holder {
+    overflow-x: scroll;
+    height: 400px;
+}
+
+.leaders td{
+    border: solid 1px black;
+}
+
+.globe {
+    height: 20px;
+    width: 20px;
+    margin: 5px;
+}
+
+.globe:hover{
+    cursor: pointer;
+}

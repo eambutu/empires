@@ -23,7 +23,6 @@ export default function Lobby(props) {
 
 
         if (id === playerId) {
-            console.log("HIIII")
             return (
                 <tr>
                     <td style={{minWidth: "100px", textAlign: "left"}}>

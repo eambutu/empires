@@ -439,6 +439,14 @@ class Game extends Component {
                     function() {window.location.replace('/room');},
                     5000
                 );
+            } else if (data.event === 'noSession') {
+                this.ws.close();
+                let fullText = 'A username is required. Redirecting to front page in 5 seconds...'
+                this.setState({waitingText: fullText});
+                setInterval(
+                    function() {window.location.replace('/');},
+                    5000
+                );
             }
         });
     }
@@ -447,6 +455,8 @@ class Game extends Component {
         let pathname;
         if (this.props.ffa) {
             pathname = '/ffa';
+        } else if (this.props.isTutorial) {
+            pathname = '/tutorial'
         } else {
             pathname = window.location.pathname;
         }
@@ -471,7 +481,7 @@ class Game extends Component {
                         displayShards={this.state.displayShards}
                         insufficientShards={this.state.insufficientShards}
                         onVeil={this.onVeil}
-                        exitClick={this.onExit}
+                        exitClick={this.goToHomeMenuAndClose}
                         playerId={playerId}
                         playerIds={playerIds}
                         playerStatus={playerStatus}
