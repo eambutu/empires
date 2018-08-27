@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import * as Cookies from 'js-cookie';
 
 import Game from './Game.js';
-import HomepageButtons from "./HomepageButtons";
 import Leaderboard from "./Leaderboard"
 import '../styles/Homepage.css';
 
@@ -171,7 +170,7 @@ class Homepage extends Component {
 }
 
 function HomepageButtons(props) {
-    const {setFocusUsername, checkOrRegisterUser, setPage, page, username, rating, ranking, usernameFocus} = props;
+    const {showLeaderboard, onLeaveGlobe, onHoverGlobe, setFocusUsername, checkOrRegisterUser, setPage, page, username, rating, ranking, usernameFocus} = props;
     console.log('page', page);
     switch (page) {
         case HomePageOption.HOME_PAGE:
@@ -198,8 +197,8 @@ function HomepageButtons(props) {
                         <div className={"rating-text"} style={{visibility: rating === null ? "hidden": "visible"}} >
                         Rating: {rating} <br/>
                         </div>
-                        <div style={{fontSize: "20px", visibility: ranking === null ? "hidden": "visible"}}>
-                        (Rank: {ranking})
+                        <div style={{visibility: ranking === null ? "hidden": "visible", alignItems: "center", justifyContent: "center", display: "flex", fontSize: "20px"}}>
+                            (Rank: {ranking}) <div id={"globe"} onClick={showLeaderboard} onMouseLeave={onLeaveGlobe} onMouseOver={onHoverGlobe} className={"globe"} style={{backgroundImage: `url(${globe})`}}></div>
                         </div>
                         <form onKeyPress={onEnterKeyPress} action="#">
                             <input disabled={username ? true : false} autoComplete="off" onFocus={() => setFocusUsername(true)} onBlur={() => setFocusUsername(false)} type="text" id="username" placeholder="Username" value={username}/> <br/>
@@ -220,8 +219,8 @@ function HomepageButtons(props) {
                     <div className={"rating-text"}>
                         Rating: {rating} <br/>
                     </div>
-                    <div style={{fontSize: "20px"}}>
-                        (Rank: {ranking})
+                    <div style={{alignItems: "center", justifyContent: "center", display: "flex", fontSize: "20px"}}>
+                        (Rank: {ranking}) <div id={"globe"} onClick={showLeaderboard} onMouseLeave={onLeaveGlobe} onMouseOver={onHoverGlobe} className={"globe"} style={{backgroundImage: `url(${globe})`}}></div>
                     </div>
                     <div>
                         <input disabled={username ? true : false} type="text" id="room_id" placeholder="Username" value={username}/> <br/>
