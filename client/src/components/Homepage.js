@@ -79,11 +79,13 @@ class Homepage extends Component {
                             }
                         } else { // failed to register
                             document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
+                            document.getElementById("username").focus();
                             return false;
                         }
                     });
                 } else {
                     document.getElementById("usernameTakenText").innerText = "Username cannot be empty!";
+                    document.getElementById("username").focus();
                     return Promise.resolve(false);
                 }
             } else { // user is already found
