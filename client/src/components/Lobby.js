@@ -5,7 +5,7 @@ import {ReadyType, GameType} from "./config"
 
 export default function Lobby(props) {
     const {gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
-    let roomName = window.location.href.split("/").pop()
+    let roomName = decodeURI(window.location.href.split("/").pop());
     let duelButtonClass = "";
     let ctfButtonClass  = "";
     console.log(gameType)
