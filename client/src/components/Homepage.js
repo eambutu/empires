@@ -65,7 +65,7 @@ class Homepage extends Component {
             if (!this.state.username) {
                 let newName = document.getElementById("username").value;
                 if (newName && newName.length < 20) {
-                    return fetch('/set_username?username=' + newName, {
+                    fetch('/set_username?username=' + newName, {
                         method: 'GET',
                         credentials: 'include'
                     }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
@@ -73,7 +73,6 @@ class Homepage extends Component {
                             console.log(resJson);
                             if (resJson.ratingFFA && resJson.ranking) {
                                 this.setState({
-                                    username: resJson.username,
                                     rating: Math.round(resJson.ratingFFA),
                                     ranking: resJson.ranking + 1
                                 });
@@ -83,25 +82,22 @@ class Homepage extends Component {
                                     username: resJson.username
                                 });
                                 document.getElementById("username").disabled = true;
-                                return true;
+                                this.setPage(HomePageOption.TUTORIAL_PAGE);
                             }
                         } else { // failed to register
                             document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
                             document.getElementById("username").focus();
-                            return false;
                         }
                     });
                 } else if (newName.length >= 20) {
                     document.getElementById("usernameTakenText").innerText = "Username is too long!";
                     document.getElementById("username").focus();
-                    return Promise.resolve(false);
                 } else {
                     document.getElementById("usernameTakenText").innerText = "Username cannot be empty!";
                     document.getElementById("username").focus();
-                    return Promise.resolve(false);
                 }
-            } else { // user is already found
-                return Promise.resolve(true);
+            } else { // direct user to play page
+                this.setPage(HomePageOption.PLAY_PAGE);
             }
         }
     }
@@ -128,8 +124,6 @@ class Homepage extends Component {
                     // user has session but is not in database, cookie has been cleared by server
                 }
             });
-        } else {
-            this.setPage(HomePageOption.TUTORIAL_PAGE);
         }
 
         fetch('/leaderboard', {
@@ -208,15 +202,6 @@ function HomepageButtons(props) {
                     document.getElementById("username").blur();
                 }
             };
-            let onPlayClick = e => {
-                checkOrRegisterUser().then(success => {
-                    if (success) {
-                        setPage(HomePageOption.PLAY_PAGE);
-                    } else {
-                        document.getElementById("username").focus();
-                    }
-                });
-            }
             return (
                 <div id={"homepage-buttons"}>
                     <div>
@@ -233,7 +218,7 @@ function HomepageButtons(props) {
                             Careful! You can only set your username once.
                         </div>
                     </div>
-                    <button className="homepage-button" onClick={onPlayClick}>Play!</button>
+                    <button className="homepage-button" onClick={checkOrRegisterUser}>Play!</button>
                     <br/>
                     <button className="homepage-button" onClick={() => setPage(HomePageOption.TUTORIAL_PAGE)}>Tutorial</button>
                 </div>
