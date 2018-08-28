@@ -51,7 +51,7 @@ class RoomList extends Component {
             const filtered_data = Object.entries(this.state.data).filter(value => true || value[1]['numPlayersIn'] !== value[1]['maxNumPlayers']);
             return (
                 <div className={"room-list-title"}>
-                    <img src={sword} className="App-logo" alt="logo"/>
+                    <img onClick={() => {window.location.replace("http://squarecraft.io")}} src={sword} className="App-logo" alt="logo"/>
                     <div className="title">Lobbies</div>
                         <div className={"create-lobby"}>
                             <div className={"join-room-text"}>

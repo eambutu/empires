@@ -58,8 +58,8 @@ export default function Lobby(props) {
     return (
         <div className={"custom-lobby-title"}>
             <div className={"lobby-title"}>
-                <img src={sword} className="App-logo" alt="logo"/>
-                <div className="title">{roomName}</div>
+                <img onClick={() => {window.location.replace("http://squarecraft.io")}} src={sword} className="App-logo" alt="logo"/>
+                <div style={{cursor:"pointer"}} className="title">{roomName}</div>
             </div>
             <div style={{marginBottom:"15px"}}> Game Type: <br/>
 

@@ -157,8 +157,8 @@ class Homepage extends Component {
                 </div>
 
                 <div className="center">
-                    <img src={sword} className="App-logo" alt="logo"/>
-                    <div className="title">squarecraft.io</div>
+                    <img onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} src={sword} className="App-logo" alt="logo"/>
+                    <div onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} style={{cursor: "pointer"}} className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
                             <HomepageButtons
