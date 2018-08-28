@@ -510,6 +510,7 @@ class Game extends Component {
                             isSpawnDefender={isSpawnDefender}
                             isInSpawningRange={this.isInSpawningRange.bind(this)}
                             flags={flags}
+                            gameType={this.state.gameType}
                         />
                     </div>
                 );
@@ -522,8 +523,7 @@ class Game extends Component {
                     </div>
                 </div>;
             }
-        }
-        if (squares) {
+        } else if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
                 return (
                     <div id="game-page">
@@ -549,37 +549,38 @@ class Game extends Component {
                                  canPlayAgain={!this.props.isTutorial} />
                     </div>
                 );
+            } else {
+                return (
+                    <div id="game-page">
+                        <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
+
+                        <Map
+                            onReleaseMap={this.onReleaseMap}
+                            onDragMap={this.onDragMap}
+                            onClickMap={this.onClickMap}
+                            playerId={playerId}
+                            playerIds={playerIds}
+                            squares={squares}
+                            queue={queue}
+                            cursor={cursor}
+                            handleClick={this.onClickBound}
+                            isSpawnDefender={isSpawnDefender}
+                            isInSpawningRange={this.isInSpawningRange.bind(this)}
+                        />
+
+                        <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
+                    </div>
+                );
             }
-            return (
-                <div id="game-page">
-                    <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
-
-                    <Map
-                        onReleaseMap={this.onReleaseMap}
-                        onDragMap={this.onDragMap}
-                        onClickMap={this.onClickMap}
-                        playerId={playerId}
-                        playerIds={playerIds}
-                        squares={squares}
-                        queue={queue}
-                        cursor={cursor}
-                        handleClick={this.onClickBound}
-                        isSpawnDefender={isSpawnDefender}
-                        isInSpawningRange={this.isInSpawningRange.bind(this)}
-                    />
-
-                    <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
-                </div>
-            );
         } else if (this.props.ffa) {
             return (
                 <GlobalQueue waitingText={this.state.waitingText} statuses={waitingClientStatus} goToHomeMenu={this.goToHomeMenuAndClose} />
-            )
+            );
         }
         else {
             return (
                 <Lobby gameType={this.state.gameType} changeGameType={this.changeGameType} onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
-            )
+            );
         }
     }
 
