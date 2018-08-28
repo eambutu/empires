@@ -134,7 +134,7 @@ function initState(room) {
         });
     });
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
-        if (roomType === RoomType.FFA) {
+        if (gameType !== GameType.DUEL) {
             squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 0});
         } else {
             squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
