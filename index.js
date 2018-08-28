@@ -507,13 +507,16 @@ function runGame(room) {
 
 function checkRoomState(room) {
     let clients = room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
+
     if (clients.length === 0) {
         clearInterval(room.gameInterval);
         room.gameStatus = GameStatus.QUEUING;
-        tryStartGame(room);
         if (room.waitingClients.length === 0) {
             delete rooms[room.id];
             console.log("deleting room with id " + room.id);
+        }
+        else {
+            tryStartGame(room);
         }
     }
 }
