@@ -300,8 +300,10 @@ function onMessage(room, ws) {
         } else if (data.event === 'exit') {
             ws.close();
         } else if (data.event === 'changeGame') {
-            room.gameType = data.gameType;
-            broadcastChangeGameType(room);
+            if (room.gameStatus === GameStatus.QUEUING) {
+                room.gameType = data.gameType;
+                broadcastChangeGameType(room);      
+            }
         }
     });
 }

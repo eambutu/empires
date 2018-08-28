@@ -14,8 +14,8 @@ export default function Lobby(props) {
 
     let gametypeButtons = (
         <div>
-            <button className={"active"} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"duelButton"}> Duel </button>
-            <button onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"ctfButton"}> Capture The Flag </button>
+            <button className={gameType === GameType.DUEL && "active"} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"duelButton"}> Duel </button>
+            <button className={gameType === GameType.CTF && "active"} onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"ctfButton"}> Capture The Flag </button>
         </div>
     );
     let playerRows = Object.keys(statuses).filter(id => {return id === playerId}).map((id, index) => {
