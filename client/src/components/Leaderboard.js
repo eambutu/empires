@@ -18,6 +18,11 @@ export default function Leaderboard(props) {
                 <div className={"leader-table-holder"}>
                     <table cellSpacing={0} className={"leaders"} >
                         <tbody>
+                        <tr>
+                            <td> <b>Rank</b> </td>
+                            <td> <b>Username</b></td>
+                            <td> <b>ELO</b></td>
+                        </tr>
                         {leaders}
                         </tbody>
                     </table>
