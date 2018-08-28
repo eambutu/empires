@@ -193,9 +193,9 @@ class Tutorial extends Component {
                         isInSpawningRange={this.props.isInSpawningRange}
                     />
                     <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
-                    <div className={"button-holder"}>
-                        <button className={"tutorial-button"} onClick={this.skipTutorial}>Skip Tutorial</button>
-                    </div>
+                    {/*<div className={"button-holder"}>*/}
+                        {/*<button className={"tutorial-button"} onClick={this.skipTutorial}>Skip Tutorial</button>*/}
+                    {/*</div>*/}
                 </div>
             );
     }
