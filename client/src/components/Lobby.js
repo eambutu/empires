@@ -2,6 +2,7 @@ import React from 'react';
 import '../styles/Lobby.css';
 import sword from "../sword.svg";
 import {ReadyType, GameType} from "./config"
+import Game from "./Game";
 
 export default function Lobby(props) {
     const {gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText, active} = props;
@@ -10,13 +11,13 @@ export default function Lobby(props) {
     let ctfButtonClass  = "";
     console.log(gameType)
 
-    let playerRow = Object.keys(statuses).filter(id => {
-        console.log(id);
-        console.log(playerId);
-        console.log(id === playerId);
-        return (id === playerId)
-    });
 
+    let gametypeButtons = (
+        <div>
+            <button className={"active"} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"duelButton"}> Duel </button>
+            <button onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"ctfButton"}> Capture The Flag </button>
+        </div>
+    );
     let playerRows = Object.keys(statuses).filter(id => {return id === playerId}).map((id, index) => {
         return (
             <tr>
@@ -44,6 +45,12 @@ export default function Lobby(props) {
             otherPlayerStatusStr = "Ready";
         } else if (statuses[id]['ready'] === ReadyType.PLAYING) {
             otherPlayerStatusStr = "Playing";
+            gametypeButtons = (
+                <div className={"disabled-buttons"}>
+                    <button className={gameType === GameType.DUEL ? "active" : ""} disabled={true} id={"duelButton"}> Duel2 </button>
+                    <button className={gameType === GameType.CTF ? "active" : ""}disabled={true} id={"ctfButton"}> Capture The Flag </button>
+                </div>
+            )
         }
         return (
             <tr>
@@ -71,8 +78,7 @@ export default function Lobby(props) {
             <div style={{marginBottom:"15px"}}> Game Type: <br/>
 
                 <div className={"custom-game-buttons"}>
-                    <button className={"active"} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel} id={"duelButton"}> Duel </button>
-                    <button onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF} id={"ctfButton"}> Capture The Flag </button>
+                    {gametypeButtons}
                 </div>
                 <div id={"gamedescription"} style={{fontSize: "15px", visibility:"hidden"}}>
                     Duel: Take over your opponent's base to win.

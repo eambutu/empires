@@ -70,3 +70,9 @@
     color: white;
     pointer: default;
 }
+
+.disabled-buttons button:hover{
+    background-color: transparent;
+    color: #ff4136;
+    cursor: default;
+}
