@@ -22,6 +22,8 @@ const GameStatus = {
 let mongoUrl = 'mongodb://localhost:27017/db';
 let database = null;
 let users = null;
+let roomListeners = [];
+
 MongoClient.connect(mongoUrl, (err, db) => {
     if (err) throw err;
     console.log('Database created!');
@@ -239,6 +241,7 @@ function onClose(room, ws) {
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
         broadcastWaitingClientStatus(room);
+        broadcastRoomList();
         let checkRoomStateFn = e => {checkRoomState(room)};
         setTimeout(
             checkRoomStateFn,
@@ -327,6 +330,7 @@ function connectToRoom(room, ws, username, session, autoReady) {
         onConnect(room, ws, username, session, autoReady);
         onClose(room, ws);
         broadcastWaitingClientStatus(room);
+        broadcastRoomList();
     }
 }
 
@@ -387,6 +391,14 @@ app.ws('/tutorial', (ws, req) => {
     let tutorialRoomId = 'tutorial-' + randString();
     let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
     connectToRoom(room, ws, 'tutorial', 'tutorial-playerId', true);
+});
+
+app.ws('/room_list', (ws, req) => {
+    roomListeners.push(ws);
+    ws.on('close', () => {
+        roomListeners = roomListeners.filter(client => (client !== ws));
+
+    });
 });
 
 app.listen(5000, function () {
@@ -499,6 +511,17 @@ function broadcastWaitingClientStatus(room) {
         }
     });
     console.log(`sent waitingClientStatus to ${room.id}`);
+    console.log(roomListeners.length);
+}
+
+function broadcastRoomList() {
+    roomListeners.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                'event': 'refresh_room_list'
+            }));
+        }
+    });
 }
 
 function broadcastStarting(room) {

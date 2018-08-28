@@ -15,6 +15,21 @@ class RoomList extends Component {
 
     }
 
+    setUpWebSocket(wsPath) {
+        this.ws = new WebSocket(wsPath);
+        this.ws.onopen = () => {
+            console.log('WebSocket opened, sending session');
+        }
+        this.ws.addEventListener('message', event => {
+            let data = JSON.parse(event.data);
+            console.log(data.event);
+            if (data.event === 'refresh_room_list') {
+                this.loadRoomList();
+            }
+        });
+    }
+
+
     onClickRoom(id) {
         function onClick(e) {
             window.location.href = '/room/' + id;
@@ -24,6 +39,12 @@ class RoomList extends Component {
     }
 
     componentDidMount() {
+        this.loadRoomList();
+        let wsPath = 'ws://' + window.location.hostname + ':5000/room_list';
+        this.setUpWebSocket(wsPath);
+    }
+
+    loadRoomList() {
         this.callBackendAPI()
             .then(res => {
                 let filtered = _.pickBy(res, function(value) {
