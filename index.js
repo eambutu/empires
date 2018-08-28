@@ -205,7 +205,7 @@ function initOrGetRoom (roomId, roomType) {
                 break;
             case RoomType.CUSTOM:
                 minNumPlayers = 2;
-                maxNumPlayers = 2;
+                maxNumPlayers = 4;
                 gameType = GameType.DUEL;
                 break;
             case RoomType.TUTORIAL:
