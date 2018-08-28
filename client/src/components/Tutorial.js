@@ -27,15 +27,16 @@ class Tutorial extends Component {
             tutorialWon: false,
         }
         this.props = props;
-        this.nextBox = () => {
-            console.log("hi")
-            this.state.textIndex += 1;
-            let map = document.getElementsByClassName("map")[0]
-            console.log(map)
+        this.animateTutorial = () => {
             switch(this.state.textIndex) {
+                case 0:
+                    document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.remove("expanded");
                 case 1:
                     document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.remove("expanded");
                     break;
                 case 2:
                     document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.remove("expanded");
@@ -46,9 +47,27 @@ class Tutorial extends Component {
                 case 3:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing");
                     break;
                 case 4:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.add("flashing");
+                    document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.remove("expanded");
+
+
+                    document.getElementsByClassName("map")[0].children[0].children[3].children[1].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[3].children[17].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[6].children[5].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[6].children[13].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[7].children[7].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[7].children[11].classList.remove("expanded");
+
+                    document.getElementsByClassName("map")[0].children[0].children[15].children[1].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[15].children[17].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[12].children[5].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[12].children[13].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[11].children[7].classList.remove("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[11].children[11].classList.remove("expanded");
                     break;
                 case 5:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing")
@@ -69,11 +88,10 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[12].children[13].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[11].children[7].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[11].children[11].classList.add("expanded");
-
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
 
                     break;
                 case 6:
-                    console.log(map[0]);
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.remove("expanded");
@@ -93,6 +111,7 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[11].children[7].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[11].children[11].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.remove("expanded");
                     break;
 
                 case 7:
@@ -100,13 +119,31 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.add("expanded");
                     break;
-                case 8:;
+                case 8:
+                    ;
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.remove("expanded");
                     break;
                 default:
-                    document.getElementsByClassName("tutorial-box")[0].style.display= "none";
+                    document.getElementsByClassName("tutorial-box")[0].style.display = "none";
                     this.setState({tutorialWon: true})
             }
+
+        }
+
+
+        this.prevBox = () => {
+            console.log(this.state.textIndex)
+            if (this.state.textIndex > 0){
+                this.state.textIndex -= 1;
+                this.animateTutorial()
+            }
+        }
+        this.nextBox = () => {
+            console.log("hi")
+            this.state.textIndex += 1;
+            let map = document.getElementsByClassName("map")[0]
+            console.log(map)
+            this.animateTutorial();
         }
     }
 
@@ -137,7 +174,7 @@ class Tutorial extends Component {
             return (
                 <div>
                     <PlayerBoard gameType={this.props.gameType} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus}/>
-                    <TutorialBox nextBox={this.nextBox} text={tutorialTextMap[this.state.textIndex]}/>
+                    <TutorialBox index={this.state.textIndex} prevBox={this.prevBox} nextBox={this.nextBox} text={tutorialTextMap[this.state.textIndex]}/>
                     <Map
                         onReleaseMap={this.props.onReleaseMap}
                         onDragMap={this.props.onDragMap}
