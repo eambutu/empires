@@ -64,7 +64,7 @@ class Homepage extends Component {
             console.log('checkOrRegisterUser');
             if (!this.state.username) {
                 let newName = document.getElementById("username").value;
-                if (newName) {
+                if (newName && newName.length < 20) {
                     return fetch('/set_username?username=' + newName).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
@@ -83,6 +83,10 @@ class Homepage extends Component {
                             return false;
                         }
                     });
+                } else if (newName.length >= 20) {
+                    document.getElementById("usernameTakenText").innerText = "Username is too long!";
+                    document.getElementById("username").focus();
+                    return Promise.resolve(false);
                 } else {
                     document.getElementById("usernameTakenText").innerText = "Username cannot be empty!";
                     document.getElementById("username").focus();
