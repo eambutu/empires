@@ -42,6 +42,7 @@ class RoomList extends Component {
         this.loadRoomList();
         let wsPath = 'ws://' + window.location.hostname + ':5000/room_list';
         this.setUpWebSocket(wsPath);
+        document.body.style.overflow = "scroll";
     }
 
     loadRoomList() {
@@ -65,6 +66,10 @@ class RoomList extends Component {
         }
         return body;
     };
+
+    componentWillUnmount() {
+        document.body.style.overflow = "hidden";
+    }
 
     render() {
         if (this.state.data) {

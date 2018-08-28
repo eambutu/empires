@@ -7,14 +7,15 @@ import PlayerBoard from "./PlayerBoard";
 
 const tutorialTextMap = {
     0: "Hi! Welcome to Squarecraft.io. Let’s walk you through how to play.",
-    1: "The objective of Squarecraft is to capture these flags by moving your army units over them. Whoever captures 20 flags first wins.",
-    2: "You have two army types. Defenders are immobile, and can defend against up to 5 hits. Attackers move around and can take other squares.",
-    3: "Attackers cost 25 shards. Press SPACEBAR now to spawn an attacker and WASD to move it around.",
-    4: "Defenders cost 100 shards. Hold the CONTROL (or COMMAND) key and CLICK a valid location to spawn a defender. Defenders can stack, but can't be spawned on top of attackers. Try it on this square!",
-    5: "Increase your shard collection rate by moving an attacker or spawning a defender on these shard towers.",
-    6: "This is your base. If any enemy attacker occupies it, they will take your flags at a steady rate, and you'll have to run your own attackers into it to regain control. Make sure to defend it!",
-    7: "During real gameplay, you can't see the whole board. You can also take the vision tower for more vision.",
-    8: "Have fun!",
+    1: "First: some map controls. Press = and - to zoom in and out respectively, and click and drag the map to move it.",
+    2: "The objective of Squarecraft is to capture these flags by moving your army units over them. Whoever captures 20 flags first wins.",
+    3: "You have two army types. Defenders are immobile, and can defend against up to 5 hits. Attackers move around and can take other squares.",
+    4: "Attackers cost 25 shards. Press SPACEBAR now to spawn an attacker and WASD to move it around.",
+    5: "Defenders cost 100 shards. Hold the CONTROL (or COMMAND) key and CLICK a valid location to spawn a defender. Defenders can spawn on buildings, stack, but can't be spawned on top of attackers. Try it on this square!",
+    6: "Increase your shard collection rate by moving an attacker or spawning a defender on these shard towers.",
+    7: "This is your base. If any enemy attacker occupies it, they will take your flags at a steady rate, and you'll have to run your own attackers into it to regain control. Make sure to defend it!",
+    8: "During real gameplay, you can't see the whole board. You can also take the vision tower for more vision.",
+    9: "Have fun!",
 }
 
 
@@ -30,26 +31,29 @@ class Tutorial extends Component {
         this.animateTutorial = () => {
             switch(this.state.textIndex) {
                 case 0:
+                    break;
+                case 1:
                     document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.remove("expanded");
-                case 1:
+                    break;
+                case 2:
                     document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.remove("expanded");
                     break;
-                case 2:
+                case 3:
                     document.getElementsByClassName("map")[0].children[0].children[8].children[8].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.add("expanded");
                     break;
-                case 3:
+                case 4:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing");
                     break;
-                case 4:
+                case 5:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.add("flashing");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.remove("expanded");
@@ -69,7 +73,7 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[11].children[7].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[11].children[11].classList.remove("expanded");
                     break;
-                case 5:
+                case 6:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing")
                     document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.add("expanded");
@@ -91,7 +95,7 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
 
                     break;
-                case 6:
+                case 7:
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.remove("expanded");
@@ -114,12 +118,12 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.remove("expanded");
                     break;
 
-                case 7:
+                case 8:
                     props.onVeil();
                     document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.add("expanded");
                     break;
-                case 8:
+                case 9:
                     ;
                     document.getElementsByClassName("map")[0].children[0].children[9].children[9].classList.remove("expanded");
                     break;

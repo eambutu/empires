@@ -241,8 +241,7 @@ function HomepageButtons(props) {
                     </div>
                     <button id="ffa-game-button" className="homepage-button" onClick={() => setPage(HomePageOption.FFA_PAGE)}>FFA</button>
                     <br/>
-                    (Custom Games coming soon!)
-                    {/*<button id="custom-game-button" className="homepage-button" onClick={() => {window.location = "/room/"}}>Custom Game</button>*/}
+                    <button id="custom-game-button" className="homepage-button" onClick={() => {window.location = "/room/"}}>Custom Game</button>
                 </div>
             )
         default:
