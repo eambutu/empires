@@ -405,7 +405,7 @@ function verifyWs(ws) {
                 users.findOne(query, (err, data) => {
                     if (err || !data) {
                         console.log(err);
-                        reject(null);
+                        reject(query.session);
                     } else {
                         console.log('Verify success with username', data.username, 'session', data.session);
                         resolve(data.username, data.session)
