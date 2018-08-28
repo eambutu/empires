@@ -26,8 +26,8 @@ class Homepage extends Component {
             page: HomePageOption.HOME_PAGE,
             leaderboard: [],
             username: undefined,
-            rating: null,
-            ranking: null,
+            rating: 1000,
+            ranking: 'noob',
             usernameFocus: false
         };
 
@@ -71,11 +71,16 @@ class Homepage extends Component {
                     }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
-                            if ((resJson.username && resJson.ratingFFA && resJson.ranking)) {
+                            if (resJson.ratingFFA && resJson.ranking) {
                                 this.setState({
                                     username: resJson.username,
                                     rating: Math.round(resJson.ratingFFA),
-                                    ranking: resJson.ranking
+                                    ranking: resJson.ranking + 1
+                                });
+                            }
+                            if (resJson.username) {
+                                this.setState({
+                                    username: resJson.username
                                 });
                                 document.getElementById("username").disabled = true;
                                 return true;
@@ -111,10 +116,14 @@ class Homepage extends Component {
                 if (resJson.success) {
                     console.log(resJson);
                     this.setState({
-                        username: resJson.username,
-                        rating: Math.round(resJson.ratingFFA),
-                        ranking: resJson.ranking
+                        username: resJson.username
                     });
+                    if (resJson.ratingFFA && resJson.ranking) {
+                        this.setState({
+                            rating: Math.round(resJson.ratingFFA),
+                            ranking: resJson.ranking + 1
+                        })
+                    }
                 } else {
                     // user has session but is not in database, cookie has been cleared by server
                 }

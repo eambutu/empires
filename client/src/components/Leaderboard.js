@@ -4,9 +4,9 @@ import "../styles/Homepage.css"
 export default function Leaderboard(props) {
     let {hideLeaderboard, leaderboard} = props;
     console.log(leaderboard)
-    let leaders = leaderboard.map((leader, index) => (
-        <tr key={index}>
-            <td> {index + 1} </td>
+    let leaders = leaderboard.map(leader => (
+        <tr key={leader.ranking}>
+            <td> {leader.ranking + 1} </td>
             <td> {leader.username} </td>
             <td> {leader.ratingFFA} </td>
         </tr>

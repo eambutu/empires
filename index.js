@@ -65,9 +65,7 @@ app.get('/user_info', (req, res) => {
 function getNewUser(username) {
     return {
         username: username,
-        session: randKey(),
-        ratingFFA: 1000,
-        ranking: 'noob'
+        session: randKey()
     }
 }
 
@@ -96,83 +94,20 @@ app.get('/set_username', function(req, res) {
     }
 });
 
-app.get('/ranking', function(req, res) {
-    console.log(req.param('username'));
-    users.aggregate(
-        [{ "$sort": { "ratingFFA": -1 } },
-        {
-            "$group": {
-                "_id": false,
-                "rankedUsers": {
-                    "$push": {
-                        "username": "$username",
-                        "session": "$session",
-                        "ratingFFA": "$ratingFFA"
-                    }
-                }
-            }
-        },
-        {
-            "$unwind": {
-                "path": "$rankedUsers",
-                "includeArrayIndex": "ranking"
-            }
-        },
-        {
-            "$match": {
-                "rankedUsers.username": req.param('username')
-            }
-        }], function (err, data) {
-            if (err) {
-                throw err;
-            } else {
-                data.get(function (err, result) {
-                    if (result && result[0]) {
-                        res.send(JSON.stringify({
-                            rating: result[0].rankedUsers.ratingFFA,
-                            ranking: result[0].ranking + 1
-                        }));
-                    }
-                })
-            }
-        }
-    );
-});
-
 app.get('/leaderboard', function (req, res) {
     users.aggregate(
-        [{ "$sort": { "ratingFFA": -1 } },
-            {
-                "$group": {
-                    "_id": false,
-                    "rankedUsers": {
-                        "$push": {
-                            "username": "$username",
-                            "session": "$session",
-                            "ratingFFA": "$ratingFFA"
-                        }
-                    }
-                }
-            },
-            {
-                "$unwind": {
-                    "path": "$rankedUsers",
-                    "includeArrayIndex": "ranking"
-                }
-            }], function (err, data) {
-            if (err) {
-                throw err;
-            } else {
-                data.get(function (err, result) {
-                    let toReturn = result.map(entry => entry.rankedUsers);
-                    console.log(toReturn)
-                    if (toReturn) {
-                        res.send(JSON.stringify(toReturn));
-                    }
-                })
-            }
+        [
+            { "$match": { "ranking" : {"$exists" : true}}},
+            { "$sort": { "ranking": 1 } }
+        ], function (err, data) {
+        if (err) {
+            throw err;
+        } else {
+            data.get(function (err, result) {
+                res.send(JSON.stringify(result));
+            });
         }
-    );
+    });
 });
 
 app.get('/room_list', function (req, res) {
@@ -479,6 +414,7 @@ getPerformOneTurn = targetRoom => {
                             if (err) throw err;
                         });
                     });
+                    calculateRankings();
                 }
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
@@ -606,4 +542,45 @@ function broadcastState(room) {
 
 function incrementFrameCounter(room) {
     room.frameCounter = (room.frameCounter + 1) % framesPerTurn;
+}
+
+function calculateRankings() {
+    users.aggregate(
+    [
+        { "$match": { "ratingFFA" : {"$exists" : true}}},
+        { "$sort": { "ratingFFA": -1 } },
+        {
+            "$group": {
+                "_id": false,
+                "rankedUsers": {
+                    "$push": {
+                        "username": "$username",
+                        "session": "$session",
+                        "ratingFFA": "$ratingFFA"
+                    }
+                }
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$rankedUsers",
+                "includeArrayIndex": "ranking"
+            }
+        }
+    ], function (err, data) {
+        if (err) {
+            throw err;
+        } else {
+            data.get(function (err, result) {
+                result.forEach(entry => {
+                    let query = entry.rankedUsers;
+                    let rank = { $set: {ranking: entry.ranking}};
+
+                    users.updateOne(query, rank, function(err, res) {
+                        if (err) throw err;
+                    });
+                });
+            })
+        }
+    });
 }
