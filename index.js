@@ -140,7 +140,7 @@ function initOrGetRoom (roomId, roomType) {
                 break;
             case RoomType.CUSTOM:
                 minNumPlayers = 2;
-                maxNumPlayers = 2;
+                maxNumPlayers = 4;
                 gameType = GameType.DUEL;
                 break;
             case RoomType.TUTORIAL:
@@ -293,6 +293,9 @@ function onMessage(room, ws) {
             room.fogOfWar = true;
         } else if (data.event === 'exit') {
             ws.close();
+        } else if (data.event === 'changeGame') {
+            room.gameType = data.gameType;
+            broadcastChangeGameType(room);
         }
     });
 }
@@ -328,7 +331,7 @@ function connectToRoom(room, ws, username, session, autoReady) {
 }
 
 function verifyWs(ws) {
-    return new Promise((resolve, reject) => { // TODO add timeout
+    return new Promise((resolve, reject) => {
         ws.on('message', function (msg) {
             let data = JSON.parse(msg);
             if (data.event === 'verify' && data.session) {
@@ -337,7 +340,7 @@ function verifyWs(ws) {
                 users.findOne(query, (err, data) => {
                     if (err || !data) {
                         console.log(err);
-                        reject(data.session);
+                        reject(query.session);
                     } else {
                         console.log('Verify success with username', data.username, 'session', data.session);
                         resolve(data.username, data.session)
@@ -361,7 +364,9 @@ app.ws('/ffa', (ws, req) => {
             queueRoomId = null;
         }
     }).catch((session) => { // session not found in database, redirect
-        ws.close();
+        if (ws.readyState === ws.OPEN) {
+            ws.close();
+        }
     });
 });
 
@@ -372,7 +377,9 @@ app.ws('/room/:roomId', (ws, req) => {
         connectToRoom(room, ws, username, session, false);
     }).catch((session) => { // session not found in database, redirect
         ws.send(JSON.stringify({event: 'noSession'}));
-        ws.close();
+        if (ws.readyState === ws.OPEN) {
+            ws.close();
+        }
     });
 });
 
@@ -466,6 +473,17 @@ function getWaitingClientStatus(room) {
         }
     });
     return waitingClientStatus;
+}
+
+function broadcastChangeGameType(room) {
+    room.waitingClients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                'event': 'setGameType',
+                'gameType': room.gameType,
+            }));
+        }
+    });
 }
 
 function broadcastWaitingClientStatus(room) {

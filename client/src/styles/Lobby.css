@@ -47,7 +47,7 @@
 
 }
 
-#gameTypeButton{
+.custom-game-buttons button{
     font-size: 0.8em;
     min-height: 10px;
     min-width: 250px;
@@ -58,9 +58,15 @@
 
 .custom-lobby-title {
     position: absolute;
-    top: 50%;
+    top: 10%;
     left: 50%;
-    transform: translateY(-50%) translateX(-50%);
+    transform: translateX(-50%);
     text-align: center;
     color: white;
+}
+
+.active {
+    background-color: #ff4136; /* Green */
+    color: white;
+    pointer: default;
 }

@@ -181,6 +181,7 @@ a:hover{
 
 .leaders td{
     border: solid 1px black;
+    padding: 4px;
 }
 
 .globe {

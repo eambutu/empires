@@ -64,15 +64,18 @@ class Homepage extends Component {
             console.log('checkOrRegisterUser');
             if (!this.state.username) {
                 let newName = document.getElementById("username").value;
-                if (newName) {
-                    return fetch('/set_username?username=' + newName).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
+                if (newName && newName.length < 20) {
+                    return fetch('/set_username?username=' + newName, {
+                        method: 'GET',
+                        credentials: 'include'
+                    }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
                             if (resJson.ratingFFA && resJson.ranking) {
                                 this.setState({
                                     username: resJson.username,
                                     rating: Math.round(resJson.ratingFFA),
-                                    ranking: resJson.ranking
+                                    ranking: resJson.ranking + 1
                                 });
                             }
                             if (resJson.username) {
@@ -84,11 +87,17 @@ class Homepage extends Component {
                             }
                         } else { // failed to register
                             document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
+                            document.getElementById("username").focus();
                             return false;
                         }
                     });
+                } else if (newName.length >= 20) {
+                    document.getElementById("usernameTakenText").innerText = "Username is too long!";
+                    document.getElementById("username").focus();
+                    return Promise.resolve(false);
                 } else {
                     document.getElementById("usernameTakenText").innerText = "Username cannot be empty!";
+                    document.getElementById("username").focus();
                     return Promise.resolve(false);
                 }
             } else { // user is already found
@@ -112,7 +121,7 @@ class Homepage extends Component {
                     if (resJson.ratingFFA && resJson.ranking) {
                         this.setState({
                             rating: Math.round(resJson.ratingFFA),
-                            ranking: resJson.ranking
+                            ranking: resJson.ranking + 1
                         })
                     }
                 } else {
@@ -157,8 +166,8 @@ class Homepage extends Component {
                 </div>
 
                 <div className="center">
-                    <img src={sword} className="App-logo" alt="logo"/>
-                    <div className="title">squarecraft.io</div>
+                    <img onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} src={sword} className="App-logo" alt="logo"/>
+                    <div onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} style={{cursor: "pointer"}} className="title">squarecraft.io</div>
                     <div className="App-text">
                         <div className="button-area">
                             <HomepageButtons
