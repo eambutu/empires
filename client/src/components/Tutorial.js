@@ -145,6 +145,10 @@ class Tutorial extends Component {
             console.log(map)
             this.animateTutorial();
         }
+        this.skipTutorial = () => {
+            this.state.textIndex = -1;
+            this.animateTutorial();
+        }
     }
 
     render() {
@@ -189,6 +193,9 @@ class Tutorial extends Component {
                         isInSpawningRange={this.props.isInSpawningRange}
                     />
                     <ResourceBoard displayShards={this.props.displayShards} insufficientShards={this.props.insufficientShards}/>
+                    <div className={"button-holder"}>
+                        <button className={"tutorial-button"} onClick={this.skipTutorial}>Skip Tutorial</button>
+                    </div>
                 </div>
             );
     }

@@ -1,0 +1,28 @@
+.button-holder {
+    text-align: center;
+}
+
+.tutorial-button {
+    height: 20px;
+    cursor: pointer;
+    font-family: 'Marvel';
+
+
+    background-color: transparent;
+    color: #fefbef;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color 300ms, border-color 300ms, box-shadow 150ms;
+    width: 20%;
+
+
+    min-width: 10rem;
+    border-radius: 0.75rem;
+    font-size: 15px;
+    letter-spacing: 1px;
+    min-height: 30px;
+
+    color: #ff4136;
+    border: 3px solid #ff4136;
+    margin: 5px;
+}
