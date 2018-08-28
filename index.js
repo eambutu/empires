@@ -229,6 +229,9 @@ function onConnect(room, ws, username, session, autoReady) {
         }
     }, 1000);
 
+    broadcastWaitingClientStatus(room);
+    broadcastRoomList();
+
     if (autoReady) {
         tryStartGame(room);
     }
@@ -329,8 +332,6 @@ function connectToRoom(room, ws, username, session, autoReady) {
 
         onConnect(room, ws, username, session, autoReady);
         onClose(room, ws);
-        broadcastWaitingClientStatus(room);
-        broadcastRoomList();
     }
 }
 
