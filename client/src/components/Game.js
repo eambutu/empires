@@ -8,6 +8,7 @@ import ResourceBoard from "./ResourceBoard";
 import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
 import GlobalQueue from "./GlobalQueue";
+import sword from "../sword.svg";
 
 const {SquareType, Costs, UnitType, Action, ReadyType, GameType} = require("./config");
 
@@ -487,30 +488,40 @@ class Game extends Component {
 
     render() {
         let {waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
-        if (this.props.isTutorial && squares){
-            return (
-                <div id="game-page">
-                    <Tutorial
-                        onReleaseMap={this.onReleaseMap}
-                        onDragMap={this.onDragMap}
-                        onClickMap={this.onClickMap}
-                        displayShards={this.state.displayShards}
-                        insufficientShards={this.state.insufficientShards}
-                        onVeil={this.onVeil}
-                        exitClick={this.goToHomeMenuAndClose}
-                        playerId={playerId}
-                        playerIds={playerIds}
-                        playerStatus={playerStatus}
-                        squares={squares}
-                        queue={queue}
-                        cursor={cursor}
-                        handleClick={this.onClickBound}
-                        isSpawnDefender={isSpawnDefender}
-                        isInSpawningRange={this.isInSpawningRange.bind(this)}
-                        flags={flags}
-                    />
-                </div>
-            );
+        if (this.props.isTutorial) {
+            if (squares) {
+                return (
+                    <div id="game-page">
+                        <Tutorial
+                            onReleaseMap={this.onReleaseMap}
+                            onDragMap={this.onDragMap}
+                            onClickMap={this.onClickMap}
+                            displayShards={this.state.displayShards}
+                            insufficientShards={this.state.insufficientShards}
+                            onVeil={this.onVeil}
+                            exitClick={this.goToHomeMenuAndClose}
+                            playerId={playerId}
+                            playerIds={playerIds}
+                            playerStatus={playerStatus}
+                            squares={squares}
+                            queue={queue}
+                            cursor={cursor}
+                            handleClick={this.onClickBound}
+                            isSpawnDefender={isSpawnDefender}
+                            isInSpawningRange={this.isInSpawningRange.bind(this)}
+                            flags={flags}
+                        />
+                    </div>
+                );
+            } else {
+                return <div className="center">
+                    <img src={sword} className="App-logo" alt="logo"/>
+                    <div className="title">squarecraft.io</div>
+                    <div className="App-text">
+                        Tutorial is loading...
+                    </div>
+                </div>;
+            }
         }
         if (squares) {
             if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
