@@ -65,7 +65,10 @@ class Homepage extends Component {
             if (!this.state.username) {
                 let newName = document.getElementById("username").value;
                 if (newName && newName.length < 20) {
-                    return fetch('/set_username?username=' + newName).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
+                    return fetch('/set_username?username=' + newName, {
+                        method: 'GET',
+                        credentials: 'include'
+                    }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
                             if ((resJson.username && resJson.ratingFFA && resJson.ranking)) {
