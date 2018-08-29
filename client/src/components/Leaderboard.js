@@ -8,7 +8,7 @@ export default function Leaderboard(props) {
         <tr key={leader.ranking}>
             <td> {leader.ranking + 1} </td>
             <td> {leader.username} </td>
-            <td> {leader.ratingFFA} </td>
+            <td> {Math.round(leader.ratingFFA)} </td>
         </tr>
     ));
 
