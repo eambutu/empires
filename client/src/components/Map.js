@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import '../styles/Map.css';
 
-import sword from "../sword.svg";
+import sword_circle from "../sword_circle.svg";
 import base from "../base.svg";
 import eye from "../eye.svg"
 import shards from "../shards.svg"
@@ -172,7 +172,7 @@ class Cell extends Component {
             }
             else if (square.unit.type === UnitType.ATTACKER)
             {
-                divStyle["backgroundImage"] = `url(${sword})`;
+                divStyle["backgroundImage"] = `url(${sword_circle})`;
             }
         } else if (renderSpawnDefender) {
             divStyle["backgroundImage"] = `url(${shield})`;
