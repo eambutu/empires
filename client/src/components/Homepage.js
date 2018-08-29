@@ -27,7 +27,7 @@ class Homepage extends Component {
             page: HomePageOption.HOME_PAGE,
             leaderboard: [],
             username: undefined,
-            rating: 1000,
+            rating: 0,
             ranking: 'noob',
             usernameFocus: false
         };
@@ -72,11 +72,15 @@ class Homepage extends Component {
                     }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
-                            if (resJson.ratingFFA && resJson.ranking) {
+                            if (resJson.ratingFFA) {
                                 this.setState({
-                                    rating: Math.round(resJson.ratingFFA),
-                                    ranking: resJson.ranking + 1
+                                    rating: resJson.ratingFFA
                                 });
+                            }
+                            if (resJson.ranking) {
+                                this.setState({
+                                    ranking: resJson.ranking
+                                })
                             }
                             if (resJson.username) {
                                 this.setState({
@@ -111,14 +115,17 @@ class Homepage extends Component {
                 credentials: 'include'
             }).then(res => res.json()).then(resJson => {
                 if (resJson.success) {
-                    console.log(resJson);
                     this.setState({
                         username: resJson.username
                     });
-                    if (resJson.ratingFFA && resJson.ranking) {
+                    if (resJson.ratingFFA) {
                         this.setState({
-                            rating: Math.round(resJson.ratingFFA),
-                            ranking: resJson.ranking + 1
+                            rating: resJson.ratingFFA
+                        })
+                    }
+                    if (resJson.ranking) {
+                        this.setState({
+                            ranking: resJson.ranking
                         })
                     }
                 } else {
@@ -130,7 +137,6 @@ class Homepage extends Component {
         fetch('/leaderboard', {
             method: 'GET'
         }).then(res => res.json()).then(resJson => {
-            console.log("leaderboard", resJson);
             this.setState({
                 leaderboard: resJson
             });
@@ -154,6 +160,7 @@ class Homepage extends Component {
                 </div>
             )
         }
+
         return (
             <div>
                 <div id={"leaderboard"} className="leaderboard center" style={{display: "none"}}>

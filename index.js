@@ -22,6 +22,7 @@ const GameStatus = {
 let mongoUrl = 'mongodb://localhost:27017/db';
 let database = null;
 let users = null;
+let displayRankings = null;
 let roomListeners = [];
 
 MongoClient.connect(mongoUrl, (err, db) => {
@@ -29,6 +30,7 @@ MongoClient.connect(mongoUrl, (err, db) => {
     console.log('Database created!');
     database = db.db();
     users = database.collection('users');
+    displayRankings = database.collection('displayRankings');
 });
 
 function randString() {
@@ -56,7 +58,17 @@ app.get('/user_info', (req, res) => {
             console.log(err);
             res(err);
         } else if (data) {
-            res.json({success: true, username: data.username, ratingFFA: data.ratingFFA, ranking: data.ranking});
+            displayRankings.findOne({username: data.username}, (err, dataTemp) => {
+                console.log(dataTemp);
+                if (err) {
+                    console.log(err);
+                    res(err);
+                } else if (dataTemp) {
+                    res.json({success: true, username: dataTemp.username, ratingFFA: Math.round(dataTemp.ratingFFA), ranking: dataTemp.ranking + 1});
+                } else {
+                    res.json({success: true, username: data.username});
+                }
+            });
         } else {
             res.clearCookie('session');
             res.json({success: false});
@@ -67,7 +79,9 @@ app.get('/user_info', (req, res) => {
 function getNewUser(username) {
     return {
         username: username,
-        session: randKey()
+        session: randKey(),
+        ratingFFA: 1000,
+        multiplier: 0
     }
 }
 
@@ -96,28 +110,17 @@ app.get('/set_username', function(req, res) {
 });
 
 app.get('/leaderboard', function (req, res) {
-    let usernameBlacklist = [
-        "squareadmin",
-        "eambutu",
-        "carboxysome",
-        "abhi",
-        "abhio",
-        "q"
-    ]
-    users.aggregate(
+    calculateRankings();
+    displayRankings.aggregate(
         [
             { "$match": { "ranking" : {"$exists" : true}}},
+            { "$project": { "username": 1, "ranking": 1, "ratingFFA": {"$trunc": "$ratingFFA"}}},
             { "$sort": { "ranking": 1 } }
         ], function (err, data) {
         if (err) {
             throw err;
         } else {
             data.get(function (err, result) {
-                result = result.filter(user => {return usernameBlacklist.indexOf(user.username) === -1});
-                result.forEach(user => {
-                    delete user["_id"];
-                    delete user["session"];
-                });
                 res.send(JSON.stringify(result));
             });
         }
@@ -466,6 +469,7 @@ getPerformOneTurn = targetRoom => {
             if (gameEnded) {
                 if (room.type === RoomType.FFA) {
                     calculateNewRatings(room);
+                    let usernameList = [];
                     room.clients.forEach(client => {
                         console.log("new rating", client.rating);
                         let query = {username: client.name};
@@ -474,7 +478,10 @@ getPerformOneTurn = targetRoom => {
                         users.updateOne(query, newValues, function(err, res) {
                             if (err) throw err;
                         });
+                        usernameList.push(client.name);
                     });
+                    updateMultipliers(usernameList);
+                    updateDisplayRatings();
                     calculateRankings();
                 }
                 room.clients.forEach(ws => {
@@ -627,10 +634,49 @@ function incrementFrameCounter(room) {
     room.frameCounter = (room.frameCounter + 1) % framesPerTurn;
 }
 
-function calculateRankings() {
+function updateMultipliers(usernameList) {
+    users.updateMany(
+        {
+            "username": {"$in": usernameList},
+            "multiplier": {"$lt": 0.99}  // MongoDB has some weird rounding errors sometimes
+        },
+        { "$inc": { "multiplier": 0.1 } }
+    );
+}
+
+function updateDisplayRatings() {
     users.aggregate(
+        [
+            { "$project":
+                    {
+                        "username": 1,
+                        "ratingFFA": { "$multiply": ["$ratingFFA", "$multiplier"]}
+                    }
+            },
+            { "$out": "displayRankings" }
+        ], function (err, cursor) {
+            cursor.toArray(function (err, documents) {
+                // Do nothing, because mongo is a POS
+                // "Expected behavior my ass https://jira.mongodb.org/browse/NODE-1398
+            })
+        }
+    );
+}
+
+function calculateRankings() {
+    let usernameBlacklist = [
+        "squareadmin",
+        "eambutu",
+        "carboxysome",
+        "abhi",
+        "abhio",
+        "q"
+    ];
+
+    displayRankings.aggregate(
     [
-        { "$match": { "ratingFFA" : {"$exists" : true}}},
+        { "$match": { "ratingFFA": {"$gt" : 0}}},
+        { "$match": { "username": {"$nin": usernameBlacklist}}},
         { "$sort": { "ratingFFA": -1 } },
         {
             "$group": {
@@ -638,7 +684,6 @@ function calculateRankings() {
                 "rankedUsers": {
                     "$push": {
                         "username": "$username",
-                        "session": "$session",
                         "ratingFFA": "$ratingFFA"
                     }
                 }
@@ -651,15 +696,17 @@ function calculateRankings() {
             }
         }
     ], function (err, data) {
+        console.log("data", data);
         if (err) {
             throw err;
         } else {
             data.get(function (err, result) {
                 result.forEach(entry => {
-                    let query = entry.rankedUsers;
+                    console.log("entry", entry);
+                    let query = {username: entry.rankedUsers.username};
                     let rank = { $set: {ranking: entry.ranking}};
 
-                    users.updateOne(query, rank, function(err, res) {
+                    displayRankings.updateOne(query, rank, function(err, res) {
                         if (err) throw err;
                     });
                 });
