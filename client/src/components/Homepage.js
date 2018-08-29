@@ -10,6 +10,7 @@ import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 import redglobe from "../redglobe.svg";
 import globe from "../globe.svg";
+import startsound from "../startsound.wav";
 
 let HomePageOption = {
     HOME_PAGE: "home page",
