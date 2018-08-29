@@ -96,6 +96,14 @@ app.get('/set_username', function(req, res) {
 });
 
 app.get('/leaderboard', function (req, res) {
+    let usernameBlacklist = [
+        "squareadmin",
+        "eambutu",
+        "carboxysome",
+        "abhi",
+        "abhio",
+        "q"
+    ]
     users.aggregate(
         [
             { "$match": { "ranking" : {"$exists" : true}}},
@@ -105,6 +113,7 @@ app.get('/leaderboard', function (req, res) {
             throw err;
         } else {
             data.get(function (err, result) {
+                result = result.filter(user => {return usernameBlacklist.indexOf(user.username) === -1});
                 result.forEach(user => {
                     delete user["_id"];
                     delete user["session"];
