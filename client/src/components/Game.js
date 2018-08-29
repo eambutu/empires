@@ -24,6 +24,8 @@ const MoveKeyMap = {
     d: Action.MOVE_RIGHT
 };
 
+let audio = new Audio(startsound);
+
 let backsize = 25;
 let squaresize = 35;
 
@@ -435,7 +437,6 @@ class Game extends Component {
             } else if (data.event === 'update') {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
-                let audio = new Audio(startsound);
                 audio.play();
                 let startingText = 'Starting game...'
                 if (this.props.isTutorial) {
