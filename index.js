@@ -105,6 +105,10 @@ app.get('/leaderboard', function (req, res) {
             throw err;
         } else {
             data.get(function (err, result) {
+                result.forEach(user => {
+                    delete user["_id"];
+                    delete user["session"];
+                });
                 res.send(JSON.stringify(result));
             });
         }
