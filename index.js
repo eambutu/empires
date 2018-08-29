@@ -136,7 +136,7 @@ function initOrGetRoom (roomId, roomType) {
         let gameType;
         switch (roomType) {
             case RoomType.FFA:
-                minNumPlayers = 4;
+                minNumPlayers = 2;
                 maxNumPlayers = 4;
                 gameType = GameType.CTF;
                 break;
@@ -172,7 +172,13 @@ function initOrGetRoom (roomId, roomType) {
     return rooms[roomId];
 }
 
-function onConnect(room, ws, username, session, autoReady) {
+function makeAllWaitingClientsReady(room) {
+    room.waitingClients.forEach(client => {
+        client.ready = ReadyType.READY;
+    });
+}
+
+function onConnect(room, ws, username, session) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
@@ -180,7 +186,7 @@ function onConnect(room, ws, username, session, autoReady) {
     ws.playerId = randString();
     ws.name = username;
     ws.secret = randSecret();
-    ws.ready = autoReady ? ReadyType.READY : ReadyType.NOT_READY;
+    ws.ready = ReadyType.NOT_READY;
     console.log(`player ${ws.name} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
         event: 'connected',
@@ -232,7 +238,36 @@ function onConnect(room, ws, username, session, autoReady) {
     broadcastWaitingClientStatus(room);
     broadcastRoomList();
 
-    if (autoReady) {
+    if (room.type === RoomType.FFA) {
+        let numWaitingClients = room.waitingClients.length;
+        let forceStartFn = e => {
+            broadcastForceStartSec(room);
+            if (room.forceStartSec === 0) {
+                clearInterval(room.forceStartInterval);
+                makeAllWaitingClientsReady(room);
+                tryStartGame(room);
+            }
+            room.forceStartSec -= 1;
+        }
+        if (numWaitingClients > 1) {
+            room.forceStartSec = 15;
+
+            if (room.forceStartInterval) {
+                clearInterval(room.forceStartInterval);
+            }
+
+            if (numWaitingClients === room.maxNumPlayers) {
+                makeAllWaitingClientsReady(room);
+                tryStartGame(room);
+            } else {
+                room.forceStartInterval = setInterval(
+                    forceStartFn,
+                    1000
+                );
+            }
+        }
+    } else if (room.type === RoomType.TUTORIAL) {
+        makeAllWaitingClientsReady(room);
         tryStartGame(room);
     }
 }
@@ -325,14 +360,13 @@ function tryStartGame(room) {
     room.waitingClients = connectedClients;
 }
 
-function connectToRoom(room, ws, username, session, autoReady) {
+function connectToRoom(room, ws, username, session) {
     if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
         room.waitingClients.push(ws);
-
-        onConnect(room, ws, username, session, autoReady);
+        onConnect(room, ws, username, session);
         onClose(room, ws);
     }
 }
@@ -366,7 +400,7 @@ app.ws('/ffa', (ws, req) => {
             queueRoomId = 'ffa-' + randString();
         }
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
-        connectToRoom(room, ws, username, session, true);
+        connectToRoom(room, ws, username, session);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             queueRoomId = null;
         }
@@ -381,7 +415,7 @@ app.ws('/room/:roomId', (ws, req) => {
     verifyWs(ws).then((username, session) => {
         let roomId = req.params.roomId;
         let room = initOrGetRoom(roomId, RoomType.CUSTOM);
-        connectToRoom(room, ws, username, session, false);
+        connectToRoom(room, ws, username, session);
     }).catch((session) => { // session not found in database, redirect
         ws.send(JSON.stringify({event: 'noSession'}));
         if (ws.readyState === ws.OPEN) {
@@ -393,7 +427,7 @@ app.ws('/room/:roomId', (ws, req) => {
 app.ws('/tutorial', (ws, req) => {
     let tutorialRoomId = 'tutorial-' + randString();
     let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
-    connectToRoom(room, ws, 'tutorial', 'tutorial-playerId', true);
+    connectToRoom(room, ws, 'tutorial', 'tutorial-playerId');
 });
 
 app.ws('/room_list', (ws, req) => {
@@ -462,7 +496,7 @@ function checkRoomState(room) {
     if (clients.length === 0) {
         clearInterval(room.gameInterval);
         room.gameStatus = GameStatus.QUEUING;
-        if (room.waitingClients.length === 0) {
+        if (room.waitingClients.length === 0 && room.id in rooms) {
             delete rooms[room.id];
             console.log("deleting room with id " + room.id);
         }
@@ -493,6 +527,18 @@ function getWaitingClientStatus(room) {
     return waitingClientStatus;
 }
 
+
+function broadcastForceStartSec(room) {
+    room.waitingClients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                'event': 'forceStartSec',
+                'seconds': room.forceStartSec
+            }));
+        }
+    });
+}
+
 function broadcastChangeGameType(room) {
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
@@ -514,7 +560,6 @@ function broadcastWaitingClientStatus(room) {
         }
     });
     console.log(`sent waitingClientStatus to ${room.id}`);
-    console.log(roomListeners.length);
 }
 
 function broadcastRoomList() {

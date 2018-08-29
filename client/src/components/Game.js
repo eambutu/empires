@@ -79,7 +79,8 @@ class Game extends Component {
             ready: ReadyType.NOT_READY,
             playerStatus: {},
             waitingClientStatus: {},
-            gameType: null
+            gameType: null,
+            forceStartSec: null
         };
     }
 
@@ -464,6 +465,8 @@ class Game extends Component {
                     function() {window.location.replace('/');},
                     5000
                 );
+            } else if (data.event === 'forceStartSec') {
+                this.setState({forceStartSec: data.seconds});
             }
         });
     }
@@ -487,7 +490,7 @@ class Game extends Component {
     }
 
     render() {
-        let {waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
+        let {forceStartSec, waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
         if (this.props.isTutorial) {
             if (squares) {
                 return (
@@ -574,7 +577,7 @@ class Game extends Component {
             }
         } else if (this.props.ffa) {
             return (
-                <GlobalQueue waitingText={this.state.waitingText} statuses={waitingClientStatus} goToHomeMenu={this.goToHomeMenuAndClose} />
+                <GlobalQueue waitingText={this.state.waitingText} playerId={playerId} togglePlayerReady={this.togglePlayerReady} forceStartSec={forceStartSec} statuses={waitingClientStatus} goToHomeMenu={this.goToHomeMenuAndClose} />
             );
         }
         else {

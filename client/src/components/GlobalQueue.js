@@ -4,10 +4,12 @@ import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 import person_red from "../person_red.svg";
 import person from "../person.svg";
+import {ReadyType} from "./config"
+
 
 export default function GlobalQueue(props) {
-    const {statuses, waitingText, goToHomeMenu} = props;
-    console.log(statuses)
+    const {forceStartSec, statuses, waitingText, goToHomeMenu, playerId, togglePlayerReady} = props;
+    console.log("statuses", statuses)
     let numInQueue = Object.keys(statuses).length;
     let peopleIcons = [];
     let img = null;
@@ -28,6 +30,16 @@ export default function GlobalQueue(props) {
         i++;
     }
 
+    let buttonClassName = "ready-up-button";
+    if (playerId in statuses) {
+        buttonClassName = (statuses[playerId]['ready'] === ReadyType.NOT_READY ? "ready-up-button" : "ready-up-button-active");
+    }
+
+    let numWaitingClients = Object.keys(statuses).length;
+    let numReadyClients = Object.keys(statuses).filter(id => {
+        return (statuses[id]['ready'] === ReadyType.READY);
+    }).length;
+
     return (
         <div>
             <div className="center">
@@ -36,9 +48,13 @@ export default function GlobalQueue(props) {
                 <div className="App-text">
                     {waitingText}
                 </div>
+                {(forceStartSec > 0) && <div>Auto-starting in {forceStartSec} seconds...</div>}
                 <div className={"queue-people-icons-container"}>
                     {peopleIcons}
                 </div>
+                <button className={buttonClassName} onClick={togglePlayerReady}>
+                    <div>Force-Start {numReadyClients}/{numWaitingClients}</div>
+                </button>
             </div>
             <div id="back-arrow" onMouseLeave={() => {console.log("hi"); document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
                  onMouseOver={() => {console.log('hover'); document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
