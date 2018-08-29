@@ -74,20 +74,19 @@ function getNewUser(username) {
 app.get('/set_username', function(req, res) {
     let username = req.query.username;
     if (username) { // make sure not empty string
-        let query = {username: username}
-        users.findOne(query, (err, data) => {
+        let query = {username: username};
+        let insert = getNewUser(username);
+        users.updateOne(query, {$setOnInsert: insert}, {upsert: true}, (err, ret) => {
             if (err) {
                 console.log(err);
                 res(err);
-            } else if (data) {
+            } else if (!ret.result.upserted) {
                 res.json({success: false});
                 console.log('Found existing user with name', username);
             } else {
-                let user = getNewUser(username);
-                users.insertOne(user);
-                res.cookie('session', user.session);
-                res.json(Object.assign({success: true}, user));
-                console.log('Created new user with name', username, 'and key', user.session);
+                res.cookie('session', insert.session);
+                res.json(Object.assign({success: true}, insert));
+                console.log('Created new user with name', username, 'and key', insert.session);
             }
         });
     } else {

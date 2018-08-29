@@ -9,6 +9,7 @@ import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
 import GlobalQueue from "./GlobalQueue";
 import sword from "../sword.svg";
+import startsound from "../startsound.wav"
 
 const {SquareType, Costs, UnitType, Action, ReadyType, GameType} = require("./config");
 
@@ -444,6 +445,8 @@ class Game extends Component {
             } else if (data.event === 'update') {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
+                let audio = new Audio(startsound);
+                audio.play();
                 let startingText = 'Starting game...'
                 if (this.props.isTutorial) {
                     startingText = 'Starting tutorial...'
