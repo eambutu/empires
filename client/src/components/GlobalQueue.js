@@ -48,13 +48,15 @@ export default function GlobalQueue(props) {
                 <div className="App-text">
                     {waitingText}
                 </div>
-                {(forceStartSec > 0) && <div>Auto-starting in {forceStartSec} seconds...</div>}
                 <div className={"queue-people-icons-container"}>
                     {peopleIcons}
                 </div>
-                <button className={buttonClassName} onClick={togglePlayerReady}>
-                    <div>Force-Start {numReadyClients}/{numWaitingClients}</div>
-                </button>
+                <div className={"queue-poppers"} style={{visibility: (numInQueue > 1) ? "visible" : "hidden"}}>
+                    <button className={buttonClassName} style={{width: "50%"}}onClick={togglePlayerReady}>
+                        <div>Force-Start {numReadyClients}/{numWaitingClients}</div>
+                    </button>
+                    <div style={{visibility: (forceStartSec > 0) ? "visible" : "hidden"}}>Auto-starting in {forceStartSec} seconds...</div>
+                </div>
             </div>
             <div id="back-arrow" onMouseLeave={() => {console.log("hi"); document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
                  onMouseOver={() => {console.log('hover'); document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
