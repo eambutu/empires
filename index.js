@@ -352,7 +352,7 @@ function onMessage(room, ws) {
         } else if (data.event === 'changeGame') {
             if (room.gameStatus === GameStatus.QUEUING) {
                 room.gameType = data.gameType;
-                broadcastChangeGameType(room);      
+                broadcastChangeGameType(room);
             }
         }
     });
@@ -365,8 +365,8 @@ function tryStartGame(room) {
     let numConnectedClients = connectedClients.length;
     let numReadyClients = readyClients.length;
 
-    if (numReadyClients >= room.minNumPlayers && 
-            numReadyClients === numConnectedClients && 
+    if (numReadyClients >= room.minNumPlayers &&
+            numReadyClients === numConnectedClients &&
                 room.gameStatus === GameStatus.QUEUING) {
         room.clients = readyClients.slice(0, numReadyClients);
         connectedClients = readyClients.slice(numReadyClients, connectedClients.length);
@@ -467,6 +467,7 @@ getPerformOneTurn = targetRoom => {
             broadcastState(room);
             clearTrimmedAndSpawned(room);
             if (gameEnded) {
+                console.log("Game ended at room id", room.id);
                 if (room.type === RoomType.FFA) {
                     calculateNewRatings(room);
                     let usernameList = [];
@@ -488,10 +489,10 @@ getPerformOneTurn = targetRoom => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
                     }
-                });                
+                });
             }
         }
-    };    
+    };
 };
 
 
@@ -635,6 +636,7 @@ function incrementFrameCounter(room) {
 }
 
 function updateMultipliers(usernameList) {
+    console.log("updateMultipliers", usernameList);
     users.updateMany(
         {
             "username": {"$in": usernameList},
@@ -696,13 +698,11 @@ function calculateRankings() {
             }
         }
     ], function (err, data) {
-        console.log("data", data);
         if (err) {
             throw err;
         } else {
             data.get(function (err, result) {
                 result.forEach(entry => {
-                    console.log("entry", entry);
                     let query = {username: entry.rankedUsers.username};
                     let rank = { $set: {ranking: entry.ranking}};
 
