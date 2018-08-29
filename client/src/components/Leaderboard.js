@@ -8,15 +8,15 @@ export default function Leaderboard(props) {
         <tr key={leader.ranking}>
             <td> {leader.ranking + 1} </td>
             <td> {leader.username} </td>
-            <td> {leader.ratingFFA} </td>
+            <td> {Math.round(leader.ratingFFA)} </td>
         </tr>
     ));
 
     return (
         <div>
             <h1 style={{color: "black"}}> Global Leaderboard </h1>
-                <div className={"leader-table-holder"}>
-                    <table cellSpacing={0} className={"leaders"} >
+                <div className={"pop-up-table-holder"}>
+                    <table cellSpacing={0} className={"pop-up-table"} >
                         <tbody>
                         <tr>
                             <td> <b>Rank</b> </td>

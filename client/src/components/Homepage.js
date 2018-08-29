@@ -11,6 +11,10 @@ import redarrow from "../redarrow.svg";
 import redglobe from "../redglobe.svg";
 import globe from "../globe.svg";
 import startsound from "../startsound.wav";
+import redkeyboard from "../redkeyboard.svg"
+import whitekeyboard from "../whitekeyboard.svg"
+import Instructions from "./Instructions";
+
 
 let HomePageOption = {
     HOME_PAGE: "home page",
@@ -163,9 +167,12 @@ class Homepage extends Component {
 
         return (
             <div>
-                <div id={"leaderboard"} className="leaderboard center" style={{display: "none"}}>
+                <div id={"leaderboard"} className="pop-up-board center" style={{display: "none"}}>
                     <Leaderboard hideLeaderboard={this.hideLeaderboard} leaderboard={this.state.leaderboard}/>
                 </div>
+
+                <Instructions hideInstructions={this.hideInstructions}/>
+
 
                 <div className="center">
                     <img onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} src={sword} className="App-logo" alt="logo"/>

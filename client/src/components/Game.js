@@ -5,11 +5,13 @@ import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
+import Instructions from "./Instructions";
 import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
 import GlobalQueue from "./GlobalQueue";
 import sword from "../sword.svg";
 import startsound from "../startsound.wav"
+import redkeyboard from "../redkeyboard.svg";
 
 const {SquareType, Costs, UnitType, Action, ReadyType, GameType} = require("./config");
 
@@ -23,6 +25,8 @@ const MoveKeyMap = {
     a: Action.MOVE_LEFT,
     d: Action.MOVE_RIGHT
 };
+
+let audio = new Audio(startsound);
 
 let backsize = 25;
 let squaresize = 35;
@@ -435,7 +439,6 @@ class Game extends Component {
             } else if (data.event === 'update') {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
-                let audio = new Audio(startsound);
                 audio.play();
                 let startingText = 'Starting game...'
                 if (this.props.isTutorial) {
@@ -509,6 +512,7 @@ class Game extends Component {
                             gameType={this.state.gameType}
                         />
                     </div>
+
                 );
             } else {
                 return <div className="center">
@@ -563,7 +567,7 @@ class Game extends Component {
                             isSpawnDefender={isSpawnDefender}
                             isInSpawningRange={this.isInSpawningRange.bind(this)}
                         />
-
+                        <Instructions />
                         <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                     </div>
                 );
