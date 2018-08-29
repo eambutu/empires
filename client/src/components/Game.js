@@ -422,16 +422,6 @@ class Game extends Component {
                 });
             } else if (data.event === 'setGameType'){
                 this.setState({'gameType' : data.gameType});
-                console.log("setting game type")
-                console.log(data.gameType)
-                if (data.gameType === GameType.DUEL) {
-                    document.getElementById("duelButton").classList.add("active")
-                    document.getElementById("ctfButton").classList.remove("active")
-                }
-                else if (data.gameType === GameType.CTF) {
-                    document.getElementById("ctfButton").classList.add("active")
-                    document.getElementById("duelButton").classList.remove("active")
-                }
             } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,
@@ -585,7 +575,7 @@ class Game extends Component {
         }
         else {
             return (
-                <Lobby gameType={this.state.gameType} changeGameType={this.changeGameType} onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} active={this.state.ready === ReadyType.READY} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby gameType={this.state.gameType} changeGameType={this.changeGameType} onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
             );
         }
     }
