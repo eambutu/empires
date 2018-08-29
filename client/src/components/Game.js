@@ -5,11 +5,13 @@ import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
 import ResourceBoard from "./ResourceBoard";
+import Instructions from "./Instructions";
 import Lobby from "./Lobby";
 import Tutorial from "./Tutorial";
 import GlobalQueue from "./GlobalQueue";
 import sword from "../sword.svg";
 import startsound from "../startsound.wav"
+import redkeyboard from "../redkeyboard.svg";
 
 const {SquareType, Costs, UnitType, Action, ReadyType, GameType} = require("./config");
 
@@ -510,6 +512,7 @@ class Game extends Component {
                             gameType={this.state.gameType}
                         />
                     </div>
+
                 );
             } else {
                 return <div className="center">
@@ -564,7 +567,7 @@ class Game extends Component {
                             isSpawnDefender={isSpawnDefender}
                             isInSpawningRange={this.isInSpawningRange.bind(this)}
                         />
-
+                        <Instructions />
                         <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                     </div>
                 );

@@ -15,8 +15,8 @@ export default function Leaderboard(props) {
     return (
         <div>
             <h1 style={{color: "black"}}> Global Leaderboard </h1>
-                <div className={"leader-table-holder"}>
-                    <table cellSpacing={0} className={"leaders"} >
+                <div className={"pop-up-table-holder"}>
+                    <table cellSpacing={0} className={"pop-up-table"} >
                         <tbody>
                         <tr>
                             <td> <b>Rank</b> </td>

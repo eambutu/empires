@@ -160,7 +160,7 @@ a:hover{
 /** leaderboard stuff **/
 
 
-.leaderboard {
+.pop-up-board {
     width: 400px;
     top: 50%;
     background-color: white;
@@ -169,18 +169,18 @@ a:hover{
     padding-bottom: 15px;
 }
 
-.leaders {
+.pop-up-table {
     color: black;
     width: 250px;
     margin: auto;
 }
 
-.leader-table-holder {
+.pop-up-table-holder {
     overflow-x: scroll;
     height: 400px;
 }
 
-.leaders td{
+.pop-up-table td{
     border: solid 1px black;
     padding: 4px;
 }
@@ -193,4 +193,20 @@ a:hover{
 
 .globe:hover{
     cursor: pointer;
+}
+
+/** instruction stuff **/
+
+.keyboard {
+    background-repeat: no-repeat;
+    height: 50px;
+    width: 50px;
+}
+
+.keyboard:hover{
+    cursor: pointer;
+}
+
+.keyboard-holder {
+    padding: 15px;
 }
