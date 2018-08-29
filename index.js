@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 var getRandomName = require('node-random-name');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
-const {RoomType, ClientStatus, ReadyType, GameType} = require('./config');
+const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
 
 const ts = 1000 / 8;
 const framesPerTurn = 8;
@@ -315,7 +315,9 @@ function onMessage(room, ws) {
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
-                    spawned[ws.playerId] = true;
+                    if (data.move.type === UnitType.ATTACKER) {
+                        spawned[ws.playerId] = true;
+                    }
                 } else if (data.move.action.includes("move")) {
                     if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
