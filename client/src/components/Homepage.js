@@ -199,7 +199,7 @@ class Homepage extends Component {
                 <div className="footer">
                     <div style={{paddingTop:"10px", fontSize:"18px"}}>
                         {/*<marquee style={{width: "180px"}}behavior="scroll" direction="left">*/}
-                        <b>Beta Tournament ends 9/4</b>: $50 Rank 1, $20 Rank 2, $10 Rank 1
+                        <b>Beta Tournament ends 9/4</b>: $50 Rank 1, $20 Rank 2, $10 Rank 3
                         {/*</marquee>*/}
                     </div>
                     {<a href={"mailto:contact@squarecraft.io"}>Contact Us!</a>}
