@@ -492,6 +492,7 @@ getPerformOneTurn = targetRoom => {
                         ws.close();
                     }
                 });
+                endGame(room);
             }
         }
     };
@@ -512,19 +513,23 @@ function runGame(room) {
     );
 }
 
+function endGame(room) {
+    clearInterval(room.gameInterval);
+    room.gameStatus = GameStatus.QUEUING;
+    if (room.waitingClients.length === 0 && room.id in rooms) {
+        delete rooms[room.id];
+        console.log("deleting room with id " + room.id);
+    }
+    else {
+        tryStartGame(room);
+    }
+}
+
 function checkRoomState(room) {
     let clients = room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
 
     if (clients.length === 0) {
-        clearInterval(room.gameInterval);
-        room.gameStatus = GameStatus.QUEUING;
-        if (room.waitingClients.length === 0 && room.id in rooms) {
-            delete rooms[room.id];
-            console.log("deleting room with id " + room.id);
-        }
-        else {
-            tryStartGame(room);
-        }
+        endGame(room);
     }
 }
 
