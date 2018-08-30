@@ -1,6 +1,6 @@
 import React from 'react';
 import '../styles/Lobby.css';
-import sword from "../sword.svg";
+import sword from "../sword.png";
 import {ReadyType, GameType} from "./config"
 import Game from "./Game";
 
