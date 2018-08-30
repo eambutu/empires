@@ -53,11 +53,13 @@ app.use(cookieParser());
 
 app.get('/user_info', (req, res) => {
     let query = {session: req.cookies.session};
+    console.log("userinfo1");
     users.findOne(query, (err, data) => {
         if (err) {
             console.log(err);
             res(err);
         } else if (data) {
+            console.log("userinfo2");
             displayRankings.findOne({username: data.username}, (err, dataTemp) => {
                 console.log(dataTemp);
                 if (err) {
@@ -74,6 +76,7 @@ app.get('/user_info', (req, res) => {
             res.json({success: false});
         }
     });
+    console.log("userinfo3");
 });
 
 function getNewUser(username) {
@@ -111,6 +114,7 @@ app.get('/set_username', function(req, res) {
 
 app.get('/leaderboard', function (req, res) {
     calculateRankings();
+    console.log("start leaderboard");
     displayRankings.aggregate(
         [
             { "$match": { "ranking" : {"$exists" : true}}},
@@ -125,6 +129,7 @@ app.get('/leaderboard', function (req, res) {
             });
         }
     });
+    console.log("end leaderboard");
 });
 
 app.get('/room_list', function (req, res) {
