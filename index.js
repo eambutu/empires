@@ -675,9 +675,12 @@ function calculateRankings() {
         "squareadmin",
         "eambutu",
         "carboxysome",
+        "notcarboxysome",
         "abhi",
         "abhio",
-        "q"
+        "q",
+        "philliptest2",
+        "philliptest"
     ];
 
     displayRankings.aggregate(
