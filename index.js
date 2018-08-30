@@ -87,7 +87,7 @@ function getNewUser(username) {
 
 app.get('/set_username', function(req, res) {
     let username = req.query.username;
-    if (username) { // make sure not empty string
+    if (username && !req.cookies.session) { // make sure not empty string and that session does not already exist
         let query = {username: username};
         let insert = getNewUser(username);
         users.updateOne(query, {$setOnInsert: insert}, {upsert: true}, (err, ret) => {
