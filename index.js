@@ -265,7 +265,7 @@ function onConnect(room, ws, username, session) {
             room.forceStartSec -= 1;
         }
         if (numWaitingClients > 1) {
-            room.forceStartSec = 15;
+            room.forceStartSec = 30;
 
             if (room.forceStartInterval) {
                 clearInterval(room.forceStartInterval);
@@ -493,6 +493,7 @@ getPerformOneTurn = targetRoom => {
             clearTrimmedAndSpawned(room);
 
             if (gameEnded) {
+                clearInterval(room.gameInterval);
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
