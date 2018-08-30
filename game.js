@@ -655,28 +655,38 @@ function ratingQ(rawRating) {
 function calculateNewRatings(room) {
     if (room.type === RoomType.FFA) {
         let ratingQs = {};
+        //Temporary fix for clients that join that are undefined
         room.clients.forEach(client => {
-            console.log("rating", client.rating);
-            ratingQs[client.playerId] = ratingQ(client.rating);
-            console.log("ratingQ", ratingQ(client.rating));
+            if (!isNaN(client.rating)) {
+                console.log("playerId", client.playerId);
+                console.log("rating", client.rating);
+                ratingQs[client.playerId] = ratingQ(client.rating);
+                console.log("ratingQ", ratingQ(client.rating));
+            }
         });
         let expectedPoints = {};
         let actualPoints = {};
         room.clients.forEach(client => {
-            expectedPoints[client.playerId] = 0;
-            actualPoints[client.playerId] = 0;
-            room.clients.forEach(clientTemp => {
-                expectedPoints[client.playerId] += ratingQs[client.playerId] / (ratingQs[client.playerId] + ratingQs[clientTemp.playerId]);
-                if (room.flags[client.playerId] > room.flags[clientTemp.playerId]) {
-                    actualPoints[client.playerId] += 1;
-                } else if (room.flags[client.playerId] === room.flags[clientTemp.playerId]) {
-                    actualPoints[client.playerId] += 0.5;
-                }
-            });
+            if (!isNaN(client.rating)) {
+                expectedPoints[client.playerId] = 0;
+                actualPoints[client.playerId] = 0;
+                room.clients.forEach(clientTemp => {
+                    if (!isNaN(clientTemp.rating)) {
+                        expectedPoints[client.playerId] += ratingQs[client.playerId] / (ratingQs[client.playerId] + ratingQs[clientTemp.playerId]);
+                        if (room.flags[client.playerId] > room.flags[clientTemp.playerId]) {
+                            actualPoints[client.playerId] += 1;
+                        } else if (room.flags[client.playerId] === room.flags[clientTemp.playerId]) {
+                            actualPoints[client.playerId] += 0.5;
+                        }
+                    }
+                });
+            }
         });
         // 32 is a random constant, determines how much the rating changes
         room.clients.forEach(client => {
-            client.rating += 32 * (actualPoints[client.playerId] - expectedPoints[client.playerId]);
+            if (!isNaN(client.rating)) {
+                client.rating += 32 * (actualPoints[client.playerId] - expectedPoints[client.playerId]);
+            }
         });
     }
 }
