@@ -480,10 +480,13 @@ getPerformOneTurn = targetRoom => {
                             users.updateOne(query, newValues, function(err, res) {
                                 if (err) throw err;
                             });
+                            console.log(client.name);
                             usernameList.push(client.name);
                         }
                     });
-                    updateMultipliers(usernameList);
+                    if (usernameList.length > 0) {
+                        updateMultipliers(usernameList);
+                    }
                     updateDisplayRatings();
                     calculateRankings();
                 }
