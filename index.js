@@ -649,9 +649,11 @@ function updateMultipliers(usernameList) {
         },
         { "$inc": { "multiplier": 0.1 } }
     );
+    console.log("end updateMultipliers");
 }
 
 function updateDisplayRatings() {
+    console.log("start updateDisplayRatings");
     users.aggregate(
         [
             { "$project":
@@ -668,9 +670,11 @@ function updateDisplayRatings() {
             })
         }
     );
+    console.log("end updateDisplayRatings");
 }
 
 function calculateRankings() {
+    console.log("start calculateRankings");
     let usernameBlacklist = [
         "squareadmin",
         "eambutu",
@@ -723,4 +727,5 @@ function calculateRankings() {
             })
         }
     });
+    console.log("end calculateRankings");
 }
