@@ -707,14 +707,16 @@ function calculateRankings() {
             throw err;
         } else {
             data.get(function (err, result) {
-                result.forEach(entry => {
-                    let query = {username: entry.rankedUsers.username};
-                    let rank = { $set: {ranking: entry.ranking}};
+                if (result) {
+                    result.forEach(entry => {
+                        let query = {username: entry.rankedUsers.username};
+                        let rank = { $set: {ranking: entry.ranking}};
 
-                    displayRankings.updateOne(query, rank, function(err, res) {
-                        if (err) throw err;
+                        displayRankings.updateOne(query, rank, function(err, res) {
+                            if (err) throw err;
+                        });
                     });
-                });
+                }
             })
         }
     });
