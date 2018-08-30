@@ -463,9 +463,6 @@ getPerformOneTurn = targetRoom => {
         checkRoomState(room);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             let gameEnded = updateState(room);
-            incrementFrameCounter(room);
-            broadcastState(room);
-            clearTrimmedAndSpawned(room);
             if (gameEnded) {
                 console.log("Game ended at room id", room.id);
                 if (room.type === RoomType.FFA) {
@@ -490,6 +487,12 @@ getPerformOneTurn = targetRoom => {
                     updateDisplayRatings();
                     calculateRankings();
                 }
+            }
+            incrementFrameCounter(room);
+            broadcastState(room);
+            clearTrimmedAndSpawned(room);
+
+            if (gameEnded) {
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
