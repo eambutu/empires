@@ -68,11 +68,11 @@ class Instructions extends Component{
                         </tr>
                         <tr>
                             <td> q</td>
-                            <td> Cancel queue</td>
+                            <td> Cancel current unit's queue</td>
                         </tr>
                         <tr>
                             <td> c</td>
-                            <td> Cancel current unit's queue</td>
+                            <td> Cancel all queues</td>
                         </tr>
                         <tr>
                             <td> -</td>
