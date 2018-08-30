@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 var getRandomName = require('node-random-name');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
-const {RoomType, ClientStatus, ReadyType, GameType} = require('./config');
+const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
 
 const ts = 1000 / 8;
 const framesPerTurn = 8;
@@ -46,7 +46,7 @@ function randKey() {
 }
 
 let rooms = {};
-let queueRoomId = null;
+let queueRoomId = 'ffa-' + randString();
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 app.use(cookieParser());
@@ -315,7 +315,9 @@ function onMessage(room, ws) {
                 data.move.playerId = ws.playerId;
                 if (data.move.action === "spawn") {
                     queues[ws.playerId]["spawn"].push(data.move);
-                    spawned[ws.playerId] = true;
+                    if (data.move.type === UnitType.ATTACKER) {
+                        spawned[ws.playerId] = true;
+                    }
                 } else if (data.move.action.includes("move")) {
                     if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
                         queues[ws.playerId][data.move.unitId].push(data.move);
@@ -411,14 +413,12 @@ function verifyWs(ws) {
 
 app.ws('/ffa', (ws, req) => {
     verifyWs(ws).then((username, session) => {
-        if (!queueRoomId) {
-            queueRoomId = 'ffa-' + randString();
-        }
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
-        connectToRoom(room, ws, username, session);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
-            queueRoomId = null;
+            queueRoomId = 'ffa-' + randString();
+            room = initOrGetRoom(queueRoomId, RoomType.FFA);
         }
+        connectToRoom(room, ws, username, session);
     }).catch((session) => { // session not found in database, redirect
         if (ws.readyState === ws.OPEN) {
             ws.close();
@@ -472,14 +472,16 @@ getPerformOneTurn = targetRoom => {
                     calculateNewRatings(room);
                     let usernameList = [];
                     room.clients.forEach(client => {
-                        console.log("new rating", client.rating);
-                        let query = {username: client.name};
-                        let newValues = { $set: {ratingFFA: client.rating}};
+                        if (client.readyState === client.OPEN) {
+                            console.log("new rating", client.rating);
+                            let query = {username: client.name};
+                            let newValues = { $set: {ratingFFA: client.rating}};
 
-                        users.updateOne(query, newValues, function(err, res) {
-                            if (err) throw err;
-                        });
-                        usernameList.push(client.name);
+                            users.updateOne(query, newValues, function(err, res) {
+                                if (err) throw err;
+                            });
+                            usernameList.push(client.name);
+                        }
                     });
                     updateMultipliers(usernameList);
                     updateDisplayRatings();
@@ -490,7 +492,6 @@ getPerformOneTurn = targetRoom => {
                         ws.close();
                     }
                 });
-                endGame(room);
             }
         }
     };
@@ -511,23 +512,19 @@ function runGame(room) {
     );
 }
 
-function endGame(room) {
-    clearInterval(room.gameInterval);
-    room.gameStatus = GameStatus.QUEUING;
-    if (room.waitingClients.length === 0 && room.id in rooms) {
-        delete rooms[room.id];
-        console.log("deleting room with id " + room.id);
-    }
-    else {
-        tryStartGame(room);
-    }
-}
-
 function checkRoomState(room) {
     let clients = room.clients.filter(client => (client.status !== ClientStatus.DISCONNECTED));
 
     if (clients.length === 0) {
-        endGame(room);
+        clearInterval(room.gameInterval);
+        room.gameStatus = GameStatus.QUEUING;
+        if (room.waitingClients.length === 0 && room.id in rooms) {
+            delete rooms[room.id];
+            console.log("deleting room with id " + room.id);
+        }
+        else {
+            tryStartGame(room);
+        }
     }
 }
 

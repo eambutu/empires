@@ -5,7 +5,7 @@ import Game from './Game.js';
 import Leaderboard from "./Leaderboard"
 import '../styles/Homepage.css';
 
-import sword from '../sword.svg';
+import sword from '../sword.png';
 import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 import redglobe from "../redglobe.svg";
