@@ -70,9 +70,10 @@ class Homepage extends Component {
             if (!this.state.username) {
                 let newName = document.getElementById("username").value;
                 if (newName && newName.length < 20) {
-                    fetch('/set_username?username=' + newName, {
-                        method: 'GET',
-                        credentials: 'include'
+                    fetch('/set_username', {
+                        method: 'POST',
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({username: newName})
                     }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
@@ -114,10 +115,11 @@ class Homepage extends Component {
     fetchUserInfo() {
         let session = Cookies.get('session');
         if (session) {
-            fetch('user_info', {
+            fetch('/user_info', {
                 method: 'GET',
                 credentials: 'include'
             }).then(res => res.json()).then(resJson => {
+                console.log(resJson)
                 if (resJson.success) {
                     this.setState({
                         username: resJson.username

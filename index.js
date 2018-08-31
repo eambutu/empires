@@ -5,8 +5,8 @@ const path = require('path');
 const crypto = require('crypto');
 const _ = require('lodash');
 const MongoClient = require('mongodb').MongoClient;
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-var getRandomName = require('node-random-name');
 
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
 const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
@@ -82,6 +82,8 @@ let rooms = {};
 let queueRoomId = 'ffa-' + randString();
 
 app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.get('/user_info', (req, res) => {
@@ -110,8 +112,11 @@ function getNewUser(username) {
     }
 }
 
-app.get('/set_username', function(req, res) {
-    let username = req.query.username;
+app.post('/set_username', function(req, res) {
+    console.log(req.params)
+    console.log(req.body)
+    console.log(req.cookies)
+    let username = req.body.username;
     if (username && !req.cookies.session) { // make sure not empty string and that session does not already exist
         let query = {username: username};
         let insert = getNewUser(username);
@@ -126,6 +131,7 @@ app.get('/set_username', function(req, res) {
                 res.cookie('session', insert.session);
                 res.json(Object.assign({success: true}, insert));
                 console.log('Created new user with name', username, 'and key', insert.session);
+                calculateLeaderboard();
             }
         });
     } else {
