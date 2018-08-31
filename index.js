@@ -514,7 +514,6 @@ getPerformOneTurn = targetRoom => {
             clearTrimmedAndSpawned(room);
 
             if (gameEnded) {
-                clearInterval(room.gameInterval);
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
