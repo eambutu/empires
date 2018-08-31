@@ -243,23 +243,26 @@ function generateMap(roomType, gameType) {
             tempRivers = [];
             while(hasEnclosed) {
                 console.log("If you see this a million times, we're stuck in an infinite loop");
-                let tempRiverMaps = [];
+                let tempOcclusionMap = [];
                 tempRivers = [];
                 for (let i=0; i<riverMaps.length; i++) {
-                    tempRiverMaps[i] = riverMaps[i].slice();
+                    tempOcclusionMap[i] = riverMaps[i].slice();
                 }
+                towers.forEach(([y, x]) => {
+                    tempOcclusionMap[y][x] = true;
+                });
                 for (let i=0; i<rivers.length; i++) {
                     tempRivers[i] = rivers[i].slice();
                 }
                 for (let i=0; i<19; i++) {
                     for (let j=0; j<19; j++) {
                         if (!forbiddenSquaresMap[i][j] && Math.random() < riverProb) {
-                            tempRiverMaps[i][j] = true;
+                            tempOcclusionMap[i][j] = true;
                             tempRivers.push([i, j]);
                         }
                     }
                 }
-                hasEnclosed = isEnclosed(tempRiverMaps);
+                hasEnclosed = isEnclosed(tempOcclusionMap);
             }
         }
     }
