@@ -57,7 +57,7 @@ function calculateLeaderboard() {
     console.log('Updated leaderboard')
 }
 
-MongoClient.connect(mongoUrl, (err, db) => {
+MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
     if (err) throw err;
     console.log('Database created!');
     database = db.db();
@@ -65,21 +65,13 @@ MongoClient.connect(mongoUrl, (err, db) => {
     calculateLeaderboard();
 });
 
-function randString() {
-    return crypto.randomBytes(10).toString('hex').substring(0,7);
-}
 
-function randSecret() {
-    return crypto.randomBytes(10).toString('hex');
+function randString(length) {
+    return crypto.randomBytes(length / 2).toString('hex');
 }
-
-function randKey() {
-    return crypto.randomBytes(50).toString('hex');
-}
-
 
 let rooms = {};
-let queueRoomId = 'ffa-' + randString();
+let queueRoomId = 'ffa-' + randString(8);
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -106,7 +98,7 @@ app.get('/user_info', (req, res) => {
 function getNewUser(username) {
     return {
         username: username,
-        session: randKey(),
+        session: randString(100),
         ratingFFA: 1000,
         multiplier: 0
     }
@@ -212,9 +204,9 @@ function onConnect(room, ws, username) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
-    ws.playerId = randString();
+    ws.playerId = randString(8);
     ws.name = username;
-    ws.secret = randSecret();
+    ws.secret = randString(20);
     ws.ready = ReadyType.NOT_READY;
     console.log(`player ${ws.name} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
@@ -429,7 +421,7 @@ app.ws('/ffa', (ws, req) => {
     verifyWs(ws).then(username => {
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
-            queueRoomId = 'ffa-' + randString();
+            queueRoomId = 'ffa-' + randString(8);
             room = initOrGetRoom(queueRoomId, RoomType.FFA);
         }
         connectToRoom(room, ws, username);
@@ -454,7 +446,7 @@ app.ws('/room/:roomId', (ws, req) => {
 });
 
 app.ws('/tutorial', (ws, req) => {
-    let tutorialRoomId = 'tutorial-' + randString();
+    let tutorialRoomId = 'tutorial-' + randString(8);
     let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
     connectToRoom(room, ws, 'tutorial', 'tutorial-playerId');
 });
