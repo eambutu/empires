@@ -111,7 +111,7 @@ class Homepage extends Component {
         }
     }
 
-    componentDidMount() {
+    fetchUserInfo() {
         let session = Cookies.get('session');
         if (session) {
             fetch('user_info', {
@@ -137,14 +137,27 @@ class Homepage extends Component {
                 }
             });
         }
+    }
 
-        fetch('/leaderboard', {
-            method: 'GET'
-        }).then(res => res.json()).then(resJson => {
+    fetchLeaderboard() {
+        fetch('/leaderboard').then(res => res.json()).then(resJson => {
             this.setState({
                 leaderboard: resJson
             });
         });
+    }
+
+    componentDidMount() {
+        this.fetchUserInfo();
+        this.fetchLeaderboard();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        let pagesNeedRanking = [HomePageOption.HOME_PAGE, HomePageOption.PLAY_PAGE];
+        if (pagesNeedRanking.includes(this.state.page) && prevState.page !== this.state.page) {
+            this.fetchUserInfo();
+            this.fetchLeaderboard();
+        }
     }
 
     render() {

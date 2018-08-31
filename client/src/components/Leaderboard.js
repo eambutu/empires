@@ -3,7 +3,6 @@ import "../styles/Homepage.css"
 
 export default function Leaderboard(props) {
     let {hideLeaderboard, leaderboard} = props;
-    console.log(leaderboard)
     let leaders = leaderboard.map(leader => (
         <tr key={leader.ranking}>
             <td> {leader.ranking} </td>
