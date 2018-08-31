@@ -72,6 +72,7 @@ class Homepage extends Component {
                 if (newName && newName.length < 20) {
                     fetch('/set_username', {
                         method: 'POST',
+                        credentials: 'include',
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({username: newName})
                     }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
