@@ -44,8 +44,11 @@ function calculateLeaderboard() {
     }
     users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1}).toArray((err, result) => {
         result = result.filter(r => !usernameBlacklist.has(r.username));
+        result.forEach(r => {
+            r.ratingFFA *= r.multiplier;
+        });
         result.sort((a, b) => (b.ratingFFA - a.ratingFFA));
-        leaderboard = result.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA * r.multiplier), ranking: index + 1}));
+        leaderboard = result.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA), ranking: index + 1}));
         nameToInfo = {};
         leaderboard.forEach((user, index) => {
             nameToInfo[user.username] = user;
