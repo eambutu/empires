@@ -40,11 +40,11 @@ function calculateLeaderboard() {
     }
     users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1, ignore: 1}).toArray((err, result) => {
         result.forEach(r => {
-            r.ratingFFA *= r.multiplier;
+            r.ratingFFA = Math.round(r.ratingFFA * r.multiplier);
         });
         unignored = result.filter(r => !r.ignore);
         unignored.sort((a, b) => (b.ratingFFA - a.ratingFFA));
-        unignored = unignored.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA), ranking: index + 1}));
+        unignored = unignored.map((r, index) => ({username: r.username, ratingFFA: r.ratingFFA, ranking: index + 1}));
         leaderboard = unignored.slice(0, 100);
         
         nameToInfo = {};
