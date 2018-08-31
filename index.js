@@ -20,51 +20,45 @@ const GameStatus = {
 };
 
 let mongoUrl = 'mongodb://localhost:27017/db';
-let database = null;
 let users = null;
+MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
+    if (err) throw err;
+    console.log('Database created!');
+    let database = db.db();
+    users = database.collection('users');
+    calculateLeaderboard();
+});
+
+
 let leaderboard = null;
 let nameToInfo = null;
 let roomListeners = [];
-
-let usernameBlacklist = new Set([
-    "squareadmin",
-    "eambutu",
-    "carboxysome",
-    "notcarboxysome",
-    "abhi",
-    "abhio",
-    "q",
-    "philliptest2",
-    "philliptest"
-]);
 
 function calculateLeaderboard() {
     if (users === null) {
         return;
     }
-    users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1}).toArray((err, result) => {
-        result = result.filter(r => !usernameBlacklist.has(r.username));
+    users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1, ignore: 1}).toArray((err, result) => {
         result.forEach(r => {
             r.ratingFFA *= r.multiplier;
         });
-        result.sort((a, b) => (b.ratingFFA - a.ratingFFA));
-        leaderboard = result.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA), ranking: index + 1}));
+        unignored = result.filter(r => !r.ignore);
+        unignored.sort((a, b) => (b.ratingFFA - a.ratingFFA));
+        unignored = unignored.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA), ranking: index + 1}));
+        leaderboard = unignored.slice(0, 100);
+        
         nameToInfo = {};
-        leaderboard.forEach((user, index) => {
+        unignored.forEach(user => {
+            nameToInfo[user.username] = user;
+        });
+
+        ignored = result.filter(r => r.ignore);
+        ignored.forEach(user => {
             nameToInfo[user.username] = user;
         });
     });
     console.log('Updated leaderboard')
 }
-
-MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
-    if (err) throw err;
-    console.log('Database created!');
-    database = db.db();
-    users = database.collection('users');
-    calculateLeaderboard();
-});
-
 
 function randString(length) {
     return crypto.randomBytes(length / 2).toString('hex');
@@ -86,7 +80,7 @@ app.get('/user_info', (req, res) => {
             res(err);
         } else if (data) {
             res.json(Object.assign({success: true}, nameToInfo[data.username]));
-            console.log('Found user info', data)
+            console.log('Found user info', nameToInfo[data.username])
         } else {
             res.clearCookie('session');
             res.json({success: false});
@@ -94,6 +88,28 @@ app.get('/user_info', (req, res) => {
         }
     });
 });
+
+function set_ignore(req, res, ignore) {
+    let query = {session: req.cookies.session};
+    users.updateOne(query, {$set: {ignore: ignore}}, (err, ret) => {
+        if (err) {
+            console.log(err);
+            res(err);
+        } else {
+            calculateLeaderboard();
+            res.json({success: true, ignore: ignore})
+            console.log('Set ignore value of', query, 'to be', ignore);
+        }
+    });
+}
+
+app.get('/ignore_username', (req, res) => {
+    set_ignore(req, res, true);
+})
+
+app.get('/unignore_username', (req, res) => {
+    set_ignore(req, res, false);
+})
 
 function getNewUser(username) {
     return {
@@ -104,7 +120,7 @@ function getNewUser(username) {
     }
 }
 
-app.post('/set_username', function(req, res) {
+app.post('/set_username', (req, res) => {
     let username = req.body.username;
     if (username && !req.cookies.session) { // make sure not empty string and that session does not already exist
         let query = {username: username};

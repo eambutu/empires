@@ -32,7 +32,7 @@ class Homepage extends Component {
             leaderboard: [],
             username: undefined,
             rating: 0,
-            ranking: 'noob',
+            ranking: null,
             usernameFocus: false
         };
 
@@ -243,7 +243,7 @@ function HomepageButtons(props) {
                         <div className={"rating-text"} style={{visibility: rating === null ? "hidden": "visible"}} >
                         Rating: {rating} <br/>
                         </div>
-                        <div style={{visibility: ranking === null ? "hidden": "visible", alignItems: "center", justifyContent: "center", display: "flex", fontSize: "20px"}}>
+                        <div style={{alignItems: "center", justifyContent: "center", display: "flex", fontSize: "20px"}}>
                             (Rank: {ranking}) <div id={"globe"} onClick={showLeaderboard} onMouseLeave={onLeaveGlobe} onMouseOver={onHoverGlobe} className={"globe"} style={{backgroundImage: `url(${globe})`}}></div>
                         </div>
                         <form onKeyPress={onEnterKeyPress} action="#">
