@@ -6,9 +6,9 @@ export default function Leaderboard(props) {
     console.log(leaderboard)
     let leaders = leaderboard.map(leader => (
         <tr key={leader.ranking}>
-            <td> {leader.ranking + 1} </td>
+            <td> {leader.ranking} </td>
             <td> {leader.username} </td>
-            <td> {Math.round(leader.ratingFFA)} </td>
+            <td> {leader.ratingFFA} </td>
         </tr>
     ));
 
