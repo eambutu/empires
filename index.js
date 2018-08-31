@@ -527,6 +527,9 @@ getPerformOneTurn = targetRoom => {
 
 function runGame(room) {
     room.gameStatus = GameStatus.IN_PROGRESS;
+    if (room.type === RoomType.FFA && queueRoomId === room.id) {
+        queueRoomId = 'ffa-' + randString(8);
+    }
     room.clients.forEach(client => {
         client.ready = ReadyType.PLAYING;
     });
