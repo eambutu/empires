@@ -24,10 +24,10 @@ let mongoUrl = 'mongodb://localhost:27017/db';
 let users = null;
 MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
     if (err) throw err;
-    console.log('Database created!');
-    let database = db.db();
-    let userCollectionName = process.env.TEST ? 'test_users' : 'users';
-    users = database.collection(userCollectionName);
+    let databaseName = process.env.TEST ? 'test' : 'db';
+    let database = db.db(databaseName);
+    console.log('Created database', databaseName);
+    users = database.collection('users');
     calculateLeaderboard();
 });
 
