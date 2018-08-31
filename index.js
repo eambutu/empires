@@ -13,6 +13,7 @@ const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./confi
 
 const ts = 1000 / 8;
 const framesPerTurn = 8;
+const port = process.env.TEST ? 5555 : 5000;
 
 const GameStatus = {
     QUEUING: "queuing",
@@ -25,7 +26,8 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
     if (err) throw err;
     console.log('Database created!');
     let database = db.db();
-    users = database.collection('users');
+    let userCollectionName = process.env.TEST ? 'test_users' : 'users';
+    users = database.collection(userCollectionName);
     calculateLeaderboard();
 });
 
@@ -46,7 +48,7 @@ function calculateLeaderboard() {
         unignored.sort((a, b) => (b.ratingFFA - a.ratingFFA));
         unignored = unignored.map((r, index) => ({username: r.username, ratingFFA: r.ratingFFA, ranking: index + 1}));
         leaderboard = unignored.slice(0, 100);
-        
+
         nameToInfo = {};
         unignored.forEach(user => {
             nameToInfo[user.username] = user;
@@ -475,8 +477,8 @@ app.ws('/room_list', (ws, req) => {
     });
 });
 
-app.listen(5000, function () {
-    console.log('App listening on port 5000!');
+app.listen(port, () => {
+    console.log('App listening on port', port);
 });
 
 getPerformOneTurn = targetRoom => {
