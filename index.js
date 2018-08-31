@@ -22,15 +22,44 @@ const GameStatus = {
 let mongoUrl = 'mongodb://localhost:27017/db';
 let database = null;
 let users = null;
-let displayRankings = null;
+let leaderboard = null;
+let nameToInfo = null;
 let roomListeners = [];
+
+let usernameBlacklist = new Set([
+    "squareadmin",
+    "eambutu",
+    "carboxysome",
+    "notcarboxysome",
+    "abhi",
+    "abhio",
+    "q",
+    "philliptest2",
+    "philliptest"
+]);
+
+function calculateLeaderboard() {
+    if (users === null) {
+        return;
+    }
+    users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1}).toArray((err, result) => {
+        result = result.filter(r => !usernameBlacklist.has(r.username));
+        result.sort((a, b) => (b.ratingFFA - a.ratingFFA));
+        leaderboard = result.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA * r.multiplier), ranking: index + 1}));
+        nameToInfo = {};
+        leaderboard.forEach((user, index) => {
+            nameToInfo[user.username] = user;
+        });
+    });
+    console.log('Updated leaderboard')
+}
 
 MongoClient.connect(mongoUrl, (err, db) => {
     if (err) throw err;
     console.log('Database created!');
     database = db.db();
     users = database.collection('users');
-    displayRankings = database.collection('displayRankings');
+    calculateLeaderboard();
 });
 
 function randString() {
@@ -45,6 +74,7 @@ function randKey() {
     return crypto.randomBytes(50).toString('hex');
 }
 
+
 let rooms = {};
 let queueRoomId = 'ffa-' + randString();
 
@@ -53,30 +83,19 @@ app.use(cookieParser());
 
 app.get('/user_info', (req, res) => {
     let query = {session: req.cookies.session};
-    console.log("userinfo1");
     users.findOne(query, (err, data) => {
         if (err) {
             console.log(err);
             res(err);
         } else if (data) {
-            console.log("userinfo2");
-            displayRankings.findOne({username: data.username}, (err, dataTemp) => {
-                console.log(dataTemp);
-                if (err) {
-                    console.log(err);
-                    res(err);
-                } else if (dataTemp) {
-                    res.json({success: true, username: dataTemp.username, ratingFFA: Math.round(dataTemp.ratingFFA), ranking: dataTemp.ranking + 1});
-                } else {
-                    res.json({success: true, username: data.username});
-                }
-            });
+            res.json(Object.assign({success: true}, nameToInfo[data.username]));
+            console.log('Found user info', data)
         } else {
             res.clearCookie('session');
             res.json({success: false});
+            console.log('Did not find user info', query, 'clearing cookies');
         }
     });
-    console.log("userinfo3");
 });
 
 function getNewUser(username) {
@@ -113,23 +132,8 @@ app.get('/set_username', function(req, res) {
 });
 
 app.get('/leaderboard', function (req, res) {
-    calculateRankings();
-    console.log("start leaderboard");
-    displayRankings.aggregate(
-        [
-            { "$match": { "ranking" : {"$exists" : true}}},
-            { "$project": { "username": 1, "ranking": 1, "ratingFFA": {"$trunc": "$ratingFFA"}}},
-            { "$sort": { "ranking": 1 } }
-        ], function (err, data) {
-        if (err) {
-            throw err;
-        } else {
-            data.get(function (err, result) {
-                res.send(JSON.stringify(result));
-            });
-        }
-    });
-    console.log("end leaderboard");
+    res.json(leaderboard);
+    console.log('Sent leaderboard');
 });
 
 app.get('/room_list', function (req, res) {
@@ -489,8 +493,7 @@ getPerformOneTurn = targetRoom => {
                     if (usernameList.length > 0) {
                         updateMultipliers(usernameList);
                     }
-                    updateDisplayRatings();
-                    calculateRankings();
+                    calculateLeaderboard();
                 }
             }
             incrementFrameCounter(room);
@@ -659,82 +662,4 @@ function updateMultipliers(usernameList) {
         { "$inc": { "multiplier": 0.1 } }
     );
     console.log("end updateMultipliers");
-}
-
-function updateDisplayRatings() {
-    console.log("start updateDisplayRatings");
-    users.aggregate(
-        [
-            { "$project":
-                    {
-                        "username": 1,
-                        "ratingFFA": { "$multiply": ["$ratingFFA", "$multiplier"]}
-                    }
-            },
-            { "$out": "displayRankings" }
-        ], function (err, cursor) {
-            cursor.toArray(function (err, documents) {
-                // Do nothing, because mongo is a POS
-                // "Expected behavior my ass https://jira.mongodb.org/browse/NODE-1398
-            })
-        }
-    );
-    console.log("end updateDisplayRatings");
-}
-
-function calculateRankings() {
-    console.log("start calculateRankings");
-    let usernameBlacklist = [
-        "squareadmin",
-        "eambutu",
-        "carboxysome",
-        "notcarboxysome",
-        "abhi",
-        "abhio",
-        "q",
-        "philliptest2",
-        "philliptest"
-    ];
-
-    displayRankings.aggregate(
-    [
-        { "$match": { "ratingFFA": {"$gt" : 0}}},
-        { "$match": { "username": {"$nin": usernameBlacklist}}},
-        { "$sort": { "ratingFFA": -1 } },
-        {
-            "$group": {
-                "_id": false,
-                "rankedUsers": {
-                    "$push": {
-                        "username": "$username",
-                        "ratingFFA": "$ratingFFA"
-                    }
-                }
-            }
-        },
-        {
-            "$unwind": {
-                "path": "$rankedUsers",
-                "includeArrayIndex": "ranking"
-            }
-        }
-    ], function (err, data) {
-        if (err) {
-            throw err;
-        } else {
-            data.get(function (err, result) {
-                if (result) {
-                    result.forEach(entry => {
-                        let query = {username: entry.rankedUsers.username};
-                        let rank = { $set: {ranking: entry.ranking}};
-
-                        displayRankings.updateOne(query, rank, function(err, res) {
-                            if (err) throw err;
-                        });
-                    });
-                }
-            })
-        }
-    });
-    console.log("end calculateRankings");
 }
