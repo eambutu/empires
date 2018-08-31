@@ -113,9 +113,6 @@ function getNewUser(username) {
 }
 
 app.post('/set_username', function(req, res) {
-    console.log(req.params)
-    console.log(req.body)
-    console.log(req.cookies)
     let username = req.body.username;
     if (username && !req.cookies.session) { // make sure not empty string and that session does not already exist
         let query = {username: username};
@@ -211,11 +208,10 @@ function makeAllWaitingClientsReady(room) {
     });
 }
 
-function onConnect(room, ws, username, session) {
+function onConnect(room, ws, username) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
-    ws.session = session;
     ws.playerId = randString();
     ws.name = username;
     ws.secret = randSecret();
@@ -406,38 +402,38 @@ function connectToRoom(room, ws, username, session) {
     }
 }
 
+expressWs.getWss().on('connection', (ws, req) => {
+    if (ws.finishConnecting) {
+        ws.finishConnecting(req.cookies.session);
+    }
+});
+
 function verifyWs(ws) {
     return new Promise((resolve, reject) => {
-        ws.on('message', function (msg) {
-            let data = JSON.parse(msg);
-            if (data.event === 'verify' && data.session) {
-                console.log('Verifying ', data.session);
-                let query = {session: data.session};
-                users.findOne(query, (err, data) => {
-                    if (err || !data) {
-                        console.log(err);
-                        reject(query.session);
-                    } else {
-                        console.log('Verify success with username', data.username, 'session', data.session);
-                        resolve(data.username, data.session)
-                    }
-                });
-            } else {
-                reject(null);
-            }
-        });
+        ws.finishConnecting = session => { // promise gets resolved or rejected when finishConnecting gets called by expressWs.getWss().on('connection')
+            console.log('Verifying new ws connection with session', session);
+            users.findOne({session: session}, (err, data) => {
+                if (err || !data) {
+                    console.log(err);
+                    reject(ws.session);
+                } else {
+                    console.log('Verify success with username', data.username, 'session', data.session);
+                    resolve(data.username)
+                }
+            });
+        }
     });
 }
 
 app.ws('/ffa', (ws, req) => {
-    verifyWs(ws).then((username, session) => {
+    verifyWs(ws).then(username => {
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             queueRoomId = 'ffa-' + randString();
             room = initOrGetRoom(queueRoomId, RoomType.FFA);
         }
-        connectToRoom(room, ws, username, session);
-    }).catch((session) => { // session not found in database, redirect
+        connectToRoom(room, ws, username);
+    }).catch(session => { // session not found in database, redirect
         if (ws.readyState === ws.OPEN) {
             ws.close();
         }
@@ -445,11 +441,11 @@ app.ws('/ffa', (ws, req) => {
 });
 
 app.ws('/room/:roomId', (ws, req) => {
-    verifyWs(ws).then((username, session) => {
+    verifyWs(ws).then(username => {
         let roomId = req.params.roomId;
         let room = initOrGetRoom(roomId, RoomType.CUSTOM);
-        connectToRoom(room, ws, username, session);
-    }).catch((session) => { // session not found in database, redirect
+        connectToRoom(room, ws, username);
+    }).catch(session => { // session not found in database, redirect
         ws.send(JSON.stringify({event: 'noSession'}));
         if (ws.readyState === ws.OPEN) {
             ws.close();

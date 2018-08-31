@@ -363,16 +363,6 @@ class Game extends Component {
 
     setUpWebSocket(wsPath) {
         this.ws = new WebSocket(wsPath);
-        let session = Cookies.get('session');
-        if (!this.props.isTutorial) {
-            this.ws.onopen = () => {
-                console.log('WebSocket opened, sending session');
-                this.ws.send(JSON.stringify({
-                    event: 'verify',
-                    session: session
-                }));
-            };
-        }
 
         this.togglePlayerReady = e => {
             this.ws.send(JSON.stringify({'event': 'toggleReady'}));
