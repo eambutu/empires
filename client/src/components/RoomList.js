@@ -7,19 +7,25 @@ const _ = require('lodash');
 class RoomList extends Component {
     constructor(props) {
         super(props);
-        this.state = {data: null};
+        this.state = {
+            data: null,
+            lastFailedName: null
+        };
 
         this.onClickSubmitLobby = () => {
-            window.location = "/room/" + document.getElementById("room_id").value
+            let roomName = document.getElementById('room_id').value;
+            if (['..', '.', ''].includes(roomName) || roomName.includes('/')) {
+                console.log('last failed', roomName);
+                this.setState({lastFailedName: roomName});
+            } else {
+                window.location = "/room/" + roomName;
+            }
         }
 
     }
 
     setUpWebSocket(wsPath) {
         this.ws = new WebSocket(wsPath);
-        this.ws.onopen = () => {
-            console.log('WebSocket opened, sending session');
-        }
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
             console.log(data.event);
@@ -82,6 +88,9 @@ class RoomList extends Component {
                         <div className={"create-lobby"}>
                             <div className={"join-room-text"}>
                                 Create or join a room: <br/><input type="text" id="room_id"/> <br/>
+                            </div>
+                            <div id={"badRoomText"} style={{visibility: this.state.lastFailedName !== null ? "visible" : "hidden", fontSize: "12px", color: "#ff4136"}}>
+                                Cannot create room with name "{this.state.lastFailedName}"
                             </div>
                             <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
                         </div>
