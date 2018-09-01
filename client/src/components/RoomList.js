@@ -2,8 +2,6 @@ import React, {Component} from 'react';
 import '../styles/RoomList.css';
 import sword from "../sword.svg";
 
-const _ = require('lodash');
-
 class RoomList extends Component {
     constructor(props) {
         super(props);
@@ -54,10 +52,7 @@ class RoomList extends Component {
     loadRoomList() {
         this.callBackendAPI()
             .then(res => {
-                let filtered = _.pickBy(res, function(value) {
-                    return (!value['isTutorial']);
-                })
-                this.setState({data: filtered})
+                this.setState({data: res})
             })
             .catch(err => console.log(err));
     }

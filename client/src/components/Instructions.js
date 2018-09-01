@@ -2,8 +2,6 @@ import React, {Component} from "react";
 import redkeyboard from "../redkeyboard.svg";
 import whitekeyboard from "../whitekeyboard.svg";
 
-
-
 class Instructions extends Component{
     constructor(props) {
         super(props);

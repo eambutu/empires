@@ -3,7 +3,6 @@ const app = express();
 const expressWs = require('express-ws')(app);
 const path = require('path');
 const crypto = require('crypto');
-const _ = require('lodash');
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -31,11 +30,8 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
     calculateLeaderboard();
 });
 
-
 let leaderboard = null;
 let nameToInfo = null;
-let roomListeners = [];
-
 function calculateLeaderboard() {
     if (users === null) {
         return;
@@ -58,9 +54,12 @@ function calculateLeaderboard() {
         ignored.forEach(user => {
             nameToInfo[user.username] = user;
         });
+        
+        console.log('Updated leaderboard');
     });
-    console.log('Updated leaderboard')
 }
+
+let roomListeners = [];
 
 function randString(length) {
     return crypto.randomBytes(length / 2).toString('hex');
@@ -153,16 +152,16 @@ app.get('/leaderboard', function (req, res) {
 });
 
 app.get('/room_list', function (req, res) {
-    let tempRooms = _.cloneDeep(rooms);
-    Object.keys(tempRooms).forEach(key => {
-        let numPlayersIn = tempRooms[key]['waitingClients'].length + tempRooms[key]['clients'].length;
-        tempRooms[key] = _.pick(tempRooms[key], ['id', 'type', 'gameStatus', 'maxNumPlayers']);
-        tempRooms[key]['numPlayersIn'] = numPlayersIn;
-    });
-    tempRooms = _.pickBy(tempRooms, function(value) {
-        return (value.type === RoomType.CUSTOM);
-    });
-    res.send(JSON.stringify(tempRooms));
+    let roomList = Object.values(rooms).filter(room => room.type === RoomType.CUSTOM)
+        .map(room => {
+            return {
+                id: room.id,
+                gameStatus: room.gameStatus,
+                maxNumPlayers: room.maxNumPlayers,
+                numPlayersIn: room.waitingClients.length + room.clients.length
+            };
+        });
+    res.json(roomList);
 });
 
 app.get(['/room', '/room/:roomId'], function (req, res) {
