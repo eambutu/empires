@@ -1,0 +1,9 @@
+{
+  "env": {
+    "production": {
+      "plugins": ["transform-remove-console"]
+    }
+  },
+  "presets": ["@babel/preset-react", "@babel/preset-env"],
+  "plugins": ["@babel/plugin-proposal-class-properties"]
+}

@@ -3,7 +3,6 @@ const app = express();
 const expressWs = require('express-ws')(app);
 const path = require('path');
 const crypto = require('crypto');
-const _ = require('lodash');
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -11,8 +10,10 @@ const cookieParser = require('cookie-parser');
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
 const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
 
-const ts = 1000 / 8;
+const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
+const gameDelayInterval = 3000;
+const port = process.env.TEST ? 5555 : 5000;
 
 const GameStatus = {
     QUEUING: "queuing",
@@ -20,51 +21,46 @@ const GameStatus = {
 };
 
 let mongoUrl = 'mongodb://localhost:27017/db';
-let database = null;
 let users = null;
-let leaderboard = null;
-let nameToInfo = null;
-let roomListeners = [];
-
-let usernameBlacklist = new Set([
-    "squareadmin",
-    "eambutu",
-    "carboxysome",
-    "notcarboxysome",
-    "abhi",
-    "abhio",
-    "q",
-    "philliptest2",
-    "philliptest"
-]);
-
-function calculateLeaderboard() {
-    if (users === null) {
-        return;
-    }
-    users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1}).toArray((err, result) => {
-        result = result.filter(r => !usernameBlacklist.has(r.username));
-        result.forEach(r => {
-            r.ratingFFA *= r.multiplier;
-        });
-        result.sort((a, b) => (b.ratingFFA - a.ratingFFA));
-        leaderboard = result.map((r, index) => ({username: r.username, ratingFFA: Math.round(r.ratingFFA), ranking: index + 1}));
-        nameToInfo = {};
-        leaderboard.forEach((user, index) => {
-            nameToInfo[user.username] = user;
-        });
-    });
-    console.log('Updated leaderboard')
-}
-
 MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
     if (err) throw err;
-    console.log('Database created!');
-    database = db.db();
+    let databaseName = process.env.TEST ? 'test' : 'db';
+    let database = db.db(databaseName);
+    console.log('Created database', databaseName);
     users = database.collection('users');
     calculateLeaderboard();
 });
 
+let leaderboard = null;
+let nameToInfo = null;
+function calculateLeaderboard() {
+    if (users === null) {
+        return;
+    }
+    users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1, ignore: 1}).toArray((err, result) => {
+        result.forEach(r => {
+            r.ratingFFA = Math.round(r.ratingFFA * r.multiplier);
+        });
+        unignored = result.filter(r => !r.ignore);
+        unignored.sort((a, b) => (b.ratingFFA - a.ratingFFA));
+        unignored = unignored.map((r, index) => ({username: r.username, ratingFFA: r.ratingFFA, ranking: index + 1}));
+        leaderboard = unignored.slice(0, 100);
+
+        nameToInfo = {};
+        unignored.forEach(user => {
+            nameToInfo[user.username] = user;
+        });
+
+        ignored = result.filter(r => r.ignore);
+        ignored.forEach(user => {
+            nameToInfo[user.username] = user;
+        });
+        
+        console.log('Updated leaderboard');
+    });
+}
+
+let roomListeners = [];
 
 function randString(length) {
     return crypto.randomBytes(length / 2).toString('hex');
@@ -86,7 +82,7 @@ app.get('/user_info', (req, res) => {
             res(err);
         } else if (data) {
             res.json(Object.assign({success: true}, nameToInfo[data.username]));
-            console.log('Found user info', data)
+            console.log('Found user info', nameToInfo[data.username])
         } else {
             res.clearCookie('session');
             res.json({success: false});
@@ -94,6 +90,28 @@ app.get('/user_info', (req, res) => {
         }
     });
 });
+
+function set_ignore(req, res, ignore) {
+    let query = {session: req.cookies.session};
+    users.updateOne(query, {$set: {ignore: ignore}}, (err, ret) => {
+        if (err) {
+            console.log(err);
+            res(err);
+        } else {
+            calculateLeaderboard();
+            res.json({success: true, ignore: ignore})
+            console.log('Set ignore value of', query, 'to be', ignore);
+        }
+    });
+}
+
+app.get('/ignore_username', (req, res) => {
+    set_ignore(req, res, true);
+})
+
+app.get('/unignore_username', (req, res) => {
+    set_ignore(req, res, false);
+})
 
 function getNewUser(username) {
     return {
@@ -104,7 +122,7 @@ function getNewUser(username) {
     }
 }
 
-app.post('/set_username', function(req, res) {
+app.post('/set_username', (req, res) => {
     let username = req.body.username;
     if (username && !req.cookies.session) { // make sure not empty string and that session does not already exist
         let query = {username: username};
@@ -135,16 +153,16 @@ app.get('/leaderboard', function (req, res) {
 });
 
 app.get('/room_list', function (req, res) {
-    let tempRooms = _.cloneDeep(rooms);
-    Object.keys(tempRooms).forEach(key => {
-        let numPlayersIn = tempRooms[key]['waitingClients'].length + tempRooms[key]['clients'].length;
-        tempRooms[key] = _.pick(tempRooms[key], ['id', 'type', 'gameStatus', 'maxNumPlayers']);
-        tempRooms[key]['numPlayersIn'] = numPlayersIn;
-    });
-    tempRooms = _.pickBy(tempRooms, function(value) {
-        return (value.type === RoomType.CUSTOM);
-    });
-    res.send(JSON.stringify(tempRooms));
+    let roomList = Object.values(rooms).filter(room => room.type === RoomType.CUSTOM)
+        .map(room => {
+            return {
+                id: room.id,
+                gameStatus: room.gameStatus,
+                maxNumPlayers: room.maxNumPlayers,
+                numPlayersIn: room.waitingClients.length + room.clients.length
+            };
+        });
+    res.json(roomList);
 });
 
 app.get(['/room', '/room/:roomId'], function (req, res) {
@@ -200,15 +218,15 @@ function makeAllWaitingClientsReady(room) {
     });
 }
 
-function onConnect(room, ws, username) {
+function onConnect(room, ws, user) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
     ws.playerId = randString(8);
-    ws.name = username;
+    ws.user = user;
     ws.secret = randString(20);
     ws.ready = ReadyType.NOT_READY;
-    console.log(`player ${ws.name} connected to ${room.id} with status ${room.gameStatus}`);
+    console.log(`player ${ws.user.username} connected to ${room.id} with status ${room.gameStatus}`);
     ws.send(JSON.stringify({
         event: 'connected',
         playerId: ws.playerId,
@@ -216,19 +234,6 @@ function onConnect(room, ws, username) {
         gameType: room.gameType
     }));
     onMessage(room, ws);
-
-    users.findOne({username: username}, (err, data) => {
-        if (err) {
-            console.log(err);
-            res(err);
-        } else if (data) {
-            console.log("found data ", data);
-            ws.rating = data.ratingFFA;
-        } else {
-            console.log("no data found");
-            ws.rating = 0;
-        }
-    });
 
     // ping pong for client status
     ws.on('pong', () => {
@@ -295,7 +300,6 @@ function onConnect(room, ws, username) {
 
 function onClose(room, ws) {
     ws.on('close', () => {
-        room.clients = room.clients.filter(client => (client !== ws));
         room.waitingClients = room.waitingClients.filter(client => (client !== ws));
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
@@ -383,13 +387,20 @@ function tryStartGame(room) {
     room.waitingClients = connectedClients;
 }
 
-function connectToRoom(room, ws, username, session) {
-    if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
+function connectToRoom(room, ws, user) {
+    let duplicatePlayer = false;
+    room.waitingClients.forEach(client => {
+        duplicatePlayer = duplicatePlayer || (client.user.session === user.session);
+    });
+    if (duplicatePlayer) {
+        console.log('Prevented', user, 'from connecting to room', room.id, 'twice');
+        ws.close();
+    } else if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
         room.waitingClients.push(ws);
-        onConnect(room, ws, username, session);
+        onConnect(room, ws, user);
         onClose(room, ws);
     }
 }
@@ -400,7 +411,7 @@ expressWs.getWss().on('connection', (ws, req) => {
     }
 });
 
-function verifyWs(ws) {
+function verifyUser(ws) {
     return new Promise((resolve, reject) => {
         ws.finishConnecting = session => { // promise gets resolved or rejected when finishConnecting gets called by expressWs.getWss().on('connection')
             console.log('Verifying new ws connection with session', session);
@@ -410,7 +421,7 @@ function verifyWs(ws) {
                     reject(session);
                 } else {
                     console.log('Verify success with username', data.username, 'session', data.session);
-                    resolve(data.username)
+                    resolve(data)
                 }
             });
         }
@@ -418,13 +429,13 @@ function verifyWs(ws) {
 }
 
 app.ws('/ffa', (ws, req) => {
-    verifyWs(ws).then(username => {
+    verifyUser(ws).then(user => {
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             queueRoomId = 'ffa-' + randString(8);
             room = initOrGetRoom(queueRoomId, RoomType.FFA);
         }
-        connectToRoom(room, ws, username);
+        connectToRoom(room, ws, user);
     }).catch(session => { // session not found in database, redirect
         if (ws.readyState === ws.OPEN) {
             ws.close();
@@ -433,10 +444,10 @@ app.ws('/ffa', (ws, req) => {
 });
 
 app.ws('/room/:roomId', (ws, req) => {
-    verifyWs(ws).then(username => {
+    verifyUser(ws).then(user => {
         let roomId = req.params.roomId;
         let room = initOrGetRoom(roomId, RoomType.CUSTOM);
-        connectToRoom(room, ws, username);
+        connectToRoom(room, ws, user);
     }).catch(session => { // session not found in database, redirect
         ws.send(JSON.stringify({event: 'noSession'}));
         if (ws.readyState === ws.OPEN) {
@@ -448,19 +459,18 @@ app.ws('/room/:roomId', (ws, req) => {
 app.ws('/tutorial', (ws, req) => {
     let tutorialRoomId = 'tutorial-' + randString(8);
     let room = initOrGetRoom(tutorialRoomId, RoomType.TUTORIAL);
-    connectToRoom(room, ws, 'tutorial', 'tutorial-playerId');
+    connectToRoom(room, ws, {username: 'tutorial'});
 });
 
 app.ws('/room_list', (ws, req) => {
     roomListeners.push(ws);
     ws.on('close', () => {
         roomListeners = roomListeners.filter(client => (client !== ws));
-
     });
 });
 
-app.listen(5000, function () {
-    console.log('App listening on port 5000!');
+app.listen(port, () => {
+    console.log('App listening on port', port);
 });
 
 getPerformOneTurn = targetRoom => {
@@ -475,21 +485,16 @@ getPerformOneTurn = targetRoom => {
                     calculateNewRatings(room);
                     let usernameList = [];
                     room.clients.forEach(client => {
-                        if (client.readyState === client.OPEN) {
-                            console.log("new rating", client.rating);
-                            let query = {username: client.name};
-                            let newValues = { $set: {ratingFFA: client.rating}};
+                        let query = {username: client.user.username};
+                        let newValues = { $set: {
+                            ratingFFA: client.user.ratingFFA,
+                            multiplier: Math.min(client.user.multiplier + 0.1, 1.0)
+                        }};
 
-                            users.updateOne(query, newValues, function(err, res) {
-                                if (err) throw err;
-                            });
-                            console.log(client.name);
-                            usernameList.push(client.name);
-                        }
+                        users.updateOne(query, newValues, function(err, res) {
+                            if (err) throw err;
+                        });
                     });
-                    if (usernameList.length > 0) {
-                        updateMultipliers(usernameList);
-                    }
                     calculateLeaderboard();
                 }
             }
@@ -498,7 +503,6 @@ getPerformOneTurn = targetRoom => {
             clearTrimmedAndSpawned(room);
 
             if (gameEnded) {
-                clearInterval(room.gameInterval);
                 room.clients.forEach(ws => {
                     if (ws.status !== ClientStatus.DISCONNECTED) {
                         ws.close();
@@ -512,16 +516,21 @@ getPerformOneTurn = targetRoom => {
 
 function runGame(room) {
     room.gameStatus = GameStatus.IN_PROGRESS;
+    if (room.type === RoomType.FFA && queueRoomId === room.id) {
+        queueRoomId = 'ffa-' + randString(8);
+    }
     room.clients.forEach(client => {
         client.ready = ReadyType.PLAYING;
     });
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
-    room.gameInterval = setInterval(
-        getPerformOneTurn(room),
-        ts
-    );
+    setTimeout(() => { // delay start of game by gameDelayInterval
+        room.gameInterval = setInterval(
+            getPerformOneTurn(room),
+            gameTickInterval
+        )
+    }, gameDelayInterval);
 }
 
 function checkRoomState(room) {
@@ -545,7 +554,7 @@ function getWaitingClientStatus(room) {
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             waitingClientStatus[ws.playerId] = {
-                'name': ws.name,
+                'name': ws.user.username,
                 'ready': ws.ready
             }
         }
@@ -553,7 +562,7 @@ function getWaitingClientStatus(room) {
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             waitingClientStatus[ws.playerId] = {
-                'name': ws.name,
+                'name': ws.user.username,
                 'ready': ReadyType.PLAYING
             }
         }
@@ -647,16 +656,4 @@ function broadcastState(room) {
 
 function incrementFrameCounter(room) {
     room.frameCounter = (room.frameCounter + 1) % framesPerTurn;
-}
-
-function updateMultipliers(usernameList) {
-    console.log("updateMultipliers", usernameList);
-    users.updateMany(
-        {
-            "username": {"$in": usernameList},
-            "multiplier": {"$lt": 0.99}  // MongoDB has some weird rounding errors sometimes
-        },
-        { "$inc": { "multiplier": 0.1 } }
-    );
-    console.log("end updateMultipliers");
 }

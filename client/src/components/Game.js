@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import * as Cookies from 'js-cookie';
 import '../styles/Game.css';
 import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";

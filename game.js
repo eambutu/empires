@@ -104,7 +104,6 @@ function initState(room) {
     }
 
     let genMap = generateMap(roomType, gameType);
-    console.log("here");
 
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
@@ -144,11 +143,8 @@ function initState(room) {
         });
     });
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
-        if (gameType !== GameType.DUEL) {
-            squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 0});
-        } else {
-            squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: 5});
-        }
+        let baseHP = (gameType === GameType.DUEL) ? 5 : 0;
+        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: baseHP});
     });
     genMap.towers.forEach(([y, x]) => {
         squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.TOWER});
@@ -273,13 +269,13 @@ function getPlayerStatus(room) {
     if (room.gameWonStatus) {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
-                playerStatus[client.playerId] = {'name': client.name, 'status': room.gameWonStatus[client.playerId]};
+                playerStatus[client.playerId] = {'name': client.user.username, 'status': room.gameWonStatus[client.playerId]};
             }
         });
     } else {
         room.clients.forEach(client => {
             if (client.readyState === 1) {
-                playerStatus[client.playerId] = {'name': client.name, 'status': client.status};
+                playerStatus[client.playerId] = {'name': client.user.username, 'status': client.status};
             }
         });
     }
@@ -700,38 +696,26 @@ function ratingQ(rawRating) {
 function calculateNewRatings(room) {
     if (room.type === RoomType.FFA) {
         let ratingQs = {};
-        //Temporary fix for clients that join that are undefined
         room.clients.forEach(client => {
-            if (!isNaN(client.rating)) {
-                console.log("playerId", client.playerId);
-                console.log("rating", client.rating);
-                ratingQs[client.playerId] = ratingQ(client.rating);
-                console.log("ratingQ", ratingQ(client.rating));
-            }
+            ratingQs[client.playerId] = ratingQ(client.user.ratingFFA);
         });
         let expectedPoints = {};
         let actualPoints = {};
         room.clients.forEach(client => {
-            if (!isNaN(client.rating)) {
-                expectedPoints[client.playerId] = 0;
-                actualPoints[client.playerId] = 0;
-                room.clients.forEach(clientTemp => {
-                    if (!isNaN(clientTemp.rating)) {
-                        expectedPoints[client.playerId] += ratingQs[client.playerId] / (ratingQs[client.playerId] + ratingQs[clientTemp.playerId]);
-                        if (room.flags[client.playerId] > room.flags[clientTemp.playerId]) {
-                            actualPoints[client.playerId] += 1;
-                        } else if (room.flags[client.playerId] === room.flags[clientTemp.playerId]) {
-                            actualPoints[client.playerId] += 0.5;
-                        }
-                    }
-                });
-            }
+            expectedPoints[client.playerId] = 0;
+            actualPoints[client.playerId] = 0;
+            room.clients.forEach(clientTemp => {
+                expectedPoints[client.playerId] += ratingQs[client.playerId] / (ratingQs[client.playerId] + ratingQs[clientTemp.playerId]);
+                if (room.flags[client.playerId] > room.flags[clientTemp.playerId]) {
+                    actualPoints[client.playerId] += 1;
+                } else if (room.flags[client.playerId] === room.flags[clientTemp.playerId]) {
+                    actualPoints[client.playerId] += 0.5;
+                }
+            });
         });
         // 32 is a random constant, determines how much the rating changes
         room.clients.forEach(client => {
-            if (!isNaN(client.rating)) {
-                client.rating += 32 * (actualPoints[client.playerId] - expectedPoints[client.playerId]);
-            }
+            client.user.ratingFFA += 32 * (actualPoints[client.playerId] - expectedPoints[client.playerId]);
         });
     }
 }
