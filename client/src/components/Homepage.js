@@ -3,6 +3,7 @@ import * as Cookies from 'js-cookie';
 
 import Game from './Game.js';
 import Leaderboard from "./Leaderboard"
+import Instructions from "./Instructions";
 import '../styles/Homepage.css';
 
 import sword from '../sword.png';
@@ -13,7 +14,6 @@ import globe from "../globe.svg";
 import startsound from "../startsound.wav";
 import redkeyboard from "../redkeyboard.svg"
 import whitekeyboard from "../whitekeyboard.svg"
-import Instructions from "./Instructions";
 
 
 let HomePageOption = {
