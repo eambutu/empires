@@ -34,6 +34,16 @@ class SquareState {
         return this.units.length > 0 ? this.units[0] : null;
     }
 
+    peekUnitById(id) {
+        for (let idx = 0; idx < this.units.length; idx++) {
+            if (this.units[idx].id === id) {
+                let temp = this.units[idx];
+                return temp;
+            }
+        }
+        return null;
+    }
+
     popUnitById(id) {
         for (let idx = 0; idx < this.units.length; idx++) {
             if (this.units[idx].id === id) {
@@ -421,9 +431,41 @@ function fetchMoves(room) {
     return moves;
 }
 
+function isCrossingMoves(room, move1, move2) {
+    // Also has a check for if the playerId of the move is correct, so that things dont get subtracted if invalid
+    let [sY1, sX1] = move1.source;
+    let [tY1, tX1] = move1.target;
+    let [sY2, sX2] = move2.source;
+    let [tY2, tX2] = move2.target;
+    let unit1 = room.squareStates[sY1][sX1].peekUnitById(move1.unitId);
+    let unit2 = room.squareStates[sY2][sX2].peekUnitById(move2.unitId);
+    return (sY1 === tY2 && sX1 === tX2 && tY1 === sY2 && tX1 === sX2 && unit1.playerId === move1.playerId && unit2.playerId === move2.playerId);
+}
+
+function getCountMove(room, move) {
+    let [sY, sX] = move.source;
+    let unit = room.squareStates[sY][sX].peekUnitById(move.unitId);
+    return unit.count;
+}
+
 function addMoves(room, moves) {
+    // First, handle the collisions
+    let countArray = [];
+    moves.forEach((move, idx) => {
+        countArray[idx] = getCountMove(room, move);
+    });
+    moves.forEach((move1, idx1) => {
+        for (let idx2 = idx1 + 1; idx2 < moves.length; idx2++) {
+            let move2 = moves[idx2];
+            if (isCrossingMoves(room, move1, move2)) {
+                let minCount = Math.min(getCountMove(room, move1), getCountMove(room, move2));
+                countArray[idx1] = getCountMove(room, move1) - minCount;
+                countArray[idx2] = getCountMove(room, move2) - minCount;
+            }
+        }
+    });
     // update the units arrays with move
-    moves.forEach(move => {
+    moves.forEach((move, idx) => {
         let {unitId, playerId, target} = move;
         let [sY, sX] = move.source;
         let [tY, tX] = target;
@@ -434,7 +476,10 @@ function addMoves(room, moves) {
                 if (unit.playerId !== playerId) {
                     room.squareStates[sY][sX].units.push(unit);
                 } else {
-                    room.squareStates[tY][tX].units.push(unit);
+                    if (countArray[idx] > 0) {
+                        unit.count = countArray[idx];
+                        room.squareStates[tY][tX].units.push(unit);
+                    }
                 }
             }
         }
