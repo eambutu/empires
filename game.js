@@ -473,8 +473,16 @@ function addMoves(room, moves) {
                     room.squareStates[sY][sX].units.push(unit);
                 } else {
                     if (countArray[idx] > 0) {
-                        unit.count = countArray[idx];
-                        room.squareStates[tY][tX].units.push(unit);
+                        if (countArray[idx] > 1 && move.split) {
+                            unit.count = countArray[idx] - 1;
+                            room.squareStates[tY][tX].units.push(unit);
+                            let unitId = Math.floor(10000000*Math.random()).toString();
+                            room.squareStates[sY][sX].units.push(new Unit(unitId, playerId, UnitType.ATTACKER, 1));
+                            room.queues[playerId][unitId] = [];
+                        } else {
+                            unit.count = countArray[idx];
+                            room.squareStates[tY][tX].units.push(unit);
+                        }
                     }
                 }
             }

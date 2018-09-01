@@ -84,7 +84,8 @@ class Game extends Component {
             playerStatus: {},
             waitingClientStatus: {},
             gameType: null,
-            forceStartSec: null
+            forceStartSec: null,
+            isSplit: false
         };
     }
 
@@ -260,7 +261,8 @@ class Game extends Component {
                         action: action,
                         source: [cursorY, cursorX],
                         target: target,
-                        unitId: unitId
+                        unitId: unitId,
+                        split: this.state.isSplit
                     };
                     this.setState({cursor: [targetY, targetX, unitId]});
                     this.updateUnitIdQueue(unitId);
@@ -296,9 +298,15 @@ class Game extends Component {
                     action: "cancelPlayerQueues"
                 };
                 this.sendMove(move);
-            }
-            else if (e.key === "Control" || e.key === "Meta") {
+            } else if (e.key === "Control" || e.key === "Meta") {
                 this.setState({isSpawnDefender: true});
+            }
+
+            // Pressing "r" turns on split mode, any other key cancels split mode
+            if (e.key === "r") {
+                this.setState({isSplit: true});
+            } else {
+                this.setState({isSplit: false});
             }
         };
 
