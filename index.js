@@ -387,7 +387,14 @@ function tryStartGame(room) {
 }
 
 function connectToRoom(room, ws, user) {
-    if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
+    let duplicatePlayer = false;
+    room.waitingClients.forEach(client => {
+        duplicatePlayer = duplicatePlayer || (client.user.session === user.session);
+    });
+    if (duplicatePlayer) {
+        console.log('Prevented', user, 'from connecting to room', room.id, 'twice');
+        ws.close();
+    } else if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
