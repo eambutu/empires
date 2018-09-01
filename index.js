@@ -10,8 +10,9 @@ const cookieParser = require('cookie-parser');
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
 const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
 
-const ts = 1000 / 8;
+const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
+const gameDelayInterval = 3000;
 const port = process.env.TEST ? 5555 : 5000;
 
 const GameStatus = {
@@ -465,7 +466,6 @@ app.ws('/room_list', (ws, req) => {
     roomListeners.push(ws);
     ws.on('close', () => {
         roomListeners = roomListeners.filter(client => (client !== ws));
-
     });
 });
 
@@ -525,10 +525,12 @@ function runGame(room) {
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
-    room.gameInterval = setInterval(
-        getPerformOneTurn(room),
-        ts
-    );
+    setTimeout(() => { // delay start of game by gameDelayInterval
+        room.gameInterval = setInterval(
+            getPerformOneTurn(room),
+            gameTickInterval
+        )
+    }, gameDelayInterval);
 }
 
 function checkRoomState(room) {
