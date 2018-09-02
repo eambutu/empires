@@ -16,7 +16,7 @@ export default function GlobalQueue(props) {
         let img = (index < numInQueue) ? person_red : person;
         return <div key={index} className="queue-people-icons" style={{backgroundImage: `url(${img}`}}></div>
     });
-    console.log(peopleIcons);
+
     let buttonClassName = "ready-up-button";
     if (playerId in statuses) {
         buttonClassName = (statuses[playerId]['ready'] === ReadyType.NOT_READY) ? "ready-up-button" : "ready-up-button-active";

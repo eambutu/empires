@@ -51,7 +51,6 @@ export default function Lobby(props) {
             </tr>
         )
     });
-    console.log(statuses)
 
     let gametypeButtons = (
         <div>
@@ -65,7 +64,7 @@ export default function Lobby(props) {
         case LobbyState.CONNECTED:
             switch (roomType) {
                 case RoomType.CUSTOM:
-                    waitingText = 'Connected! Waiting for other players to ready up.';
+                    waitingText = 'Connected! Waiting for players to ready up.';
                     break;
                 case RoomType.TUTORIAL:
                     waitingText = 'Connected! Welcome to the tutorial';
@@ -99,22 +98,23 @@ export default function Lobby(props) {
                 <img onClick={() => {window.location.replace('/')}} src={sword} className="App-logo" alt="logo"/>
                 <div style={{cursor:"pointer"}} className="title">{roomName}</div>
             </div>
-            <div style={{marginBottom:"15px"}}> Game Type: <br/>
-                <div className={"custom-game-buttons"}>
-                    {gametypeButtons}
+            {[LobbyState.FULL, LobbyState.NO_SESSION].includes(lobbyState) ? undefined :
+                <div style={{marginBottom:"15px"}}> Game Type: <br/>
+                    <div className={"custom-game-buttons"}>
+                        {gametypeButtons}
+                    </div>
+                    <div id={"gamedescription"} style={{fontSize: "15px", visibility:"hidden"}}>
+                        Duel: Take over your opponent's base to win.
+                    </div>
                 </div>
-                <div id={"gamedescription"} style={{fontSize: "15px", visibility:"hidden"}}>
-                    Duel: Take over your opponent's base to win.
-                </div>
-
-            </div>
-                {waitingText}
-                <br/>
-                <table className={"lobby-player-table"}>
-                    <tbody>
-                        {playerRows.concat(otherRows)}
-                    </tbody>
-                </table>
+            }
+            {waitingText}
+            <br/>
+            <table className={"lobby-player-table"}>
+                <tbody>
+                    {playerRows.concat(otherRows)}
+                </tbody>
+            </table>
         </div>
     );
 }

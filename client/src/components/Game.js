@@ -81,7 +81,7 @@ class Game extends Component {
             playerStatus: {},
             
             lobbyState: null,
-            waitingClientStatus: {},
+            allClientStatus: {},
             gameType: null,
             forceStartSec: null,
             isSplit: false
@@ -461,8 +461,8 @@ class Game extends Component {
                     lobbyState: LobbyState.CONNECTED,
                     gameType: data.defaultGameType
                 });
-            } else if (data.event === 'setWaitingClientStatus') {
-                this.setState({waitingClientStatus: data.waitingClientStatus});
+            } else if (data.event === 'setAllClientStatus') {
+                this.setState({allClientStatus: data.allClientStatus});
             } else if (data.event === 'setGameType'){
                 this.setState({gameType: data.gameType});
             } else if (data.event === 'init') {
@@ -479,7 +479,7 @@ class Game extends Component {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
                 audio.play();
-                this.setState({lobbyState: LobbyState.STARTING})
+                this.setState({lobbyState: LobbyState.STARTING});
             } else if (data.event === 'full') {
                 this.setState({lobbyState: LobbyState.FULL});
                 setInterval(() => window.location.replace('/room'), 5000);
@@ -514,7 +514,7 @@ class Game extends Component {
     }
 
     render() {
-        let {forceStartSec, waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, lobbyState} = this.state;
+        let {forceStartSec, allClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, lobbyState} = this.state;
         if (this.props.roomType === RoomType.TUTORIAL) {
             if (squares) {
                 return (
@@ -608,7 +608,7 @@ class Game extends Component {
                     playerId={playerId}
                     togglePlayerReady={this.togglePlayerReady}
                     forceStartSec={forceStartSec}
-                    statuses={waitingClientStatus}
+                    statuses={allClientStatus}
                     goToHomeMenu={this.goToHomeMenuAndClose} />
             );
         }
@@ -624,7 +624,7 @@ class Game extends Component {
                     onMouseAwayCTF={this.onMouseAwayCTF}
                     onMouseOverCTF={this.onMouseOverCTF}
                     playerId={playerId}
-                    statuses={waitingClientStatus}
+                    statuses={allClientStatus}
                     togglePlayerReady={this.togglePlayerReady}
                     playerIds={playerIds}
                     playerStatus={playerStatus} />

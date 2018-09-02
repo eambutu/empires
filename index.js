@@ -259,7 +259,7 @@ function onConnect(room, ws, user) {
         }
     }, 1000);
 
-    broadcastWaitingClientStatus(room);
+    broadcastAllClientStatus(room);
     broadcastRoomList();
 
     if (room.type === RoomType.FFA) {
@@ -301,7 +301,7 @@ function onClose(room, ws) {
         room.waitingClients = room.waitingClients.filter(client => (client !== ws));
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
-        broadcastWaitingClientStatus(room);
+        broadcastAllClientStatus(room);
         broadcastRoomList();
         let checkRoomStateFn = e => {checkRoomState(room)};
         setTimeout(
@@ -346,7 +346,7 @@ function onMessage(room, ws) {
             } else {
                 ws.ready = ReadyType.NOT_READY;
             }
-            broadcastWaitingClientStatus(room);
+            broadcastAllClientStatus(room);
             
             if (ws.ready === ReadyType.READY) {
                 tryStartGame(room);
@@ -543,11 +543,11 @@ function checkRoomState(room) {
     }
 }
 
-function getWaitingClientStatus(room) {
-    waitingClientStatus = {};
+function getAllClientStatus(room) {
+    let allClientStatus = {};
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
-            waitingClientStatus[ws.playerId] = {
+            allClientStatus[ws.playerId] = {
                 'name': ws.user.username,
                 'ready': ws.ready
             }
@@ -555,13 +555,13 @@ function getWaitingClientStatus(room) {
     });
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
-            waitingClientStatus[ws.playerId] = {
+            allClientStatus[ws.playerId] = {
                 'name': ws.user.username,
                 'ready': ReadyType.PLAYING
             }
         }
     });
-    return waitingClientStatus;
+    return allClientStatus;
 }
 
 
@@ -587,17 +587,17 @@ function broadcastChangeGameType(room) {
     });
 }
 
-function broadcastWaitingClientStatus(room) {
-    let waitingClientStatus = getWaitingClientStatus(room);
+function broadcastAllClientStatus(room) {
+    let allClientStatus = getAllClientStatus(room);
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
-                'event': 'setWaitingClientStatus',
-                'waitingClientStatus': waitingClientStatus
+                event: 'setAllClientStatus',
+                allClientStatus: allClientStatus
             }));
         }
     });
-    console.log('sent waitingClientStatus', waitingClientStatus, 'to', room.id);
+    console.log('sent allClientStatus', allClientStatus, 'to', room.id);
 }
 
 function broadcastRoomList() {
@@ -623,7 +623,6 @@ function broadcastInit(room) {
     let playerBases = room.playerBases;
     let spawnSquares = room.spawnSquares;
     let playerIds = room.playerIds;
-    let ffa = (room.type === RoomType.FFA);
     let [height, width] = room.shape;
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
@@ -634,7 +633,6 @@ function broadcastInit(room) {
                 'spawn': spawnSquares[ws.playerId],
                 'width': width,
                 'height': height,
-                'ffa': ffa
             }));
         }
     });
