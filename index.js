@@ -154,14 +154,12 @@ app.get('/leaderboard', function (req, res) {
 
 app.get('/room_list', function (req, res) {
     let roomList = Object.values(rooms).filter(room => room.type === RoomType.CUSTOM)
-        .map(room => {
-            return {
-                id: room.id,
-                gameStatus: room.gameStatus,
-                maxNumPlayers: room.maxNumPlayers,
-                numPlayersIn: room.waitingClients.length + room.clients.length
-            };
-        });
+        .map(room => ({
+            id: room.id,
+            gameStatus: room.gameStatus,
+            maxNumPlayers: room.maxNumPlayers,
+            numPlayersIn: room.waitingClients.length + room.clients.length
+        }));
     res.json(roomList);
 });
 
@@ -231,7 +229,7 @@ function onConnect(room, ws, user) {
         event: 'connected',
         playerId: ws.playerId,
         secret: ws.secret,
-        gameType: room.gameType
+        defaultGameType: room.gameType
     }));
     onMessage(room, ws);
 
@@ -349,11 +347,7 @@ function onMessage(room, ws) {
                 ws.ready = ReadyType.NOT_READY;
             }
             broadcastWaitingClientStatus(room);
-            ws.send(JSON.stringify({
-                'event': 'setReady',
-                'ready': ws.ready
-            }));
-
+            
             if (ws.ready === ReadyType.READY) {
                 tryStartGame(room);
             }
@@ -594,15 +588,16 @@ function broadcastChangeGameType(room) {
 }
 
 function broadcastWaitingClientStatus(room) {
+    let waitingClientStatus = getWaitingClientStatus(room);
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
                 'event': 'setWaitingClientStatus',
-                'waitingClientStatus': getWaitingClientStatus(room)
+                'waitingClientStatus': waitingClientStatus
             }));
         }
     });
-    console.log(`sent waitingClientStatus to ${room.id}`);
+    console.log('sent waitingClientStatus', waitingClientStatus, 'to', room.id);
 }
 
 function broadcastRoomList() {

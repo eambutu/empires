@@ -4,6 +4,7 @@ import '../styles/App.css';
 import Homepage from './Homepage.js';
 import Game from './Game.js';
 import RoomList from './RoomList.js';
+import {RoomType} from './config.js';
 
 class App extends Component {
     render() {
@@ -12,7 +13,7 @@ class App extends Component {
                 <Switch>
                     <Route exact path="/" component={Homepage}/>
                     <Route exact path="/room" component={RoomList}/>
-                    <Route exact path="/room/:number" component={Game}/>
+                    <Route exact path="/room/:number" render={() => <Game roomType={RoomType.CUSTOM} />} />
                 </Switch>
             </div>
         )

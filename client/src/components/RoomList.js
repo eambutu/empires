@@ -50,23 +50,12 @@ class RoomList extends Component {
     }
 
     loadRoomList() {
-        this.callBackendAPI()
-            .then(res => {
-                this.setState({data: res})
-            })
-            .catch(err => console.log(err));
+        fetch('/room_list')
+            .then(res => res.json())
+            .then(resJson => {
+                this.setState({data: resJson})
+            });
     }
-
-    // Fetch the list of rooms from express
-    callBackendAPI = async () => {
-        const response = await fetch('/room_list');
-        const body = await response.json();
-
-        if (response.status !== 200) {
-            throw Error(body.message)
-        }
-        return body;
-    };
 
     componentWillUnmount() {
         document.body.style.overflow = "hidden";
@@ -74,11 +63,9 @@ class RoomList extends Component {
 
     render() {
         if (this.state.data) {
-            // make sure that full lobbies aren't shown
-            const filtered_data = Object.entries(this.state.data).filter(value => true || value[1]['numPlayersIn'] !== value[1]['maxNumPlayers']);
             return (
                 <div className={"room-list-title"}>
-                    <img onClick={() => {window.location.replace("http://squarecraft.io")}} src={sword} className="App-logo" alt="logo"/>
+                    <img onClick={() => {window.location.replace('/')}} src={sword} className="App-logo" alt="logo"/>
                     <div className="title">Lobbies</div>
                         <div className={"create-lobby"}>
                             <div className={"join-room-text"}>
@@ -92,14 +79,14 @@ class RoomList extends Component {
                         <div className={"room-list-table-holder"}>
                             <table>
                                 <tbody className={"room-list-table"}>
-                                    {filtered_data.map(([key, value]) => (
-                                        <tr onClick={this.onClickRoom(value["id"])} className={"room-list-row-container"}>
+                                    {Object.values(this.state.data).map(room => (
+                                        <tr key={room['id']} onClick={this.onClickRoom(room['id'])} className={"room-list-row-container"}>
                                             <div className={"room-list-row"}>
                                             <td className={"room-list-element"}>
-                                                {value['id']}
+                                                {room['id']}
                                             </td>
                                             <td className={"room-list-element"}>
-                                                {value['numPlayersIn']} / {value['maxNumPlayers']}
+                                                {room['numPlayersIn']} / {room['maxNumPlayers']}
                                             </td>
                                             </div>
                                         </tr>

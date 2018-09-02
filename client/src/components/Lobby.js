@@ -1,24 +1,23 @@
 import React from 'react';
 import '../styles/Lobby.css';
 import sword from "../sword.png";
-import {ReadyType, GameType} from "./config"
+import {ReadyType, GameType, RoomType, LobbyState} from "./config"
 import Game from "./Game";
 
 export default function Lobby(props) {
-    const {gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, waitingText} = props;
+    const {roomType, gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, lobbyState} = props;
     let roomName = decodeURI(window.location.href.split("/").pop());
 
-    let anyPlaying = false;
     let playerRows = Object.keys(statuses).filter(id => {return id === playerId}).map((id, index) => {
         return (
-            <tr>
+            <tr key={playerId}>
                 <td style={{minWidth: "100px", textAlign: "left"}}>
                     <div className={"lobby-display-name"}>
                         {statuses[playerId]['name']}
                     </div>
                 </td>
                 <td style={{minWidth: "100px", textAlign: "right"}}>
-                    <button className={statuses[playerId]['ready'] === ReadyType.NOT_READY ? "ready-up-button" : "ready-up-button-active"} onClick={togglePlayerReady}>
+                    <button className={(statuses[playerId]['ready'] === ReadyType.NOT_READY) ? "ready-up-button" : "ready-up-button-active"} onClick={togglePlayerReady}>
                         <div>{statuses[playerId]['ready'] === ReadyType.NOT_READY ? "Ready up" : "Ready"}
                         </div>
                     </button>
@@ -28,7 +27,6 @@ export default function Lobby(props) {
     });
 
     let otherRows = Object.keys(statuses).filter(id => {return id !== playerId}).map((id, index) => {
-        // console.log(id)
         let otherPlayerStatusStr;
         if (statuses[id]['ready'] === ReadyType.NOT_READY) {
             otherPlayerStatusStr = "Not yet ready"
@@ -36,10 +34,9 @@ export default function Lobby(props) {
             otherPlayerStatusStr = "Ready";
         } else if (statuses[id]['ready'] === ReadyType.PLAYING) {
             otherPlayerStatusStr = "Playing";
-            anyPlaying = true;
         }
         return (
-            <tr>
+            <tr key={id}>
                 <td style={{minWidth: "100px", textAlign: "left"}}>
                     <div className={"lobby-display-name"}>
                         {statuses[id]['name']}
@@ -54,33 +51,55 @@ export default function Lobby(props) {
             </tr>
         )
     });
+    console.log(statuses)
 
     let gametypeButtons = (
         <div>
-            <button className={gameType === GameType.DUEL && "active"} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel}> Duel </button>
-            <button className={gameType === GameType.CTF && "active"} onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF}> Capture The Flag </button>
+            <button className={gameType === GameType.DUEL ? "active" : undefined} onClick={() => {changeGameType(GameType.DUEL)}} onMouseLeave={onMouseAwayDuel} onMouseEnter={onMouseOverDuel}> Duel </button>
+            <button className={gameType === GameType.CTF ? "active" : undefined} onClick={() => {changeGameType(GameType.CTF)}} onMouseLeave={onMouseAwayCTF} onMouseEnter={onMouseOverCTF}> Capture The Flag </button>
         </div>
     );
 
-    if (anyPlaying) {
-        gametypeButtons = (
-            <div className={"disabled-buttons"}>
-                <button className={gameType === GameType.DUEL && "active"} disabled={true}> Duel </button>
-                <button className={gameType === GameType.CTF && "active"} disabled={true}> Capture The Flag </button>
-            </div>
-        )
+    let waitingText;
+    switch (lobbyState) {
+        case LobbyState.CONNECTED:
+            switch (roomType) {
+                case RoomType.CUSTOM:
+                    waitingText = 'Connected! Waiting for other players to ready up.';
+                    break;
+                case RoomType.TUTORIAL:
+                    waitingText = 'Connected! Welcome to the tutorial';
+                    break;
+                default:
+                    waitingText = '';
+            }
+            break;
+        case LobbyState.STARTING:
+            switch (roomType) {
+                case RoomType.TUTORIAL:
+                    waitingText = 'Starting tutorial...';
+                    break
+                default:
+                    waitingText = 'Starting game...';
+            }
+            break;
+        case LobbyState.FULL:
+            waitingText = 'This room is full. Redirecting to lobbies page in 5 seconds...';
+            break;
+        case LobbyState.NO_SESSION:
+            waitingText = 'A username is required. Redirecting to front page in 5 seconds...';
+            break;
+        default:
+            waitingText = '';
     }
-
-
 
     return (
         <div className={"custom-lobby-title"}>
             <div className={"lobby-title"}>
-                <img onClick={() => {window.location.replace("http://squarecraft.io")}} src={sword} className="App-logo" alt="logo"/>
+                <img onClick={() => {window.location.replace('/')}} src={sword} className="App-logo" alt="logo"/>
                 <div style={{cursor:"pointer"}} className="title">{roomName}</div>
             </div>
             <div style={{marginBottom:"15px"}}> Game Type: <br/>
-
                 <div className={"custom-game-buttons"}>
                     {gametypeButtons}
                 </div>
@@ -97,6 +116,5 @@ export default function Lobby(props) {
                     </tbody>
                 </table>
         </div>
-    )
-
+    );
 }

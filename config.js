@@ -36,6 +36,12 @@ module.exports = {
         CTF: "ctf",
         DUEL: "duel"
     },
+    LobbyState: {
+        CONNECTED: 1,
+        STARTING: 2,
+        FULL: 3,
+        NO_SESSION: 4
+    },
     ClientStatus: {
         CONNECTED: "connected",
         RECONNECTING: "reconnecting",

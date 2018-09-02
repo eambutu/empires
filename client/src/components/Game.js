@@ -12,7 +12,7 @@ import sword from "../sword.svg";
 import startsound from "../startsound.wav"
 import redkeyboard from "../redkeyboard.svg";
 
-const {SquareType, Costs, UnitType, Action, ReadyType, GameType} = require("./config");
+const {SquareType, Costs, UnitType, Action, ReadyType, GameType, RoomType, LobbyState} = require("./config");
 
 const MoveKeyMap = {
     ArrowDown: Action.MOVE_DOWN,
@@ -70,18 +70,17 @@ class Game extends Component {
             squares: null,
             queue: [],
             displayShards: 0,
-            waiting: true,
             width: 0,
             height: 0,
             cursor: [null, null, null],
-            waitingText: '',
             spawnSquare: null,
             isSpawnDefender: false,
             insufficientShards: false,
             flags: null,
             unitIdQueue: [],
-            ready: ReadyType.NOT_READY,
             playerStatus: {},
+            
+            lobbyState: null,
             waitingClientStatus: {},
             gameType: null,
             forceStartSec: null,
@@ -108,13 +107,11 @@ class Game extends Component {
         }
 
         this.onMouseOverCTF = () => {
-            console.log("onmouseoverc")
             document.getElementById("gamedescription").innerText = "Capture The Flag: Capture the flags to win"
             document.getElementById("gamedescription").style.visibility = "visible";
         }
 
         this.onMouseAwayCTF = () => {
-            console.log("onmouseawayc")
             document.getElementById("gamedescription").style.visibility = "hidden";
         }
 
@@ -456,31 +453,18 @@ class Game extends Component {
 
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
-            // console.log(data.event);
+            console.log(data.event);
             if (data.event === 'connected') {
-                let connectedText = 'Connected! Waiting for other players to ready up.'
-                if (this.props.isTutorial) {
-                    connectedText = 'Connected! Welcome to the tutorial.'
-                } else if (this.props.ffa) {
-                    connectedText = 'Connected! Currently in queue...'
-                }
-
                 this.setState({
                     playerId: data.playerId,
                     secret: data.secret,
-                    waitingText: connectedText,
-                    gameType: data.gameType
-                });
-            } else if (data.event === 'setReady') {
-                this.setState({
-                    'ready': data.ready
+                    lobbyState: LobbyState.CONNECTED,
+                    gameType: data.defaultGameType
                 });
             } else if (data.event === 'setWaitingClientStatus') {
-                this.setState({
-                    'waitingClientStatus': data.waitingClientStatus
-                });
+                this.setState({waitingClientStatus: data.waitingClientStatus});
             } else if (data.event === 'setGameType'){
-                this.setState({'gameType' : data.gameType});
+                this.setState({gameType: data.gameType});
             } else if (data.event === 'init') {
                 this.setState({
                     width: data.width,
@@ -495,27 +479,13 @@ class Game extends Component {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
                 audio.play();
-                let startingText = 'Starting game...'
-                if (this.props.isTutorial) {
-                    startingText = 'Starting tutorial...'
-                }
-                this.setState({waitingText: startingText})
+                this.setState({lobbyState: LobbyState.STARTING})
             } else if (data.event === 'full') {
-                this.ws.close();
-                let fullText = 'This room is full. Redirecting to lobbies page in 5 seconds...'
-                this.setState({waitingText: fullText});
-                setInterval(
-                    function() {window.location.replace('/room');},
-                    5000
-                );
+                this.setState({lobbyState: LobbyState.FULL});
+                setInterval(() => window.location.replace('/room'), 5000);
             } else if (data.event === 'noSession') {
-                this.ws.close();
-                let fullText = 'A username is required. Redirecting to front page in 5 seconds...'
-                this.setState({waitingText: fullText});
-                setInterval(
-                    function() {window.location.replace('/');},
-                    5000
-                );
+                this.setState({lobbyState: LobbyState.NO_SESSION});
+                setInterval(() => window.location.replace('/'), 5000);
             } else if (data.event === 'forceStartSec') {
                 this.setState({forceStartSec: data.seconds});
             }
@@ -524,14 +494,17 @@ class Game extends Component {
 
     componentDidMount() {
         let pathname;
-        if (this.props.ffa) {
-            pathname = '/ffa';
-        } else if (this.props.isTutorial) {
-            pathname = '/tutorial'
-        } else {
-            pathname = window.location.pathname;
+        switch (this.props.roomType) {
+            case RoomType.FFA:
+                pathname = '/ffa';
+                break;
+            case RoomType.TUTORIAL:
+                pathname = '/tutorial';
+                break;
+            default:
+                pathname = window.location.pathname;
         }
-        let wsPath = 'ws://' + window.location.hostname + ':5000' + pathname
+        let wsPath = 'ws://' + window.location.hostname + ':5000' + pathname;
         this.setUpWebSocket(wsPath);
     }
 
@@ -541,8 +514,8 @@ class Game extends Component {
     }
 
     render() {
-        let {forceStartSec, waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags} = this.state;
-        if (this.props.isTutorial) {
+        let {forceStartSec, waitingClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, lobbyState} = this.state;
+        if (this.props.roomType === RoomType.TUTORIAL) {
             if (squares) {
                 return (
                     <div id="game-page">
@@ -601,7 +574,7 @@ class Game extends Component {
                         <EndGame resetClick={this.onPlayAgain}
                                  exitClick={this.onExit}
                                  status={playerStatus[playerId]['status']}
-                                 canPlayAgain={!this.props.isTutorial} />
+                                 canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)} />
                     </div>
                 );
             } else {
@@ -627,14 +600,34 @@ class Game extends Component {
                     </div>
                 );
             }
-        } else if (this.props.ffa) {
+        } else if (this.props.roomType === RoomType.FFA) {
             return (
-                <GlobalQueue waitingText={this.state.waitingText} playerId={playerId} togglePlayerReady={this.togglePlayerReady} forceStartSec={forceStartSec} statuses={waitingClientStatus} goToHomeMenu={this.goToHomeMenuAndClose} />
+                <GlobalQueue
+                    roomType={this.props.roomType}
+                    lobbyState={lobbyState}
+                    playerId={playerId}
+                    togglePlayerReady={this.togglePlayerReady}
+                    forceStartSec={forceStartSec}
+                    statuses={waitingClientStatus}
+                    goToHomeMenu={this.goToHomeMenuAndClose} />
             );
         }
         else {
             return (
-                <Lobby gameType={this.state.gameType} changeGameType={this.changeGameType} onMouseAwayDuel={this.onMouseAwayDuel} onMouseOverDuel={this.onMouseOverDuel} onMouseAwayCTF={this.onMouseAwayCTF} onMouseOverCTF={this.onMouseOverCTF} playerId={playerId} statuses={waitingClientStatus} togglePlayerReady={this.togglePlayerReady} playerIds={playerIds} playerStatus={playerStatus} waitingText={this.state.waitingText} />
+                <Lobby
+                    roomType={this.props.roomType}
+                    lobbyState={lobbyState}
+                    gameType={this.state.gameType}
+                    changeGameType={this.changeGameType}
+                    onMouseAwayDuel={this.onMouseAwayDuel}
+                    onMouseOverDuel={this.onMouseOverDuel}
+                    onMouseAwayCTF={this.onMouseAwayCTF}
+                    onMouseOverCTF={this.onMouseOverCTF}
+                    playerId={playerId}
+                    statuses={waitingClientStatus}
+                    togglePlayerReady={this.togglePlayerReady}
+                    playerIds={playerIds}
+                    playerStatus={playerStatus} />
             );
         }
     }

@@ -4,41 +4,43 @@ import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 import person_red from "../person_red.svg";
 import person from "../person.svg";
-import {ReadyType} from "./config"
+import {ReadyType, LobbyState} from "./config"
 
 
 export default function GlobalQueue(props) {
-    const {forceStartSec, statuses, waitingText, goToHomeMenu, playerId, togglePlayerReady} = props;
-    console.log("statuses", statuses)
+    const {roomType, lobbyState, forceStartSec, statuses, goToHomeMenu, playerId, togglePlayerReady} = props;
+
     let numInQueue = Object.keys(statuses).length;
-    let peopleIcons = [];
-    let img = null;
 
-    let i = 0;
-    console.log(numInQueue)
-    while(i < 4){
-        if (i < numInQueue) {
-            img = `url(${person_red}`
-        }
-        else {
-            img = `url(${person}`
-        }
-        peopleIcons.push(
-            <div key={i} className="queue-people-icons" style={{backgroundImage: img}}>
-            </div>
-        );
-        i++;
-    }
-
+    let peopleIcons = [...Array(4)].map((_, index) => {
+        let img = (index < numInQueue) ? person_red : person;
+        return <div key={index} className="queue-people-icons" style={{backgroundImage: `url(${img}`}}></div>
+    });
+    console.log(peopleIcons);
     let buttonClassName = "ready-up-button";
     if (playerId in statuses) {
-        buttonClassName = (statuses[playerId]['ready'] === ReadyType.NOT_READY ? "ready-up-button" : "ready-up-button-active");
+        buttonClassName = (statuses[playerId]['ready'] === ReadyType.NOT_READY) ? "ready-up-button" : "ready-up-button-active";
     }
 
     let numWaitingClients = Object.keys(statuses).length;
     let numReadyClients = Object.keys(statuses).filter(id => {
         return (statuses[id]['ready'] === ReadyType.READY);
     }).length;
+
+    let waitingText;
+    switch (lobbyState) {
+        case LobbyState.CONNECTED:
+            waitingText = 'Connected! Currently in queue...';
+            break;
+        case LobbyState.STARTING:
+            waitingText = 'Starting game...';
+            break;
+        case LobbyState.NO_SESSION:
+            waitingText = 'A username is required. Redirecting to front page in 5 seconds...';
+            break;
+        default:
+            waitingText = '';
+    }
 
     return (
         <div>
@@ -58,8 +60,8 @@ export default function GlobalQueue(props) {
                     <div style={{visibility: (forceStartSec > 0) ? "visible" : "hidden"}}>Auto-starting in {forceStartSec} seconds...</div>
                 </div>
             </div>
-            <div id="back-arrow" onMouseLeave={() => {console.log("hi"); document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
-                 onMouseOver={() => {console.log('hover'); document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
+            <div id="back-arrow" onMouseLeave={() => {document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}
+                 onMouseOver={() => {document.getElementById("back-arrow").style.backgroundImage = `url(${redarrow})`}}
                  onClick={goToHomeMenu}
                  style={{backgroundImage: `url(${arrow})`}}
                  className={"back-arrow"}>

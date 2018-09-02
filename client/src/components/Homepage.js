@@ -4,7 +4,9 @@ import * as Cookies from 'js-cookie';
 import Game from './Game.js';
 import Leaderboard from "./Leaderboard"
 import Instructions from "./Instructions";
+import {RoomType} from "./config"
 import '../styles/Homepage.css';
+
 
 import sword from '../sword.png';
 import arrow from "../arrow.svg";
@@ -145,9 +147,9 @@ class Homepage extends Component {
 
     render() {
         if (this.state.page === HomePageOption.FFA_PAGE) {
-            return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} ffa={true} />
+            return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} roomType={RoomType.FFA} />
         } else if (this.state.page === HomePageOption.TUTORIAL_PAGE) {
-            return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} isTutorial={true} />
+            return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} roomType={RoomType.TUTORIAL} />
         }
         let arrowicon = null
         if (this.state.page === HomePageOption.PLAY_PAGE) {
@@ -168,7 +170,6 @@ class Homepage extends Component {
                 </div>
 
                 <Instructions hideInstructions={this.hideInstructions}/>
-
 
                 <div className="center">
                     <img onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} src={sword} className="App-logo" alt="logo"/>
