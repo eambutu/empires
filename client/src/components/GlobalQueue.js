@@ -45,8 +45,8 @@ export default function GlobalQueue(props) {
     return (
         <div>
             <div className="center">
-                <img src={sword} className="App-logo" alt="logo"/>
-                <div className="title">squarecraft.io</div>
+                <img onClick={() => {window.location.replace('/')}} src={sword} className="App-logo" alt="logo"/>
+                <div onClick={() => {window.location.replace('/')}} style={{cursor: "pointer"}} className="title">squarecraft.io</div>
                 <div className="App-text">
                     {waitingText}
                 </div>

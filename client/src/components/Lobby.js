@@ -96,7 +96,7 @@ export default function Lobby(props) {
         <div className={"custom-lobby-title"}>
             <div className={"lobby-title"}>
                 <img onClick={() => {window.location.replace('/')}} src={sword} className="App-logo" alt="logo"/>
-                <div style={{cursor:"pointer"}} className="title">{roomName}</div>
+                <div className="title">{roomName}</div>
             </div>
             {[LobbyState.FULL, LobbyState.NO_SESSION].includes(lobbyState) ? undefined :
                 <div style={{marginBottom:"15px"}}> Game Type: <br/>
