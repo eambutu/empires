@@ -463,7 +463,7 @@ class Game extends Component {
                 });
             } else if (data.event === 'setAllClientStatus') {
                 this.setState({allClientStatus: data.allClientStatus});
-            } else if (data.event === 'setGameType'){
+            } else if (data.event === 'setGameType') {
                 this.setState({gameType: data.gameType});
             } else if (data.event === 'init') {
                 this.setState({
@@ -613,6 +613,8 @@ class Game extends Component {
                             playerIds={playerIds}
                             playerStatus={playerStatus} />
                     );
+                default:
+                    return null;
             }
         }
     }
