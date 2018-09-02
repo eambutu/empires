@@ -216,7 +216,7 @@ class Game extends Component {
         }
 
         this.keyDownBound = e => {
-            if (e.key === "="){
+            if (e.key === "=") {
                 let all = document.getElementsByClassName('square');
                 backsize = Math.min(backsize + 5, 45);
                 squaresize = Math.min(squaresize + 5, 55);
@@ -230,7 +230,7 @@ class Game extends Component {
                     all[i].style.minHeight = squaresize.toString() + "px";
 
                 }
-            } else if (e.key === "-"){
+            } else if (e.key === "-") {
                 let all = document.getElementsByClassName('square');
                 backsize = Math.max(backsize - 5, 25);
                 squaresize = Math.max(squaresize - 5, 35);
@@ -320,25 +320,46 @@ class Game extends Component {
             let target = e.currentTarget;
             let y = parseInt(target.getAttribute("y"));
             let x = parseInt(target.getAttribute("x"));
-            if (e.ctrlKey || e.metaKey) {
-                if (this.state.displayShards >= Costs.DEFENDER) {
-                    if (this.isInSpawningRange(y, x)) {
-                        let move = {
-                            "action": "spawn",
-                            "target": [y, x],
-                            "type": UnitType.DEFENDER
-                        };
-                        this.sendMove(move);
+            if (e.type === 'click') { // left click
+                if (e.ctrlKey || e.metaKey) {
+                    if (this.state.displayShards >= Costs.DEFENDER) {
+                        if (this.isInSpawningRange(y, x)) {
+                            let move = {
+                                "action": "spawn",
+                                "target": [y, x],
+                                "type": UnitType.DEFENDER
+                            };
+                            this.sendMove(move);
+                        }
                     }
+                    else {
+                        this.setState({
+                            insufficientShards: true,
+                        });
+                    }
+                } else if (this.unitSquareMap[y][x]) {
+                    this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
+                    this.updateUnitIdQueue(this.unitSquareMap[y][x]);
                 }
-                else {
-                    this.setState({
-                        insufficientShards: true,
+            } else if (e.type === 'contextmenu') { // context menu is for right click
+                e.preventDefault();
+                let [cursorY, cursorX, unitId] = this.state.cursor;
+                if (unitId === null) {
+                    const sq = this.state.squares[cursorY][cursorX];
+                    unitId = (sq.unit && sq.unit.type !== UnitType.DEFENDER && sq.unit.playerId === this.state.playerId) ? sq.unit.id : null;
+                }
+                let moves = this.getPath([y, x], [cursorY, cursorX]);
+                if (moves.length > 0 && this.state.squares[y][x].type !== SquareType.RIVER) {
+                    moves.forEach(move => {
+                        move.action = "move";
+                        move.unitId = unitId;
+                        move.split = false; // don't split after the first move
                     });
+                    moves[0].split = this.state.isSplit; // split on first move if necessary
+                    this.setState({cursor: [y, x, unitId]});
+                    this.updateUnitIdQueue(unitId);
+                    moves.forEach(move => this.sendMove(move));
                 }
-            } else if (this.unitSquareMap[y][x]) {
-                this.setState({cursor: [y, x, this.unitSquareMap[y][x]]});
-                this.updateUnitIdQueue(this.unitSquareMap[y][x]);
             }
         };
 
@@ -366,6 +387,43 @@ class Game extends Component {
         this.onReleaseMap = e => {
             downFlag = false;
         }
+    }
+
+    getValidNeighbors(y, x, walkGrid) {
+        return [[y + 1, x], [y - 1, x], [y, x + 1], [y, x - 1]]
+            .filter(([ny, nx]) => (walkGrid[ny] && walkGrid[ny][nx] // check bounds
+                && walkGrid[ny][nx].walkable // check if can walk on here
+                && !walkGrid[ny][nx].prev // check if seen previously
+            ));
+    }
+
+    getPath(target, source) {
+        let walkGrid = this.state.squares.map(row => row.map(square => ({walkable: square.type !== SquareType.RIVER})));
+        
+        let [sy, sx] = target;
+        let [ty, tx] = source;
+
+        let queue = [target]; // BFS from target to source
+        walkGrid[sy][sx].prev = -1; // set prev of the target to be -1
+        let i = 0;
+        while (!walkGrid[ty][tx].prev) {
+            let [y, x] = queue[i++];
+            this.getValidNeighbors(y, x, walkGrid).forEach(([ny, nx]) => {
+                walkGrid[ny][nx].prev = [y, x];
+                queue.push([ny, nx]);
+            });
+        }
+        let path = [];
+        let [y, x] = source;
+        while (walkGrid[y][x].prev !== -1) {
+            let move = {
+                source: [y, x],
+                target: walkGrid[y][x].prev
+            };
+            [y, x] = move.target;
+            path.push(move);
+        }
+        return path;
     }
 
     setUpWebSocket(wsPath) {
@@ -654,7 +712,6 @@ class Game extends Component {
     }
 
     sendMove(move) {
-        // console.log("Sent move", move);
         this.ws.send(JSON.stringify(
             {
                 'event': 'move',

@@ -183,6 +183,7 @@ class Cell extends Component {
                 className={styleClass}
                 style={divStyle}
                 onClick={handleClick}
+                onContextMenu={handleClick} // right click
                 x={x}
                 y={y}
                 onMouseEnter={this.handleMouseEnter}
