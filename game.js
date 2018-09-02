@@ -268,13 +268,13 @@ function getPlayerStatus(room) {
     let playerStatus = {};
     if (room.gameWonStatus) {
         room.clients.forEach(client => {
-            if (client.readyState === 1) {
+            if (client.readyState === client.OPEN) {
                 playerStatus[client.playerId] = {'name': client.user.username, 'status': room.gameWonStatus[client.playerId]};
             }
         });
     } else {
         room.clients.forEach(client => {
-            if (client.readyState === 1) {
+            if (client.readyState === client.OPEN) {
                 playerStatus[client.playerId] = {'name': client.user.username, 'status': client.status};
             }
         });

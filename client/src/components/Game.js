@@ -515,120 +515,105 @@ class Game extends Component {
 
     render() {
         let {forceStartSec, allClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, lobbyState} = this.state;
-        if (this.props.roomType === RoomType.TUTORIAL) {
-            if (squares) {
-                return (
-                    <div id="game-page">
-                        <Tutorial
-                            onReleaseMap={this.onReleaseMap}
-                            onDragMap={this.onDragMap}
-                            onClickMap={this.onClickMap}
-                            displayShards={this.state.displayShards}
-                            insufficientShards={this.state.insufficientShards}
-                            onVeil={this.onVeil}
-                            exitClick={this.goToHomeMenuAndClose}
+        let {roomType} = this.props;
+        if (squares) { // in game or after game
+            switch (roomType) {
+                case RoomType.TUTORIAL:
+                    return (
+                        <div id="game-page">
+                            <Tutorial
+                                onReleaseMap={this.onReleaseMap}
+                                onDragMap={this.onDragMap}
+                                onClickMap={this.onClickMap}
+                                displayShards={this.state.displayShards}
+                                insufficientShards={this.state.insufficientShards}
+                                onVeil={this.onVeil}
+                                exitClick={this.goToHomeMenuAndClose}
+                                playerId={playerId}
+                                playerIds={playerIds}
+                                playerStatus={playerStatus}
+                                squares={squares}
+                                queue={queue}
+                                cursor={cursor}
+                                handleClick={this.onClickBound}
+                                isSpawnDefender={isSpawnDefender}
+                                isInSpawningRange={this.isInSpawningRange.bind(this)}
+                                flags={flags}
+                                gameType={this.state.gameType}
+                            />
+                        </div>
+                    );
+                default:
+                    let gameInProgress = !['won', 'lost'].includes(playerStatus[playerId]['status']);
+                    return (
+                        <div id="game-page">
+                            <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
+
+                            <Map
+                                onReleaseMap={this.onReleaseMap}
+                                onDragMap={this.onDragMap}
+                                onClickMap={this.onClickMap}
+                                playerId={playerId}
+                                playerIds={playerIds}
+                                squares={squares}
+                                queue={gameInProgress ? queue : []}
+                                cursor={cursor}
+                                handleClick={gameInProgress ? this.onClickBound : undefined}
+                                isSpawnDefender={isSpawnDefender}
+                                isInSpawningRange={this.isInSpawningRange.bind(this)}
+                            />
+
+                            {gameInProgress ? undefined :
+                                <EndGame resetClick={this.onPlayAgain}
+                                         exitClick={this.onExit}
+                                         status={playerStatus[playerId]['status']}
+                                         canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)} />}
+
+                            <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
+                        </div>
+                    );
+            }
+        } else { // in lobby
+            switch (roomType) {
+                case RoomType.TUTORIAL:
+                    return (
+                        <div className="center">
+                            <img src={sword} className="App-logo" alt="logo"/>
+                            <div className="title">squarecraft.io</div>
+                            <div className="App-text">
+                                Tutorial is loading...
+                            </div>
+                        </div>
+                    );
+                case RoomType.FFA:
+                    return (
+                        <GlobalQueue
+                            roomType={this.props.roomType}
+                            lobbyState={lobbyState}
                             playerId={playerId}
-                            playerIds={playerIds}
-                            playerStatus={playerStatus}
-                            squares={squares}
-                            queue={queue}
-                            cursor={cursor}
-                            handleClick={this.onClickBound}
-                            isSpawnDefender={isSpawnDefender}
-                            isInSpawningRange={this.isInSpawningRange.bind(this)}
-                            flags={flags}
+                            togglePlayerReady={this.togglePlayerReady}
+                            forceStartSec={forceStartSec}
+                            statuses={allClientStatus}
+                            goToHomeMenu={this.goToHomeMenuAndClose} />
+                    );
+                case RoomType.CUSTOM:
+                    return (
+                        <Lobby
+                            roomType={this.props.roomType}
+                            lobbyState={lobbyState}
                             gameType={this.state.gameType}
-                        />
-                    </div>
-
-                );
-            } else {
-                return <div className="center">
-                    <img src={sword} className="App-logo" alt="logo"/>
-                    <div className="title">squarecraft.io</div>
-                    <div className="App-text">
-                        Tutorial is loading...
-                    </div>
-                </div>;
-            }
-        } else if (squares) {
-            if (playerStatus[playerId]['status'] === "lost" || playerStatus[playerId]['status'] === "won") {
-                return (
-                    <div id="game-page">
-                        <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
-
-                        <Map
-                            onReleaseMap={this.onReleaseMap}
-                            onDragMap={this.onDragMap}
-                            onClickMap={this.onClickMap}
+                            changeGameType={this.changeGameType}
+                            onMouseAwayDuel={this.onMouseAwayDuel}
+                            onMouseOverDuel={this.onMouseOverDuel}
+                            onMouseAwayCTF={this.onMouseAwayCTF}
+                            onMouseOverCTF={this.onMouseOverCTF}
                             playerId={playerId}
+                            statuses={allClientStatus}
+                            togglePlayerReady={this.togglePlayerReady}
                             playerIds={playerIds}
-                            squares={squares}
-                            queue={[]}
-                            cursor={cursor}
-                            handleClick={this.onClickBound}
-                            isSpawnDefender={isSpawnDefender}
-                            isInSpawningRange={this.isInSpawningRange.bind(this)}
-                        />
-
-                        <EndGame resetClick={this.onPlayAgain}
-                                 exitClick={this.onExit}
-                                 status={playerStatus[playerId]['status']}
-                                 canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)} />
-                    </div>
-                );
-            } else {
-                return (
-                    <div id="game-page">
-                        <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
-
-                        <Map
-                            onReleaseMap={this.onReleaseMap}
-                            onDragMap={this.onDragMap}
-                            onClickMap={this.onClickMap}
-                            playerId={playerId}
-                            playerIds={playerIds}
-                            squares={squares}
-                            queue={queue}
-                            cursor={cursor}
-                            handleClick={this.onClickBound}
-                            isSpawnDefender={isSpawnDefender}
-                            isInSpawningRange={this.isInSpawningRange.bind(this)}
-                        />
-                        <Instructions />
-                        <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
-                    </div>
-                );
+                            playerStatus={playerStatus} />
+                    );
             }
-        } else if (this.props.roomType === RoomType.FFA) {
-            return (
-                <GlobalQueue
-                    roomType={this.props.roomType}
-                    lobbyState={lobbyState}
-                    playerId={playerId}
-                    togglePlayerReady={this.togglePlayerReady}
-                    forceStartSec={forceStartSec}
-                    statuses={allClientStatus}
-                    goToHomeMenu={this.goToHomeMenuAndClose} />
-            );
-        }
-        else {
-            return (
-                <Lobby
-                    roomType={this.props.roomType}
-                    lobbyState={lobbyState}
-                    gameType={this.state.gameType}
-                    changeGameType={this.changeGameType}
-                    onMouseAwayDuel={this.onMouseAwayDuel}
-                    onMouseOverDuel={this.onMouseOverDuel}
-                    onMouseAwayCTF={this.onMouseAwayCTF}
-                    onMouseOverCTF={this.onMouseOverCTF}
-                    playerId={playerId}
-                    statuses={allClientStatus}
-                    togglePlayerReady={this.togglePlayerReady}
-                    playerIds={playerIds}
-                    playerStatus={playerStatus} />
-            );
         }
     }
 
