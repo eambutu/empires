@@ -31,7 +31,7 @@ class Homepage extends Component {
             page: HomePageOption.HOME_PAGE,
             leaderboard: [],
             username: undefined,
-            rating: 0,
+            rating: null,
             ranking: null,
             usernameFocus: false
         };
@@ -44,7 +44,7 @@ class Homepage extends Component {
             document.getElementById("globe").style.backgroundImage = `url(${redglobe})`
         };
 
-        this.hideLeaderboard = () =>{
+        this.hideLeaderboard = () => {
             document.getElementById("leaderboard").style.display = "none"
         };
 
@@ -78,23 +78,11 @@ class Homepage extends Component {
                     }).then(res => res.json()).then(resJson => { // returns a promise with resolve value true if username is valid, false if not
                         if (resJson.success) { // successfully registered
                             console.log(resJson);
-                            if (resJson.ratingFFA) {
-                                this.setState({
-                                    rating: resJson.ratingFFA
-                                });
-                            }
-                            if (resJson.ranking) {
-                                this.setState({
-                                    ranking: resJson.ranking
-                                })
-                            }
-                            if (resJson.username) {
-                                this.setState({
-                                    username: resJson.username
-                                });
-                                document.getElementById("username").disabled = true;
-                                this.setPage(HomePageOption.TUTORIAL_PAGE);
-                            }
+                            this.setState({ // no need to set rating and ranking at this time as we will be on tutorial
+                                username: resJson.username
+                            });
+                            document.getElementById("username").disabled = true;
+                            this.setPage(HomePageOption.TUTORIAL_PAGE);
                         } else { // failed to register
                             document.getElementById("usernameTakenText").innerText = "Username taken! Please pick another one.";
                             document.getElementById("username").focus();
@@ -123,18 +111,10 @@ class Homepage extends Component {
                 console.log(resJson)
                 if (resJson.success) {
                     this.setState({
-                        username: resJson.username
+                        username: resJson.username,
+                        rating: resJson.ratingFFA,
+                        ranking: resJson.ranking
                     });
-                    if (resJson.ratingFFA) {
-                        this.setState({
-                            rating: resJson.ratingFFA
-                        })
-                    }
-                    if (resJson.ranking) {
-                        this.setState({
-                            ranking: resJson.ranking
-                        })
-                    }
                 } else {
                     // user has session but is not in database, cookie has been cleared by server
                 }
@@ -244,7 +224,7 @@ function HomepageButtons(props) {
                         <div className={"rating-text"} style={{visibility: rating === null ? "hidden": "visible"}} >
                         Rating: {rating} <br/>
                         </div>
-                        <div style={{alignItems: "center", justifyContent: "center", display: "flex", fontSize: "20px"}}>
+                        <div style={{visibility: ranking === null ? "hidden": "visible", alignItems: "center", justifyContent: "center", display: "flex", fontSize: "20px"}}>
                             (Rank: {ranking}) <div id={"globe"} onClick={showLeaderboard} onMouseLeave={onLeaveGlobe} onMouseOver={onHoverGlobe} className={"globe"} style={{backgroundImage: `url(${globe})`}}></div>
                         </div>
                         <form onKeyPress={onEnterKeyPress} action="#">

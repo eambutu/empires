@@ -530,7 +530,7 @@ function runGame(room) {
             getPerformOneTurn(room),
             gameTickInterval
         )
-    }, gameDelayInterval);
+    }, (room.type === RoomType.TUTORIAL) ? 0 : gameDelayInterval);
 }
 
 function checkRoomState(room) {
