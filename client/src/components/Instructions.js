@@ -53,6 +53,10 @@ class Instructions extends Component{
                             <td> Move right</td>
                         </tr>
                         <tr>
+                            <td> right click</td>
+                            <td> Move selected unit to square</td>
+                        </tr>
+                        <tr>
                             <td> Space</td>
                             <td> Spawn attacker</td>
                         </tr>

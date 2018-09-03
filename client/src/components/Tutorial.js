@@ -9,8 +9,8 @@ const tutorialTextMap = {
     0: "Hi! Welcome to Squarecraft.io. Let’s walk you through how to play.",
     1: "The objective of Squarecraft is to capture these flags by moving your army units over them. They continuously spawn in the middle region. Whoever captures 20 flags first wins.",
     2: "You have two army types. Defenders are immobile, and can defend against up to 5 hits. Attackers move around and can take other squares.",
-    3: "Attackers cost 25 shards and only spawn from next to your base. Press SPACEBAR now to spawn an attacker and WASD to move it around.",
-    4: "Defenders cost 100 shards. Hold the CONTROL (or COMMAND) key and CLICK a location to spawn a defender. Defenders can spawn on buildings, stack, but can't be spawned on top of attackers. Try it on this square!",
+    3: "Attackers cost 25 shards and only spawn from next to your base. Press SPACEBAR now to spawn an attacker and WASD to move it around. You can also RIGHT CLICK to move a selected unit to a square. Try moving a spawned attacker to the highlighted square, either with WASD or RIGHT CLICK.",
+    4: "Defenders cost 100 shards. Hold the CONTROL (or COMMAND) key and CLICK a location to spawn a defender. Defenders can spawn on buildings, stack, but can't be spawned on top of attackers. Try spawning a defender on your base and this square!",
     5: "Increase your shard collection economy by moving an attacker or spawning a defender on these shard towers.",
     6: "This is your base. If any enemy attacker occupies it, they will take your flags at a steady rate, and you'll have to run your own attackers into it to regain control. Make sure to defend it!",
     7: "During real gameplay, you can't see the whole board. You can also take the vision tower for more vision.",
@@ -45,14 +45,20 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[9].children[10].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[10].children[5].classList.remove("flashing");
                     break;
                 case 3:
                     document.getElementsByClassName("map")[0].children[0].children[1].children[17].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[2].children[16].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing");
+                    document.getElementsByClassName("map")[0].children[0].children[10].children[5].classList.add("flashing");
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("flashing");
+
                     break;
                 case 4:
+                    document.getElementsByClassName("map")[0].children[0].children[10].children[5].classList.remove("flashing");
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.add("flashing");
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.add("flashing");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.remove("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.remove("expanded");
 
@@ -75,6 +81,7 @@ class Tutorial extends Component {
                     document.getElementsByClassName("map")[0].children[0].children[1].children[18].classList.remove("flashing")
                     document.getElementsByClassName("map")[0].children[0].children[18].children[0].classList.add("expanded");
                     document.getElementsByClassName("map")[0].children[0].children[18].children[18].classList.add("expanded");
+                    document.getElementsByClassName("map")[0].children[0].children[0].children[18].classList.remove("flashing");
 
 
                     document.getElementsByClassName("map")[0].children[0].children[3].children[1].classList.add("expanded");
