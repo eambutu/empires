@@ -346,7 +346,7 @@ class Game extends Component {
                     unitId = (sq.unit && sq.unit.type !== UnitType.DEFENDER && sq.unit.playerId === this.state.playerId) ? sq.unit.id : null;
                 }
                 let moves = this.getPath([y, x], [cursorY, cursorX]);
-                if (moves.length > 0 && this.state.squares[y][x].type !== SquareType.RIVER) {
+                if (moves && moves.length > 0 && this.state.squares[y][x].type !== SquareType.RIVER) {
                     moves.forEach(move => {
                         move.action = "move";
                         move.unitId = unitId;
@@ -395,8 +395,14 @@ class Game extends Component {
     }
 
     getPath(target, source) {
-        let walkGrid = this.state.squares.map(row => row.map(square => ({walkable: square.type !== SquareType.RIVER})));
-        
+        let isWalkable = function (square) {
+            let unit = null;
+            if (square.units.length > 0) {
+                unit = square.units[0];
+            }
+            return square.type !== SquareType.RIVER && !(unit && unit.type === UnitType.DEFENDER && unit.playerId === this.state.playerId);
+        }
+        let walkGrid = this.state.squares.map(row => row.map(square => ({walkable: isWalkable.bind(this)(square)})));
         let [sy, sx] = target;
         let [ty, tx] = source;
 
@@ -404,6 +410,10 @@ class Game extends Component {
         walkGrid[sy][sx].prev = -1; // set prev of the target to be -1
         let i = 0;
         while (!walkGrid[ty][tx].prev) {
+            if (i >= queue.length) {
+                // Target is unreachable
+                return null;
+            }
             let [y, x] = queue[i++];
             this.getValidNeighbors(y, x, walkGrid).forEach(([ny, nx]) => {
                 walkGrid[ny][nx].prev = [y, x];
