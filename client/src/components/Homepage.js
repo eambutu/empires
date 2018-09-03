@@ -159,6 +159,9 @@ class Homepage extends Component {
                 </div>
 
                 <Instructions hideInstructions={this.hideInstructions}/>
+                <div id={"no-mobile"} className="pop-up-board center no-mobile-notif">
+                    <h3>Hi! Thanks for checking out Squarecraft.io. Unfortunately our game only supports desktop right now, but we're working really hard on getting something for mobile users too! In the meantime, check us out on a desktop computer :)</h3>
+                </div>
 
                 <div className="center">
                     <img onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} src={sword} className="App-logo" alt="logo"/>
