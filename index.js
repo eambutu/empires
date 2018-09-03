@@ -221,7 +221,6 @@ function onConnect(room, ws, user) {
     ws.status = ClientStatus.CONNECTED;
     ws.playerId = randString(8);
     ws.user = user;
-    ws.secret = randString(20);
     ws.ready = ReadyType.NOT_READY;
 
     logger.info(`Player ${ws.user.username} connected to ${room.type} room ${room.id} with status ${room.gameStatus}`);
@@ -229,7 +228,6 @@ function onConnect(room, ws, user) {
     ws.send(JSON.stringify({
         event: 'connected',
         playerId: ws.playerId,
-        secret: ws.secret,
         defaultGameType: room.gameType
     }));
     onMessage(room, ws);
@@ -316,29 +314,27 @@ function onMessage(room, ws) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
-            if (data.secret === ws.secret) {
-                let queues = room.queues;
-                let trimmed = room.trimmed;
-                let spawned = room.spawned;
-                data.move.playerId = ws.playerId;
-                if (data.move.action === "spawn") {
-                    queues[ws.playerId]["spawn"].push(data.move);
-                    if (data.move.type === UnitType.ATTACKER) {
-                        spawned[ws.playerId] = true;
-                    }
-                } else if (data.move.action.includes("move")) {
-                    if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
-                        queues[ws.playerId][data.move.unitId].push(data.move);
-                    }
-                } else if (data.move.action === "cancelUnitQueue") {
-                    queues[ws.playerId][data.move.unitId] = [];
-                    trimmed[ws.playerId][data.move.unitId] = true;
-                } else if (data.move.action === "cancelPlayerQueues") {
-                    Object.keys(queues[ws.playerId]).forEach(unitId => {
-                        queues[ws.playerId][unitId] = [];
-                        trimmed[ws.playerId][unitId] = true;
-                    });
+            let queues = room.queues;
+            let trimmed = room.trimmed;
+            let spawned = room.spawned;
+            data.move.playerId = ws.playerId;
+            if (data.move.action === "spawn") {
+                queues[ws.playerId]["spawn"].push(data.move);
+                if (data.move.type === UnitType.ATTACKER) {
+                    spawned[ws.playerId] = true;
                 }
+            } else if (data.move.action.includes("move")) {
+                if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
+                    queues[ws.playerId][data.move.unitId].push(data.move);
+                }
+            } else if (data.move.action === "cancelUnitQueue") {
+                queues[ws.playerId][data.move.unitId] = [];
+                trimmed[ws.playerId][data.move.unitId] = true;
+            } else if (data.move.action === "cancelPlayerQueues") {
+                Object.keys(queues[ws.playerId]).forEach(unitId => {
+                    queues[ws.playerId][unitId] = [];
+                    trimmed[ws.playerId][unitId] = true;
+                });
             }
         } else if (data.event === 'toggleReady') {
             if (ws.ready === ReadyType.NOT_READY) {

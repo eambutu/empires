@@ -66,7 +66,6 @@ class Game extends Component {
         return {
             playerIds: [],
             playerId: null,
-            secret: null,
             squares: null,
             queue: [],
             displayShards: 0,
@@ -467,7 +466,6 @@ class Game extends Component {
             if (data.event === 'connected') {
                 this.setState({
                     playerId: data.playerId,
-                    secret: data.secret,
                     lobbyState: LobbyState.CONNECTED,
                     gameType: data.defaultGameType
                 });
@@ -705,7 +703,6 @@ class Game extends Component {
         this.ws.send(JSON.stringify(
             {
                 'event': 'move',
-                'secret': this.state.secret,
                 'move': move,
             }
         ));
