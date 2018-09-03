@@ -1,3 +1,4 @@
+const logger = require('./winston');
 const {SquareType, ClientStatus, UnitType, RoomType, Costs, HP, GameType} = require('./config');
 var {generateMap} = require('./map');
 
@@ -191,7 +192,7 @@ function initState(room) {
     room.towers = genMap.towers;
     room.gameWonStatus = null;
     room.frameCounter = 0;
-    console.log(`state initialized for ${room.id}`);
+    logger.info(`State initialized for room ${room.id}`);
 }
 
 function maskForPlayer(squares, playerId) {

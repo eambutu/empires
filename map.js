@@ -1,3 +1,4 @@
+const logger = require('./winston');
 const {RoomType, GameType} = require('./config');
 
 class MapSchema {
@@ -242,7 +243,7 @@ function generateMap(roomType, gameType) {
             let hasEnclosed = true;
             tempRivers = [];
             while(hasEnclosed) {
-                console.log("If you see this a million times, we're stuck in an infinite loop");
+                logger.info("If you see this a million times, we're stuck in an infinite loop");
                 let tempOcclusionMap = [];
                 tempRivers = [];
                 for (let i=0; i<riverMaps.length; i++) {
