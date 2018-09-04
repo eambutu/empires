@@ -197,7 +197,10 @@ function maskForPlayer(squares, playerId) {
 function isInSpawningRange(room, y, x, playerId, type) {
     let spawnSquares = room.spawnSquares;
     let squareStates = room.squareStates;
-    let isSpawnSquare = (y === spawnSquares[playerId][0] && x === spawnSquares[playerId][1]);
+    let isSpawnSquare = false;
+    room.playerIds.forEach(id => {
+        isSpawnSquare = isSpawnSquare || (y == spawnSquares[id][0] && x === spawnSquares[id][1]);
+    });
     if (type === UnitType.ATTACKER) {
         return isSpawnSquare;
     } else if (type === UnitType.DEFENDER) {
