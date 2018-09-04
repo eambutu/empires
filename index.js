@@ -441,6 +441,10 @@ function verifyUser(ws) {
 app.ws('/', (ws, req) => {
     verifyUser(ws).then(user => {
         homepageListeners.push(ws);
+        ws.send(JSON.stringify({
+            event: 'connected',
+            messages: chat.slice(-8)
+        }));
 
         ws.on('message', function (msg) {
             let data = JSON.parse(msg);
@@ -519,7 +523,12 @@ addMessageToChat = message => {
     while (ix >= 0 && chat[ix].timestamp > message.timestamp) {
         ix --;
     }
-    chat.splice(ix+1, 0, message);
+    if (ix < 0
+            || chat[ix].timestamp != message.timestamp
+            || chat[ix].message != message.message
+            || chat[ix].username != message.username) {
+        chat.splice(ix+1, 0, message);
+    }
 
     while (chat.length > maxChatMessages) {
         chat.shift();

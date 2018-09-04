@@ -49,13 +49,19 @@ class Homepage extends Component {
 
         this.addMessageToChat = (username, message, timestamp) => {
             let chat = this.state.chat;
-            let new_message = {username: username, message: message, timestamp: timestamp};
 
             let ix = chat.length - 1;
-            while (ix >= 0 && chat[ix].timestamp > new_message.timestamp) {
+            while (ix >= 0 && chat[ix].timestamp > timestamp) {
                 ix --;
             }
-            chat.splice(ix+1, 0, new_message);
+
+            if (ix < 0
+                    || chat[ix].timestamp != timestamp
+                    || chat[ix].message != message
+                    || chat[ix].username != username) {
+                let new_message = {username: username, message: message, timestamp: timestamp};
+                chat.splice(ix+1, 0, new_message);
+            }
 
             while (chat.length > maxChatMessages) {
                 chat.shift();
@@ -64,6 +70,7 @@ class Homepage extends Component {
             this.setState({
                 chat: chat
             });
+            this.scrollChat();
         }
 
         this.scrollChat = () => {
@@ -179,10 +186,11 @@ class Homepage extends Component {
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
             if (data.event === 'connected') {
-                console.log('connected');
+                data.messages.forEach(message => {
+                    this.addMessageToChat(message.username, message.message, message.timestamp);
+                });
             } else if (data.event === 'chat') {
                 this.addMessageToChat(data.username, data.message, data.timestamp);
-                this.scrollChat();
             }
         });
 
