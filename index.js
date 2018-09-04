@@ -17,6 +17,7 @@ const recorder = require('./recorder');
 const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
 const gameDelayInterval = 3000;
+const statisticInterval = 60000;
 const port = process.env.TEST ? 5555 : 5000;
 const maxChatMessages = 1000;
 
@@ -35,6 +36,8 @@ let roomListeners = [];
 let homepageListeners = [];
 let chat = [];
 let queueRoomId = 'ffa-' + randString(8);
+
+setInterval(logStatistics, statisticInterval);
 
 MongoClient.connect('mongodb://localhost:27017/db', { useNewUrlParser: true }, (err, db) => {
     if (err) {
@@ -781,4 +784,28 @@ function broadcastState(room) {
 
 function incrementFrameCounter(room) {
     room.frameCounter = (room.frameCounter + 1) % framesPerTurn;
+}
+
+function countClients(rooms) {
+    return rooms.map(room => room.clients.length).reduce((a, b) => a + b, 0);
+}
+
+function countWaitingClients(rooms) {
+    return rooms.map(room => room.waitingClients.length).reduce((a, b) => a + b, 0);
+}
+
+function logStatistics() {
+    let allRooms = Object.values(rooms);
+    logger.info(`------------- Begin statistics -------------`);
+    logger.info(`${allRooms.length} rooms, ${countClients(allRooms)} clients, ${countWaitingClients(allRooms)}`);
+    [RoomType.FFA, RoomType.CUSTOM].forEach(roomType => {
+        let typedRooms = allRooms.filter(room => room.type === roomType);
+        [GameStatus.IN_PROGRESS, GameStatus.QUEUING].forEach(status => {
+            let statusedRooms = typedRooms.filter(room => room.gameStatus === status);
+            logger.info(`${statusedRooms.length} ${roomType} rooms ${status}, ${countClients(statusedRooms)} clients, ${countWaitingClients(statusedRooms)} waiting clients`);
+        });
+    });
+    logger.info(`${homepageListeners.length} people on home page`);
+    logger.info(`${roomListeners.length} people on room list page`);
+    logger.info(`------------- End statistics -------------`);
 }
