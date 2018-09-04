@@ -16,7 +16,7 @@ export default function Chat(props) {
             <div id={"message-feed"} className={"message-feed"}>
                 {htmlMessages}
             </div>
-            <input id="chat-input" className={"input-box"} onKeyPress={onChatMessage} maxlength={MaxMessageLength}></input>
+            <input id="chat-input" className={"input-box"} onKeyPress={onChatMessage} maxlength={MaxMessageLength} placeholder="enter message"></input>
         </div>
     )
 
