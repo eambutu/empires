@@ -17,7 +17,29 @@ import globe from "../globe.svg";
 import startsound from "../startsound.wav";
 import redkeyboard from "../redkeyboard.svg"
 import whitekeyboard from "../whitekeyboard.svg"
+import Chat from "./Chat";
 
+let testMessages = [
+    {name: "alex", message: "s"},
+    {name: "abhi", message: "hi"},
+    {name: "alex", message: "sdgasdkgajsldgagasdgasdgadgasdgkajshdgkahsdgkashdg askldjghask djfghal isdghaklsg klashjdg klahgdasgkashdg lkashjdg "},
+    {name: "abhi", message: "salkgsldg sakldgal dsgjas"},
+    {name: "alex", message: "ya"},
+    {name: "abhi", message: ":)"},
+    {name: "alex", message: "ssdagsd gdsgsadgsadg asdgasga"},
+    {name: "phillip", message: "asldjlsdjg lasdghaklshdg kajsdhg kasgjas dglkadsglkakghak dghaksh klash kglhas kdghasl kalsdh akshd ag hakhg kasdhg klasdh kalhdgs alkhjdg "},
+    {name: "alex", message: "s"},
+    {name: "alex", message: "s"},
+    {name: "abhi", message: "hi"},
+    {name: "alex", message: "sdgasdkgajsldgagasdgasdgadgasdgkajshdgkahsdgkashdg askldjghask djfghal isdghaklsg klashjdg klahgdasgkashdg lkashjdg "},
+    {name: "abhi", message: "salkgsldg sakldgal dsgjas"},
+    {name: "alex", message: "ya"},
+    {name: "abhi", message: ":)"},
+    {name: "alex", message: "ssdagsd gdsgsadgsadg asdgasga"},
+    {name: "phillip", message: "asldjlsdjg lasdghaklshdg kajsdhg kasgjas dglkadsglkakghak dghaksh klash kglhas kdghasl kalsdh akshd ag hakhg kasdhg klasdh kalhdgs alkhjdg "},
+    {name: "alex", message: "s"},
+
+]
 
 let HomePageOption = {
     HOME_PAGE: "home page",
@@ -38,6 +60,16 @@ class Homepage extends Component {
             ranking: null,
             usernameFocus: false
         };
+
+        this.onChatMessage = (message) => {
+            console.log(message.which);
+            if (message.which === 13){
+                console.log(document.getElementById("chat-input").value)
+            }
+
+            let objDiv = document.getElementById("message-feed");
+            objDiv.scrollTop = objDiv.scrollHeight;
+        }
 
         this.hideLeaderboard = () => {
             document.getElementById("leaderboard").style.display = "none"
@@ -159,6 +191,7 @@ class Homepage extends Component {
                 </div>
 
                 <Instructions hideInstructions={this.hideInstructions}/>
+                <Chat messages={testMessages} onChatMessage={this.onChatMessage}/>
                 <div id={"no-mobile"} className="pop-up-board center no-mobile-notif">
                     <h3>Hi! Thanks for checking out Squarecraft.io. Unfortunately our game only supports desktop right now, but we're working really hard on getting something for mobile users too! In the meantime, check us out on a desktop computer :)</h3>
                 </div>
