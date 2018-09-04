@@ -191,7 +191,7 @@ class Homepage extends Component {
                 </div>
 
                 <Instructions hideInstructions={this.hideInstructions}/>
-                <Chat messages={testMessages} onChatMessage={this.onChatMessage}/>
+                {this.state.username && <Chat messages={testMessages} onChatMessage={this.onChatMessage}/>}
                 <div id={"no-mobile"} className="pop-up-board center no-mobile-notif">
                     <h3>Hi! Thanks for checking out Squarecraft.io. Unfortunately our game only supports desktop right now, but we're working really hard on getting something for mobile users too! In the meantime, check us out on a desktop computer :)</h3>
                 </div>
