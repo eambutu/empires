@@ -83,6 +83,7 @@ class Game extends Component {
             allClientStatus: {},
             gameType: null,
             forceStartSec: null,
+            waitingSec: null,
             isSplit: false
         };
     }
@@ -95,13 +96,11 @@ class Game extends Component {
         this.maxTurnsInsufficientShards = 2;  // Total number of turns the shards should flash red
 
         this.onMouseOverDuel = () => {
-            console.log("onmouseoverd")
             document.getElementById("gamedescription").innerText = "Duel: Take over your opponent's base to win."
             document.getElementById("gamedescription").style.visibility = "visible";
         }
 
         this.onMouseAwayDuel = () => {
-            console.log("onmouseawayd")
             document.getElementById("gamedescription").style.visibility = "hidden";
         }
 
@@ -484,7 +483,7 @@ class Game extends Component {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
                 audio.play();
-                this.setState({lobbyState: LobbyState.STARTING});
+                this.setState({lobbyState: LobbyState.STARTING, waitingSec: 3});
             } else if (data.event === 'full') {
                 this.setState({lobbyState: LobbyState.FULL});
                 setInterval(() => window.location.replace('/room'), 5000);
@@ -493,6 +492,8 @@ class Game extends Component {
                 setInterval(() => window.location.replace('/'), 5000);
             } else if (data.event === 'forceStartSec') {
                 this.setState({forceStartSec: data.seconds});
+            } else if (data.event === 'waitingSec') {
+                this.setState({waitingSec: data.seconds});
             }
         });
     }
@@ -519,7 +520,7 @@ class Game extends Component {
     }
 
     render() {
-        let {forceStartSec, allClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, lobbyState} = this.state;
+        let {forceStartSec, waitingSec, allClientStatus, squares, queue, playerStatus, playerId, playerIds, cursor, isSpawnDefender, flags, lobbyState} = this.state;
         let {roomType} = this.props;
         if (squares) { // in game or after game
             switch (roomType) {
@@ -598,6 +599,7 @@ class Game extends Component {
                             playerId={playerId}
                             togglePlayerReady={this.togglePlayerReady}
                             forceStartSec={forceStartSec}
+                            waitingSec={waitingSec}
                             statuses={allClientStatus}
                             goToHomeMenu={this.goToHomeMenuAndClose} />
                     );
@@ -614,6 +616,7 @@ class Game extends Component {
                             onMouseOverCTF={this.onMouseOverCTF}
                             playerId={playerId}
                             statuses={allClientStatus}
+                            waitingSec={waitingSec}
                             togglePlayerReady={this.togglePlayerReady}
                             playerIds={playerIds}
                             playerStatus={playerStatus} />
