@@ -98,20 +98,24 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.get('/user_info', (req, res) => {
-    let query = {session: req.cookies.session};
-    users.findOne(query, (err, data) => {
-        if (err) {
-            logger.error(err);
-            res(err);
-        } else if (data) {
-            res.json(Object.assign({success: true}, nameToInfo[data.username]));
-            logger.info(`Found user info ${JSON.stringify(nameToInfo[data.username], null, 2)}`);
-        } else {
-            res.clearCookie('session');
-            res.json({success: false});
-            logger.info(`Did not find user info for session ${query.session}. Clearing cookies`);
-        }
-    });
+    if (req.cookies.session) {
+        let query = {session: req.cookies.session};
+        users.findOne(query, (err, data) => {
+            if (err) {
+                logger.error(err);
+                res(err);
+            } else if (data) {
+                res.json(Object.assign({success: true}, nameToInfo[data.username]));
+                logger.info(`Found user info ${JSON.stringify(nameToInfo[data.username], null, 2)}`);
+            } else {
+                res.clearCookie('session');
+                res.json({success: false});
+                logger.info(`Did not find user info for session ${query.session}. Clearing cookies`);
+            }
+        });
+    } else {
+        logger.warn('/user_info is called but there is no session');
+    }
 });
 
 function set_ignore(req, res, ignore) {
