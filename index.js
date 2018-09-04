@@ -18,7 +18,7 @@ const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
 const gameDelayInterval = 3000;
 const port = process.env.TEST ? 5555 : 5000;
-const maxChatMessages = 10000;
+const maxChatMessages = 1000;
 
 const GameStatus = {
     QUEUING: "queuing",
