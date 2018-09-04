@@ -51,5 +51,6 @@ module.exports = {
         NOT_READY: 0,
         READY: 1,
         PLAYING: 2
-    }
+    },
+    MaxMessageLength: 100
 };

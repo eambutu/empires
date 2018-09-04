@@ -1,6 +1,8 @@
 
 import React from "react";
 import "../styles/Chat.css";
+import {MaxMessageLength} from "./config.js"
+
 
 export default function Chat(props) {
     let messages = props.messages
@@ -16,7 +18,7 @@ export default function Chat(props) {
             <div id={"message-feed"} className={"message-feed"}>
                 {htmlMessages}
             </div>
-            <input id="chat-input" className={"input-box"} onKeyPress={onChatMessage}></input>
+            <input id="chat-input" className={"input-box"} onKeyPress={onChatMessage} maxlength={MaxMessageLength}></input>
         </div>
     )
 

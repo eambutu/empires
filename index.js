@@ -10,7 +10,7 @@ const expressWs = require('express-ws')(app);
 
 const logger = require('./winston');
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
-const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
+const {RoomType, ClientStatus, ReadyType, GameType, UnitType, MaxMessageLength} = require('./config');
 
 // constants
 const gameTickInterval = 1000 / 8;
@@ -429,8 +429,10 @@ app.ws('/', (ws, req) => {
         ws.on('message', function (msg) {
             let data = JSON.parse(msg);
             if (data.event === 'chat') {
-                console.log(`User ${user.username} sent new message: "${data.message}"`)
-                broadcastChat(user.username, data.message);
+                if (data.message.length <= MaxMessageLength) {
+                    console.log(`User ${user.username} sent new message: "${data.message}"`)
+                    broadcastChat(user.username, data.message);
+                }
             }
         });
 
