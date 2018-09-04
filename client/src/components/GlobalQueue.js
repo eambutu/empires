@@ -8,7 +8,7 @@ import {ReadyType, LobbyState} from "./config"
 
 
 export default function GlobalQueue(props) {
-    const {roomType, lobbyState, forceStartSec, statuses, goToHomeMenu, playerId, togglePlayerReady} = props;
+    const {roomType, lobbyState, forceStartSec, waitingSec, statuses, goToHomeMenu, playerId, togglePlayerReady} = props;
 
     let numInQueue = Object.keys(statuses).length;
 
@@ -33,7 +33,7 @@ export default function GlobalQueue(props) {
             waitingText = 'Connected! Currently in queue...';
             break;
         case LobbyState.STARTING:
-            waitingText = 'Starting game...';
+            waitingText = `Starting game in ${waitingSec} seconds...`;
             break;
         case LobbyState.NO_SESSION:
             waitingText = 'A username is required. Redirecting to front page in 5 seconds...';
@@ -57,7 +57,7 @@ export default function GlobalQueue(props) {
                     <button className={buttonClassName} style={{width: "50%"}}onClick={togglePlayerReady}>
                         <div>Force-Start {numReadyClients}/{numWaitingClients}</div>
                     </button>
-                    <div style={{visibility: (forceStartSec > 0) ? "visible" : "hidden"}}>Auto-starting in {forceStartSec} seconds...</div>
+                    <div style={{visibility: (forceStartSec > 0 && lobbyState !== LobbyState.STARTING) ? "visible" : "hidden"}}>Auto-starting in {forceStartSec} seconds...</div>
                 </div>
             </div>
             <div id="back-arrow" onMouseLeave={() => {document.getElementById("back-arrow").style.backgroundImage = `url(${arrow})`}}

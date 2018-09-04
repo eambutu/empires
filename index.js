@@ -291,15 +291,14 @@ function onConnect(room, ws, user) {
                 tryStartGame(room);
             } else {
                 room.forceStartInterval = setInterval(() => {
-                        broadcastForceStartSec(room);
-                        if (room.forceStartSec === 0) {
-                            clearInterval(room.forceStartInterval);
-                            makeAllWaitingClientsReady(room);
-                            tryStartGame(room);
-                        }
-                        room.forceStartSec -= 1;
-                    }, 1000
-                );
+                    broadcastForceStartSec(room);
+                    if (room.forceStartSec === 0) {
+                        clearInterval(room.forceStartInterval);
+                        makeAllWaitingClientsReady(room);
+                        tryStartGame(room);
+                    }
+                    room.forceStartSec -= 1;
+                }, 1000);
             }
         }
     } else if (room.type === RoomType.TUTORIAL) {
@@ -599,6 +598,23 @@ function runGame(room) {
     room.clients.forEach(client => {
         client.ready = ReadyType.PLAYING;
     });
+
+    let gameDelayInterval = 0;
+    if (room.type !== RoomType.TUTORIAL) {
+        if (room.forceStartInterval) {
+            clearInterval(room.forceStartInterval);
+        }
+        room.waitingSec = 2;
+        gameDelayInterval = 3000;
+        room.waitingInterval = setInterval(() => {
+            broadcastWaitingSec(room);
+            if (room.waitingSec === 0) {
+                clearInterval(room.waitingInterval);
+            }
+            room.waitingSec -= 1;
+        }, 1000);
+    }
+
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
@@ -607,7 +623,7 @@ function runGame(room) {
             getPerformOneTurn(room),
             gameTickInterval
         );
-    }, (room.type === RoomType.TUTORIAL) ? 0 : gameDelayInterval);
+    }, gameDelayInterval);
     logger.info(`Started game with players ${JSON.stringify(room.clients.map(ws => ws.user.username), null, 2)}`);
 }
 
@@ -661,12 +677,23 @@ function broadcastChat(message) {
     });
 }
 
+function broadcastWaitingSec(room) {
+    room.clients.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                event: 'waitingSec',
+                seconds: room.waitingSec
+            }));
+        }
+    });
+}
+
 function broadcastForceStartSec(room) {
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
-                'event': 'forceStartSec',
-                'seconds': room.forceStartSec
+                event: 'forceStartSec',
+                seconds: room.forceStartSec
             }));
         }
     });

@@ -5,7 +5,7 @@ import {ReadyType, GameType, RoomType, LobbyState} from "./config"
 import Game from "./Game";
 
 export default function Lobby(props) {
-    const {roomType, gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, lobbyState} = props;
+    const {roomType, gameType, changeGameType, onMouseAwayDuel, onMouseOverDuel, onMouseAwayCTF, onMouseOverCTF, playerId, statuses, togglePlayerReady, playerIds, playerStatus, lobbyState, waitingSec} = props;
     let roomName = decodeURI(window.location.href.split("/").pop());
 
     let playerRows = Object.keys(statuses).filter(id => {return id === playerId}).map((id, index) => {
@@ -79,7 +79,7 @@ export default function Lobby(props) {
                     waitingText = 'Starting tutorial...';
                     break
                 default:
-                    waitingText = 'Starting game...';
+                    waitingText = `Starting game in ${waitingSec} seconds...`;
             }
             break;
         case LobbyState.FULL:
