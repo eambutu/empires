@@ -10,7 +10,7 @@ const expressWs = require('express-ws')(app);
 const logger = require('./winston');
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
 const {randString} = require('./util')
-const {RoomType, ClientStatus, ReadyType, GameType, UnitType, MaxMessageLength} = require('./config');
+const {RoomType, ClientStatus, ReadyType, GameType, UnitType, MaxMessageLength, AdminUsername} = require('./config');
 const recorder = require('./recorder');
 
 // constants
@@ -441,6 +441,7 @@ function verifyUser(ws) {
 app.ws('/', (ws, req) => {
     verifyUser(ws).then(user => {
         homepageListeners.push(ws);
+        ws.lastMessageTime = Date.now();
         ws.send(JSON.stringify({
             event: 'connected',
             messages: chat.slice(-8)
@@ -451,13 +452,23 @@ app.ws('/', (ws, req) => {
             if (data.event === 'chat') {
                 if (data.message.length > 0 && data.message.length <= MaxMessageLength) {
                     // console.log(`User ${user.username} sent new message: "${data.message}"`)
-                    let new_message = {
-                        username: user.username,
-                        message: data.message,
-                        timestamp: Date.now()
-                    };
-                    addMessageToChat(new_message);
-                    broadcastChat(new_message);
+                    let currentTime = Date.now();
+                    if ((currentTime - ws.lastMessageTime) > 500) {
+                        let new_message = {
+                            username: user.username,
+                            message: data.message,
+                            timestamp: currentTime
+                        };
+                        addMessageToChat(new_message);
+                    } else {
+                        ws.send(JSON.stringify({
+                            event: 'chat',
+                            username: AdminUsername,
+                            message: 'You are sending messages too fast!',
+                            timestamp: currentTime
+                        }));
+                    }
+                    ws.lastMessageTime = currentTime;
                 }
             }
         });
@@ -528,6 +539,7 @@ addMessageToChat = message => {
             || chat[ix].message != message.message
             || chat[ix].username != message.username) {
         chat.splice(ix+1, 0, message);
+        broadcastChat(message);
     }
 
     while (chat.length > maxChatMessages) {

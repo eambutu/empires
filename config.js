@@ -52,5 +52,6 @@ module.exports = {
         READY: 1,
         PLAYING: 2
     },
-    MaxMessageLength: 100
+    MaxMessageLength: 100,
+    AdminUsername: "SquareAdmin"
 };

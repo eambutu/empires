@@ -18,10 +18,12 @@ import startsound from "../startsound.wav";
 import redkeyboard from "../redkeyboard.svg"
 import whitekeyboard from "../whitekeyboard.svg"
 import Chat from "./Chat";
+import {AdminUsername} from "./config.js"
+
 
 let defaultMessages = [
-    {username: "squarecraftAdmin", message: "Hi there! Welcome to squarecraft.io", timestamp: 0},
-    {username: "squarecraftAdmin", message: "If you're new to the game, check out the tutorial!", timestamp: 0},
+    {username: AdminUsername, message: "Hi there! Welcome to squarecraft.io", timestamp: 0},
+    {username: AdminUsername, message: "If you're new to the game, check out the tutorial!", timestamp: 0},
 ]
 
 let maxChatMessages = 200;
