@@ -162,7 +162,9 @@ app.post('/set_username', (req, res) => {
                 res.json({success: false});
                 logger.info(`set_username found existing user with name ${username}`);
             } else {
-                res.cookie('session', insert.session);
+                res.cookie('session', insert.session, {
+                    expires: new Date('June 7, 9999')
+                });
                 res.json(Object.assign({success: true}, insert));
                 logger.info(`Created new user with name ${username} and key ${insert.session}`);
                 calculateLeaderboard();
