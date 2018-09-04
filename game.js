@@ -573,7 +573,8 @@ function updateBasesAndCheckWin(room) {
         let unit = room.squareStates[y][x].getUnit();
         if (unit && (unit.playerId !== playerId)) {
             if (unit.count >= room.squareStates[y][x].baseHP) {
-                unit.count -= room.squareStates[y][x].baseHP;
+                //unit.count -= room.squareStates[y][x].baseHP;
+                unit.count = 0;
                 room.squareStates[y][x].baseHP = 0;
 
                 let gameWonStatus = {};
