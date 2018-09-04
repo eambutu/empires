@@ -35,6 +35,7 @@ let nameToInfo = null;
 let rooms = {};
 let roomListeners = [];
 let homepageListeners = [];
+let chat = [];
 let queueRoomId = 'ffa-' + randString(8);
 
 MongoClient.connect('mongodb://localhost:27017/db', { useNewUrlParser: true }, (err, db) => {
@@ -430,8 +431,14 @@ app.ws('/', (ws, req) => {
             let data = JSON.parse(msg);
             if (data.event === 'chat') {
                 if (data.message.length <= MaxMessageLength) {
-                    console.log(`User ${user.username} sent new message: "${data.message}"`)
-                    broadcastChat(user.username, data.message);
+                    // console.log(`User ${user.username} sent new message: "${data.message}"`)
+                    let new_message = {
+                        username: user.username,
+                        message: data.message,
+                        timestamp: Date.now()
+                    };
+                    chat.push(new_message);
+                    broadcastChat(new_message);
                 }
             }
         });
@@ -593,17 +600,17 @@ function getAllClientStatus(room) {
     return allClientStatus;
 }
 
-function broadcastChat(username, message) {
+function broadcastChat(message) {
     homepageListeners.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
                 event: 'chat',
-                username: username,
-                message: message,
+                username: message.username,
+                message: message.message,
+                timestamp: message.timestamp
             }));
         }
     });
-    console.log("Broadcast chat");
 }
 
 function broadcastForceStartSec(room) {

@@ -7,11 +7,9 @@ import {MaxMessageLength} from "./config.js"
 export default function Chat(props) {
     let messages = props.messages
     let onChatMessage = props.onChatMessage;
-    console.log(messages)
-
 
     let htmlMessages = messages.map(message => (
-        <p className={"message"}><b>{message.name}</b>{": " + message.message}</p>
+        <p className={"message"}><b>{message.username}</b>{": " + message.message}</p>
     ));
     return (
         <div className={"chat-box-holder"}>

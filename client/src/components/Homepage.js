@@ -20,11 +20,11 @@ import whitekeyboard from "../whitekeyboard.svg"
 import Chat from "./Chat";
 
 let defaultMessages = [
-    {name: "squarecraftAdmin", message: "Hi there! Welcome to squarecraft.io!"},
-    {name: "squarecraftAdmin", message: "If you're new to the game, check out the tutorial."},
+    {username: "squarecraftAdmin", message: "Hi there! Welcome to squarecraft.io", timestamp: 0},
+    {username: "squarecraftAdmin", message: "If you're new to the game, check out the tutorial!", timestamp: 0},
 ]
 
-let maxChatMessages = 100;
+let maxChatMessages = 200;
 
 let HomePageOption = {
     HOME_PAGE: "home page",
@@ -47,13 +47,16 @@ class Homepage extends Component {
             chat: defaultMessages,
         };
 
-        this.addMessageToChat = (name, message) => {
+        this.addMessageToChat = (username, message, timestamp) => {
             let chat = this.state.chat;
-            let new_message = {name: name, message: message};
-            chat.push(new_message);
-            while (chat.length > maxChatMessages) {
-                chat.shift();
+            let new_message = {username: username, message: message, timestamp: timestamp};
+
+            let ix = chat.length - 1;
+            while (ix >= 0 && chat[ix].timestamp > new_message.timestamp) {
+                ix --;
             }
+            chat.splice(ix+1, 0, new_message);
+
             this.setState({
                 chat: chat
             });
@@ -154,7 +157,6 @@ class Homepage extends Component {
             // console.log(message.which);
             if (message.which === 13) {
                 let message_text = document.getElementById("chat-input").value;
-                console.log(message_text)
 
                 this.ws.send(JSON.stringify(
                     {
@@ -171,7 +173,7 @@ class Homepage extends Component {
             if (data.event === 'connected') {
                 console.log('connected');
             } else if (data.event === 'chat') {
-                this.addMessageToChat(data.username, data.message);
+                this.addMessageToChat(data.username, data.message, data.timestamp);
             }
             this.scrollChat();
         });
