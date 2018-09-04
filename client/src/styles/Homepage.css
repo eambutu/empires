@@ -210,3 +210,16 @@ a:hover{
 .keyboard-holder {
     padding: 15px;
 }
+
+
+.no-mobile-notif{
+    color: black;
+    width: 300px;
+    margin: auto;
+}
+
+@media only screen and (min-width: 500px) {
+    .no-mobile-notif {
+        display: none;
+    }
+}

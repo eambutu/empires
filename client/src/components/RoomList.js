@@ -26,41 +26,18 @@ class RoomList extends Component {
         this.ws = new WebSocket(wsPath);
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
-            console.log(data.event);
-            if (data.event === 'refresh_room_list') {
-                this.loadRoomList();
+            if (data.event === 'room_list') {
+                this.setState({data: data.roomList});
             }
         });
     }
 
-
-    onClickRoom(id) {
-        function onClick(e) {
-            window.location.href = '/room/' + id;
-        }
-
-        return onClick;
-    }
-
     componentDidMount() {
-        this.loadRoomList();
         let wsPath = 'ws://' + window.location.hostname + ':5000/room_list';
         this.setUpWebSocket(wsPath);
         document.body.style.overflow = "scroll";
     }
-
-    loadRoomList() {
-        fetch('/room_list')
-            .then(res => res.json())
-            .then(resJson => {
-                this.setState({data: resJson})
-            });
-    }
-
-    componentWillUnmount() {
-        document.body.style.overflow = "hidden";
-    }
-
+    
     render() {
         if (this.state.data) {
             return (
@@ -80,7 +57,7 @@ class RoomList extends Component {
                             <table>
                                 <tbody className={"room-list-table"}>
                                     {Object.values(this.state.data).map(room => (
-                                        <tr key={room['id']} onClick={this.onClickRoom(room['id'])} className={"room-list-row-container"}>
+                                        <tr key={room['id']} onClick={() => window.location.replace(`/room/${room['id']}`)} className={"room-list-row-container"}>
                                             <div className={"room-list-row"}>
                                             <td className={"room-list-element"}>
                                                 {room['id']}

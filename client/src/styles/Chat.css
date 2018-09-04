@@ -1,0 +1,36 @@
+.chat-box-holder{
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+}
+
+@media only screen and (max-width: 900px) {
+    .chat-box-holder {
+        display: none;
+    }
+}
+
+.message-feed{
+    max-height: 380px;
+    max-width: 300px;
+    width: 300px;
+    background-color: #111111;
+    overflow: scroll;
+    padding-left: 15px;
+    padding-right: 15px;
+    color: white;
+    font-size: 15px;
+}
+
+.input-box {
+    width: 100%;
+    background-color: white;
+
+}
+
+.message {
+    margin: 0px;
+    max-width: 240px;
+    word-wrap: break-word;
+}

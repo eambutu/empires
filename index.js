@@ -1,15 +1,18 @@
 const express = require('express');
-const app = express();
-const expressWs = require('express-ws')(app);
 const path = require('path');
 const crypto = require('crypto');
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
-const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
-const {RoomType, ClientStatus, ReadyType, GameType, UnitType} = require('./config');
+const app = express();
+const expressWs = require('express-ws')(app);
 
+const logger = require('./winston');
+const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
+const {RoomType, ClientStatus, ReadyType, GameType, UnitType, MaxMessageLength} = require('./config');
+
+// constants
 const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
 const gameDelayInterval = 3000;
@@ -20,24 +23,38 @@ const GameStatus = {
     IN_PROGRESS: "inProgress"
 };
 
-let mongoUrl = 'mongodb://localhost:27017/db';
+// util functions
+function randString(length) {
+    return crypto.randomBytes(length / 2).toString('hex');
+}
+
+// globals
 let users = null;
-MongoClient.connect(mongoUrl, { useNewUrlParser: true }, (err, db) => {
-    if (err) throw err;
+let leaderboard = null;
+let nameToInfo = null;
+let rooms = {};
+let roomListeners = [];
+let homepageListeners = [];
+let queueRoomId = 'ffa-' + randString(8);
+
+MongoClient.connect('mongodb://localhost:27017/db', { useNewUrlParser: true }, (err, db) => {
+    if (err) {
+        logger.info(err);
+        throw err;
+    }
     let databaseName = process.env.TEST ? 'test' : 'db';
     let database = db.db(databaseName);
-    console.log('Created database', databaseName);
+    logger.info(`Created database ${databaseName}`);
     users = database.collection('users');
     calculateLeaderboard();
 });
 
-let leaderboard = null;
-let nameToInfo = null;
 function calculateLeaderboard() {
-    if (users === null) {
-        return;
-    }
     users.find({}, {_id: 0, username: 1, ratingFFA: 1, multiplier: 1, ignore: 1}).toArray((err, result) => {
+        if (err) {
+            logger.error(err);
+            throw err;
+        }
         result.forEach(r => {
             r.ratingFFA = Math.round(r.ratingFFA * r.multiplier);
         });
@@ -56,18 +73,9 @@ function calculateLeaderboard() {
             nameToInfo[user.username] = user;
         });
         
-        console.log('Updated leaderboard');
+        logger.info('Updated leaderboard');
     });
 }
-
-let roomListeners = [];
-
-function randString(length) {
-    return crypto.randomBytes(length / 2).toString('hex');
-}
-
-let rooms = {};
-let queueRoomId = 'ffa-' + randString(8);
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -78,15 +86,15 @@ app.get('/user_info', (req, res) => {
     let query = {session: req.cookies.session};
     users.findOne(query, (err, data) => {
         if (err) {
-            console.log(err);
+            logger.error(err);
             res(err);
         } else if (data) {
             res.json(Object.assign({success: true}, nameToInfo[data.username]));
-            console.log('Found user info', nameToInfo[data.username])
+            logger.info(`Found user info ${JSON.stringify(nameToInfo[data.username], null, 2)}`);
         } else {
             res.clearCookie('session');
             res.json({success: false});
-            console.log('Did not find user info', query, 'clearing cookies');
+            logger.info(`Did not find user info for session ${query.session}. Clearing cookies`);
         }
     });
 });
@@ -95,12 +103,12 @@ function set_ignore(req, res, ignore) {
     let query = {session: req.cookies.session};
     users.updateOne(query, {$set: {ignore: ignore}}, (err, ret) => {
         if (err) {
-            console.log(err);
+            logger.error(err);
             res(err);
         } else {
             calculateLeaderboard();
             res.json({success: true, ignore: ignore})
-            console.log('Set ignore value of', query, 'to be', ignore);
+            logger.info(`Set ignore value of ${query} to ${ignore}`);
         }
     });
 }
@@ -129,38 +137,27 @@ app.post('/set_username', (req, res) => {
         let insert = getNewUser(username);
         users.updateOne(query, {$setOnInsert: insert}, {upsert: true}, (err, ret) => {
             if (err) {
-                console.log(err);
+                logger.error(err);
                 res(err);
             } else if (!ret.result.upserted) {
                 res.json({success: false});
-                console.log('Found existing user with name', username);
+                logger.info(`set_username found existing user with name ${username}`);
             } else {
                 res.cookie('session', insert.session);
                 res.json(Object.assign({success: true}, insert));
-                console.log('Created new user with name', username, 'and key', insert.session);
+                logger.info(`Created new user with name ${username} and key ${insert.session}`);
                 calculateLeaderboard();
             }
         });
     } else {
         res.json({success: false});
-        console.log('Empty username');
+        logger.info('set_username found empty username');
     }
 });
 
-app.get('/leaderboard', function (req, res) {
+app.get('/leaderboard', (req, res) => {
+    logger.info('Sending leaderboard');
     res.json(leaderboard);
-    console.log('Sent leaderboard');
-});
-
-app.get('/room_list', function (req, res) {
-    let roomList = Object.values(rooms).filter(room => room.type === RoomType.CUSTOM)
-        .map(room => ({
-            id: room.id,
-            gameStatus: room.gameStatus,
-            maxNumPlayers: room.maxNumPlayers,
-            numPlayersIn: room.waitingClients.length + room.clients.length
-        }));
-    res.json(roomList);
 });
 
 app.get(['/room', '/room/:roomId'], function (req, res) {
@@ -206,6 +203,9 @@ function initOrGetRoom (roomId, roomType) {
             maxNumPlayers: maxNumPlayers,
             gameType: gameType
         };
+        logger.info(`Creating new room ${roomId}`);
+    } else {
+        logger.info(`Got existing room ${roomId}`);
     }
     return rooms[roomId];
 }
@@ -222,13 +222,13 @@ function onConnect(room, ws, user) {
     ws.status = ClientStatus.CONNECTED;
     ws.playerId = randString(8);
     ws.user = user;
-    ws.secret = randString(20);
     ws.ready = ReadyType.NOT_READY;
-    console.log(`player ${ws.user.username} connected to ${room.id} with status ${room.gameStatus}`);
+
+    logger.info(`Player ${ws.user.username} connected to ${room.type} room ${room.id} with status ${room.gameStatus}`);
+
     ws.send(JSON.stringify({
         event: 'connected',
         playerId: ws.playerId,
-        secret: ws.secret,
         defaultGameType: room.gameType
     }));
     onMessage(room, ws);
@@ -260,19 +260,9 @@ function onConnect(room, ws, user) {
     }, 1000);
 
     broadcastAllClientStatus(room);
-    broadcastRoomList();
 
     if (room.type === RoomType.FFA) {
         let numWaitingClients = room.waitingClients.length;
-        let forceStartFn = e => {
-            broadcastForceStartSec(room);
-            if (room.forceStartSec === 0) {
-                clearInterval(room.forceStartInterval);
-                makeAllWaitingClientsReady(room);
-                tryStartGame(room);
-            }
-            room.forceStartSec -= 1;
-        }
         if (numWaitingClients > 1) {
             room.forceStartSec = 30;
 
@@ -284,15 +274,23 @@ function onConnect(room, ws, user) {
                 makeAllWaitingClientsReady(room);
                 tryStartGame(room);
             } else {
-                room.forceStartInterval = setInterval(
-                    forceStartFn,
-                    1000
+                room.forceStartInterval = setInterval(() => {
+                        broadcastForceStartSec(room);
+                        if (room.forceStartSec === 0) {
+                            clearInterval(room.forceStartInterval);
+                            makeAllWaitingClientsReady(room);
+                            tryStartGame(room);
+                        }
+                        room.forceStartSec -= 1;
+                    }, 1000
                 );
             }
         }
     } else if (room.type === RoomType.TUTORIAL) {
         makeAllWaitingClientsReady(room);
         tryStartGame(room);
+    } else if (room.type === RoomType.CUSTOM) {
+        broadcastRoomList();
     }
 }
 
@@ -302,7 +300,9 @@ function onClose(room, ws) {
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
         broadcastAllClientStatus(room);
-        broadcastRoomList();
+        if (room.type === RoomType.CUSTOM) {
+            broadcastRoomList();
+        }
         let checkRoomStateFn = e => {checkRoomState(room)};
         setTimeout(
             checkRoomStateFn,
@@ -315,30 +315,27 @@ function onMessage(room, ws) {
     ws.on('message', function (msg) {
         let data = JSON.parse(msg);
         if (data.event === 'move') {
-            // console.log('received', data);
-            if (data.secret === ws.secret) {
-                let queues = room.queues;
-                let trimmed = room.trimmed;
-                let spawned = room.spawned;
-                data.move.playerId = ws.playerId;
-                if (data.move.action === "spawn") {
-                    queues[ws.playerId]["spawn"].push(data.move);
-                    if (data.move.type === UnitType.ATTACKER) {
-                        spawned[ws.playerId] = true;
-                    }
-                } else if (data.move.action.includes("move")) {
-                    if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
-                        queues[ws.playerId][data.move.unitId].push(data.move);
-                    }
-                } else if (data.move.action === "cancelUnitQueue") {
-                    queues[ws.playerId][data.move.unitId] = [];
-                    trimmed[ws.playerId][data.move.unitId] = true;
-                } else if (data.move.action === "cancelPlayerQueues") {
-                    Object.keys(queues[ws.playerId]).forEach(unitId => {
-                        queues[ws.playerId][unitId] = [];
-                        trimmed[ws.playerId][unitId] = true;
-                    });
+            let queues = room.queues;
+            let trimmed = room.trimmed;
+            let spawned = room.spawned;
+            data.move.playerId = ws.playerId;
+            if (data.move.action === "spawn") {
+                queues[ws.playerId]["spawn"].push(data.move);
+                if (data.move.type === UnitType.ATTACKER) {
+                    spawned[ws.playerId] = true;
                 }
+            } else if (data.move.action.includes("move")) {
+                if (data.move.unitId && (data.move.unitId in queues[ws.playerId])) {
+                    queues[ws.playerId][data.move.unitId].push(data.move);
+                }
+            } else if (data.move.action === "cancelUnitQueue") {
+                queues[ws.playerId][data.move.unitId] = [];
+                trimmed[ws.playerId][data.move.unitId] = true;
+            } else if (data.move.action === "cancelPlayerQueues") {
+                Object.keys(queues[ws.playerId]).forEach(unitId => {
+                    queues[ws.playerId][unitId] = [];
+                    trimmed[ws.playerId][unitId] = true;
+                });
             }
         } else if (data.event === 'toggleReady') {
             if (ws.ready === ReadyType.NOT_READY) {
@@ -346,6 +343,7 @@ function onMessage(room, ws) {
             } else {
                 ws.ready = ReadyType.NOT_READY;
             }
+            logger.debug(`Client ${ws.user.username} switched state in room ${room.id} to ${ws.ready}`);
             broadcastAllClientStatus(room);
             
             if (ws.ready === ReadyType.READY) {
@@ -353,13 +351,12 @@ function onMessage(room, ws) {
             }
         } else if (data.event === 'veil') {
             room.fogOfWar = true;
-        } else if (data.event === 'exit') {
-            ws.close();
         } else if (data.event === 'changeGame') {
             if (room.gameStatus === GameStatus.QUEUING) {
                 room.gameType = data.gameType;
                 broadcastChangeGameType(room);
             }
+            logger.debug(`Client ${ws.user.username} changed game type in room ${room.id} to ${data.gameType}`);
         }
     });
 }
@@ -387,9 +384,10 @@ function connectToRoom(room, ws, user) {
         duplicatePlayer = duplicatePlayer || (client.user.session === user.session);
     });
     if (duplicatePlayer) {
-        console.log('Prevented', user, 'from connecting to room', room.id, 'twice');
+        logger.warn(`Prevented duplicate connection for ${user.username} room ${room.id}`);
         ws.close();
-    } else if (room.type === RoomType.CUSTOM && ((room.waitingClients.length + room.clients.length) === room.maxNumPlayers)) {
+    } else if (room.type === RoomType.CUSTOM && (room.waitingClients.length + room.clients.length) === room.maxNumPlayers) {
+        logger.info(`User ${user} attempted to connect to full room ${room.id}`);
         ws.send(JSON.stringify({event: 'full'}));
         ws.close();
     } else {
@@ -408,19 +406,45 @@ expressWs.getWss().on('connection', (ws, req) => {
 function verifyUser(ws) {
     return new Promise((resolve, reject) => {
         ws.finishConnecting = session => { // promise gets resolved or rejected when finishConnecting gets called by expressWs.getWss().on('connection')
-            console.log('Verifying new ws connection with session', session);
             users.findOne({session: session}, (err, data) => {
-                if (err || !data) {
-                    console.log(err);
+                if (err) {
+                    logger.error(err);
+                    reject(session);
+                } else if (!data) {
+                    logger.warn(`Could not find session ${data.session} in users`);
                     reject(session);
                 } else {
-                    console.log('Verify success with username', data.username, 'session', data.session);
+                    logger.info(`Verify success with username ${data.username} session ${data.session}`);
                     resolve(data)
                 }
             });
         }
     });
 }
+
+app.ws('/', (ws, req) => {
+    verifyUser(ws).then(user => {
+        homepageListeners.push(ws);
+
+        ws.on('message', function (msg) {
+            let data = JSON.parse(msg);
+            if (data.event === 'chat') {
+                if (data.message.length <= MaxMessageLength) {
+                    console.log(`User ${user.username} sent new message: "${data.message}"`)
+                    broadcastChat(user.username, data.message);
+                }
+            }
+        });
+
+        ws.on('close', () => {
+            homepageListeners = homepageListeners.filter(client => (client !== ws));
+        });
+    }).catch(session => { // session not found in database, redirect
+        if (ws.readyState === ws.OPEN) {
+            ws.close();
+        }
+    });
+});
 
 app.ws('/ffa', (ws, req) => {
     verifyUser(ws).then(user => {
@@ -458,13 +482,14 @@ app.ws('/tutorial', (ws, req) => {
 
 app.ws('/room_list', (ws, req) => {
     roomListeners.push(ws);
+    broadcastRoomList([ws]);
     ws.on('close', () => {
         roomListeners = roomListeners.filter(client => (client !== ws));
     });
 });
 
 app.listen(port, () => {
-    console.log('App listening on port', port);
+    logger.info(`App listening on port ${port}`);
 });
 
 getPerformOneTurn = targetRoom => {
@@ -474,7 +499,7 @@ getPerformOneTurn = targetRoom => {
         if (room.gameStatus === GameStatus.IN_PROGRESS) {
             let gameEnded = updateState(room);
             if (gameEnded) {
-                console.log("Game ended at room id", room.id);
+                logger.info(`Game ended at room ${room.id}`);
                 if (room.type === RoomType.FFA) {
                     calculateNewRatings(room);
                     let usernameList = [];
@@ -485,8 +510,11 @@ getPerformOneTurn = targetRoom => {
                             multiplier: Math.min(client.user.multiplier + 0.1, 1.0)
                         }};
 
-                        users.updateOne(query, newValues, function(err, res) {
-                            if (err) throw err;
+                        users.updateOne(query, newValues, (err, res) => {
+                            if (err) {
+                                logger.error(err);
+                                throw err;
+                            }
                         });
                     });
                     calculateLeaderboard();
@@ -525,6 +553,7 @@ function runGame(room) {
             gameTickInterval
         )
     }, (room.type === RoomType.TUTORIAL) ? 0 : gameDelayInterval);
+    logger.info(`Started game with players ${JSON.stringify(room.clients.map(ws => ws.user.username), null, 2)}`);
 }
 
 function checkRoomState(room) {
@@ -535,7 +564,7 @@ function checkRoomState(room) {
         room.gameStatus = GameStatus.QUEUING;
         if (room.waitingClients.length === 0 && room.id in rooms) {
             delete rooms[room.id];
-            console.log("deleting room with id " + room.id);
+            logger.info(`Deleting room with id ${room.id}`);
         }
         else {
             tryStartGame(room);
@@ -564,6 +593,18 @@ function getAllClientStatus(room) {
     return allClientStatus;
 }
 
+function broadcastChat(username, message) {
+    homepageListeners.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                event: 'chat',
+                username: username,
+                message: message,
+            }));
+        }
+    });
+    console.log("Broadcast chat");
+}
 
 function broadcastForceStartSec(room) {
     room.waitingClients.forEach(ws => {
@@ -580,8 +621,8 @@ function broadcastChangeGameType(room) {
     room.waitingClients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
-                'event': 'setGameType',
-                'gameType': room.gameType,
+                event: 'setGameType',
+                gameType: room.gameType,
             }));
         }
     });
@@ -597,17 +638,26 @@ function broadcastAllClientStatus(room) {
             }));
         }
     });
-    console.log('sent allClientStatus', allClientStatus, 'to', room.id);
+    if (room.waitingClients) logger.info(`Broadcasted client statuses ${JSON.stringify(allClientStatus, null, 2)} to room ${room.id}`);
 }
 
-function broadcastRoomList() {
-    roomListeners.forEach(ws => {
+function broadcastRoomList(listeners = roomListeners) {
+    let roomList = Object.values(rooms).filter(room => room.type === RoomType.CUSTOM)
+        .map(room => ({
+            id: room.id,
+            gameStatus: room.gameStatus,
+            maxNumPlayers: room.maxNumPlayers,
+            numPlayersIn: room.waitingClients.length + room.clients.length
+        }));
+    listeners.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
-                'event': 'refresh_room_list'
+                event: 'room_list',
+                roomList: roomList
             }));
         }
     });
+    if (roomListeners) logger.info(`Broadcasted ${roomList.length} rooms to ${roomListeners.length} clients`);
 }
 
 function broadcastStarting(room) {
@@ -616,7 +666,7 @@ function broadcastStarting(room) {
             ws.send(JSON.stringify({event: 'starting'}));
         }
     });
-    console.log(`sent starting to ${room.id}`);
+    logger.info(`Broadcasted starting for room ${room.id}`);
 }
 
 function broadcastInit(room) {
@@ -636,13 +686,13 @@ function broadcastInit(room) {
             }));
         }
     });
-    console.log(`sent init to ${room.id}`);
+    logger.info(`Broadcasted init to room ${room.id}`);
 }
 
 function broadcastState(room) {
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
-            ws.send(JSON.stringify({'event': 'update', 'state': getState(room, ws.playerId)}));
+            ws.send(JSON.stringify({event: 'update', 'state': getState(room, ws.playerId)}));
         }
     });
 }
