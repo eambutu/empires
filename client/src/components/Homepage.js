@@ -174,8 +174,8 @@ class Homepage extends Component {
                 console.log('connected');
             } else if (data.event === 'chat') {
                 this.addMessageToChat(data.username, data.message, data.timestamp);
+                this.scrollChat();
             }
-            this.scrollChat();
         });
 
     }
