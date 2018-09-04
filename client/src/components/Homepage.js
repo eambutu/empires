@@ -153,6 +153,9 @@ class Homepage extends Component {
                     // user has session but is not in database, cookie has been cleared by server
                 }
             });
+
+            let wsPath = 'ws://' + window.location.hostname + ':5000';
+            this.setUpWebSocket(wsPath);
         }
     }
 
@@ -166,7 +169,9 @@ class Homepage extends Component {
 
 
     setUpWebSocket(wsPath) {
-        this.ws = new WebSocket(wsPath);
+        if (!this.ws) {
+            this.ws = new WebSocket(wsPath);
+        }
 
         this.onChatMessage = (message) => {
             // console.log(message.which);
@@ -201,8 +206,6 @@ class Homepage extends Component {
     componentDidMount() {
         this.fetchUserInfo();
         this.fetchLeaderboard();
-        let wsPath = 'ws://' + window.location.hostname + ':5000';
-        this.setUpWebSocket(wsPath);
     }
 
     componentDidUpdate(prevProps, prevState) {
