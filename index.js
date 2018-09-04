@@ -34,6 +34,7 @@ let leaderboard = null;
 let nameToInfo = null;
 let rooms = {};
 let roomListeners = [];
+let homepageListeners = [];
 let queueRoomId = 'ffa-' + randString(8);
 
 MongoClient.connect('mongodb://localhost:27017/db', { useNewUrlParser: true }, (err, db) => {
@@ -421,6 +422,28 @@ function verifyUser(ws) {
     });
 }
 
+app.ws('/', (ws, req) => {
+    verifyUser(ws).then(user => {
+        homepageListeners.push(ws);
+
+        ws.on('message', function (msg) {
+            let data = JSON.parse(msg);
+            if (data.event === 'chat') {
+                console.log(`User ${user.username} sent new message: "${data.message}"`)
+                broadcastChat(user.username, data.message);
+            }
+        });
+
+        ws.on('close', () => {
+            homepageListeners = homepageListeners.filter(client => (client !== ws));
+        });
+    }).catch(session => { // session not found in database, redirect
+        if (ws.readyState === ws.OPEN) {
+            ws.close();
+        }
+    });
+});
+
 app.ws('/ffa', (ws, req) => {
     verifyUser(ws).then(user => {
         let room = initOrGetRoom(queueRoomId, RoomType.FFA);
@@ -566,6 +589,19 @@ function getAllClientStatus(room) {
         }
     });
     return allClientStatus;
+}
+
+function broadcastChat(username, message) {
+    homepageListeners.forEach(ws => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({
+                event: 'chat',
+                username: username,
+                message: message,
+            }));
+        }
+    });
+    console.log("Broadcast chat");
 }
 
 function broadcastForceStartSec(room) {

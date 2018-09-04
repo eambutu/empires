@@ -19,27 +19,12 @@ import redkeyboard from "../redkeyboard.svg"
 import whitekeyboard from "../whitekeyboard.svg"
 import Chat from "./Chat";
 
-let testMessages = [
-    {name: "alex", message: "s"},
-    {name: "abhi", message: "hi"},
-    {name: "alex", message: "sdgasdkgajsldgagasdgasdgadgasdgkajshdgkahsdgkashdg askldjghask djfghal isdghaklsg klashjdg klahgdasgkashdg lkashjdg "},
-    {name: "abhi", message: "salkgsldg sakldgal dsgjas"},
-    {name: "alex", message: "ya"},
-    {name: "abhi", message: ":)"},
-    {name: "alex", message: "ssdagsd gdsgsadgsadg asdgasga"},
-    {name: "phillip", message: "asldjlsdjg lasdghaklshdg kajsdhg kasgjas dglkadsglkakghak dghaksh klash kglhas kdghasl kalsdh akshd ag hakhg kasdhg klasdh kalhdgs alkhjdg "},
-    {name: "alex", message: "s"},
-    {name: "alex", message: "s"},
-    {name: "abhi", message: "hi"},
-    {name: "alex", message: "sdgasdkgajsldgagasdgasdgadgasdgkajshdgkahsdgkashdg askldjghask djfghal isdghaklsg klashjdg klahgdasgkashdg lkashjdg "},
-    {name: "abhi", message: "salkgsldg sakldgal dsgjas"},
-    {name: "alex", message: "ya"},
-    {name: "abhi", message: ":)"},
-    {name: "alex", message: "ssdagsd gdsgsadgsadg asdgasga"},
-    {name: "phillip", message: "asldjlsdjg lasdghaklshdg kajsdhg kasgjas dglkadsglkakghak dghaksh klash kglhas kdghasl kalsdh akshd ag hakhg kasdhg klasdh kalhdgs alkhjdg "},
-    {name: "alex", message: "s"},
-
+let defaultMessages = [
+    {name: "squarecraftAdmin", message: "Hi there! Welcome to squarecraft.io!"},
+    {name: "squarecraftAdmin", message: "If you're new to the game, check out the tutorial."},
 ]
+
+let maxChatMessages = 100;
 
 let HomePageOption = {
     HOME_PAGE: "home page",
@@ -58,15 +43,23 @@ class Homepage extends Component {
             username: undefined,
             rating: null,
             ranking: null,
-            usernameFocus: false
+            usernameFocus: false,
+            chat: defaultMessages,
         };
 
-        this.onChatMessage = (message) => {
-            console.log(message.which);
-            if (message.which === 13){
-                console.log(document.getElementById("chat-input").value)
+        this.addMessageToChat = (name, message) => {
+            let chat = this.state.chat;
+            let new_message = {name: name, message: message};
+            chat.push(new_message);
+            while (chat.length > maxChatMessages) {
+                chat.shift();
             }
+            this.setState({
+                chat: chat
+            });
+        }
 
+        this.scrollChat = () => {
             let objDiv = document.getElementById("message-feed");
             objDiv.scrollTop = objDiv.scrollHeight;
         }
@@ -153,9 +146,43 @@ class Homepage extends Component {
         });
     }
 
+
+    setUpWebSocket(wsPath) {
+        this.ws = new WebSocket(wsPath);
+
+        this.onChatMessage = (message) => {
+            // console.log(message.which);
+            if (message.which === 13) {
+                let message_text = document.getElementById("chat-input").value;
+                console.log(message_text)
+
+                this.ws.send(JSON.stringify(
+                    {
+                        'event': 'chat',
+                        'message': message_text,
+                    }
+                ));
+                this.scrollChat();
+            }
+        }
+
+        this.ws.addEventListener('message', event => {
+            let data = JSON.parse(event.data);
+            if (data.event === 'connected') {
+                console.log('connected');
+            } else if (data.event === 'chat') {
+                this.addMessageToChat(data.username, data.message);
+            }
+            this.scrollChat();
+        });
+
+    }
+
     componentDidMount() {
         this.fetchUserInfo();
         this.fetchLeaderboard();
+        let wsPath = 'ws://' + window.location.hostname + ':5000';
+        this.setUpWebSocket(wsPath);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -164,6 +191,10 @@ class Homepage extends Component {
             this.fetchUserInfo();
             this.fetchLeaderboard();
         }
+    }
+
+    componentWillUnmount() {
+        this.ws.close();
     }
 
     render() {
@@ -191,7 +222,7 @@ class Homepage extends Component {
                 </div>
 
                 <Instructions hideInstructions={this.hideInstructions}/>
-                {this.state.username && <Chat messages={testMessages} onChatMessage={this.onChatMessage}/>}
+                {this.state.username && <Chat messages={this.state.chat} onChatMessage={this.onChatMessage}/>}
                 <div id={"no-mobile"} className="pop-up-board center no-mobile-notif">
                     <h3>Hi! Thanks for checking out Squarecraft.io. Unfortunately our game only supports desktop right now, but we're working really hard on getting something for mobile users too! In the meantime, check us out on a desktop computer :)</h3>
                 </div>
