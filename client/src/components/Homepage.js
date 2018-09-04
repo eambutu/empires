@@ -14,7 +14,6 @@ import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 import redglobe from "../redglobe.svg";
 import globe from "../globe.svg";
-import reddit from "../reddit.png"
 import startsound from "../startsound.wav";
 import redkeyboard from "../redkeyboard.svg"
 import whitekeyboard from "../whitekeyboard.svg"
