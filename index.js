@@ -114,7 +114,7 @@ app.get('/user_info', (req, res) => {
             }
         });
     } else {
-        logger.warn('/user_info is called but there is no session');        
+        logger.warn('/user_info is called but there is no session');
     }
 });
 
