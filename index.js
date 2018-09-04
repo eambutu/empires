@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const crypto = require('crypto');
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -10,7 +9,9 @@ const expressWs = require('express-ws')(app);
 
 const logger = require('./winston');
 const {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings} = require('./game');
+const {randString} = require('./util')
 const {RoomType, ClientStatus, ReadyType, GameType, UnitType, MaxMessageLength} = require('./config');
+const recorder = require('./recorder');
 
 // constants
 const gameTickInterval = 1000 / 8;
@@ -23,18 +24,15 @@ const GameStatus = {
     IN_PROGRESS: "inProgress"
 };
 
-// util functions
-function randString(length) {
-    return crypto.randomBytes(length / 2).toString('hex');
-}
-
 // globals
 let users = null;
+let games = null;
 let leaderboard = null;
 let nameToInfo = null;
 let rooms = {};
 let roomListeners = [];
 let homepageListeners = [];
+let chat = [];
 let queueRoomId = 'ffa-' + randString(8);
 
 MongoClient.connect('mongodb://localhost:27017/db', { useNewUrlParser: true }, (err, db) => {
@@ -46,6 +44,19 @@ MongoClient.connect('mongodb://localhost:27017/db', { useNewUrlParser: true }, (
     let database = db.db(databaseName);
     logger.info(`Created database ${databaseName}`);
     users = database.collection('users');
+    games = database.collection('games');
+    games.createIndex({gameId: 1}, (err, result) => {
+        if (err) {
+            logger.error(err);
+            throw err;
+        }
+    });
+    games.createIndex({playerIds: 1}, (err, result) => {
+        if (err) {
+            logger.error(err);
+            throw err;
+        }
+    });
     calculateLeaderboard();
 });
 
@@ -169,6 +180,7 @@ function initOrGetRoom (roomId, roomType) {
         let maxNumPlayers;
         let minNumPlayers;
         let gameType;
+        let recorded = true;
         switch (roomType) {
             case RoomType.FFA:
                 minNumPlayers = 2;
@@ -184,11 +196,13 @@ function initOrGetRoom (roomId, roomType) {
                 minNumPlayers = 1;
                 maxNumPlayers = 1;
                 gameType = GameType.CTF;
+                recorded = false;
                 break;
             default:
                 minNumPlayers = null;
                 maxNumPlayers = null;
                 gameType = null;
+                logger.error(`Room ${room.id} is not FFA, CUSTOM, or TUTORIAL`);
                 break;
         }
         rooms[roomId] = {
@@ -201,7 +215,8 @@ function initOrGetRoom (roomId, roomType) {
             gameStatus: GameStatus.QUEUING,
             minNumPlayers: minNumPlayers,
             maxNumPlayers: maxNumPlayers,
-            gameType: gameType
+            gameType: gameType,
+            recorded: recorded
         };
         logger.info(`Creating new room ${roomId}`);
     } else {
@@ -220,9 +235,9 @@ function onConnect(room, ws, user) {
     ws.ponged = true;
     ws.missedPongs = 0;
     ws.status = ClientStatus.CONNECTED;
-    ws.playerId = randString(8);
     ws.user = user;
     ws.ready = ReadyType.NOT_READY;
+    ws.playerId = ws.user.username;
 
     logger.info(`Player ${ws.user.username} connected to ${room.type} room ${room.id} with status ${room.gameStatus}`);
 
@@ -430,8 +445,14 @@ app.ws('/', (ws, req) => {
             let data = JSON.parse(msg);
             if (data.event === 'chat') {
                 if (data.message.length <= MaxMessageLength) {
-                    console.log(`User ${user.username} sent new message: "${data.message}"`)
-                    broadcastChat(user.username, data.message);
+                    // console.log(`User ${user.username} sent new message: "${data.message}"`)
+                    let new_message = {
+                        username: user.username,
+                        message: data.message,
+                        timestamp: Date.now()
+                    };
+                    chat.push(new_message);
+                    broadcastChat(new_message);
                 }
             }
         });
@@ -502,7 +523,6 @@ getPerformOneTurn = targetRoom => {
                 logger.info(`Game ended at room ${room.id}`);
                 if (room.type === RoomType.FFA) {
                     calculateNewRatings(room);
-                    let usernameList = [];
                     room.clients.forEach(client => {
                         let query = {username: client.user.username};
                         let newValues = { $set: {
@@ -519,6 +539,7 @@ getPerformOneTurn = targetRoom => {
                     });
                     calculateLeaderboard();
                 }
+                recorder.finishRecordAndSave(room, games);
             }
             incrementFrameCounter(room);
             broadcastState(room);
@@ -551,7 +572,7 @@ function runGame(room) {
         room.gameInterval = setInterval(
             getPerformOneTurn(room),
             gameTickInterval
-        )
+        );
     }, (room.type === RoomType.TUTORIAL) ? 0 : gameDelayInterval);
     logger.info(`Started game with players ${JSON.stringify(room.clients.map(ws => ws.user.username), null, 2)}`);
 }
@@ -593,17 +614,17 @@ function getAllClientStatus(room) {
     return allClientStatus;
 }
 
-function broadcastChat(username, message) {
+function broadcastChat(message) {
     homepageListeners.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
                 event: 'chat',
-                username: username,
-                message: message,
+                username: message.username,
+                message: message.message,
+                timestamp: message.timestamp
             }));
         }
     });
-    console.log("Broadcast chat");
 }
 
 function broadcastForceStartSec(room) {

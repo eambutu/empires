@@ -1,70 +1,19 @@
 const logger = require('./winston');
+
 const {SquareType, ClientStatus, UnitType, RoomType, Costs, HP, GameType} = require('./config');
-var {generateMap} = require('./map');
+const {SquareState} = require('./util')
+const {generateMap} = require('./map');
+const recorder = require('./recorder');
 
 const Vision = {
     UNIT: 1,
     BASE: 3,
-    WATCHTOWER: 4,
+    WATCHTOWER: 4
 };
 
 const flagSpawnProbability = 0.002;
 const flagWinNum = 20;
 const framesPerMove = 2;
-
-class SquareState {
-    constructor(options = {}) {
-        Object.assign(this, {
-            units: [],
-            baseId: null,
-            baseHP: 0,
-            inFog: false
-        }, options);
-    }
-
-    currentOwner() {
-        // function assumes that only units of one player are on the square
-        if (this.units.length === 0) {
-            return null;
-        }
-        return this.units[0].playerId;
-    }
-
-    getUnit() {
-        // function assumes only one unit is in the units array
-        return this.units.length > 0 ? this.units[0] : null;
-    }
-
-    peekUnitById(id) {
-        for (let idx = 0; idx < this.units.length; idx++) {
-            if (this.units[idx].id === id) {
-                let temp = this.units[idx];
-                return temp;
-            }
-        }
-        return null;
-    }
-
-    popUnitById(id) {
-        for (let idx = 0; idx < this.units.length; idx++) {
-            if (this.units[idx].id === id) {
-                let temp = this.units[idx];
-                this.units.splice(idx, 1);
-                return temp;
-            }
-        }
-        return null;
-    }
-
-    hasDefenderId(playerId) {
-        for (let idx = 0; idx < this.units.length; idx++) {
-            if (this.units[idx].playerId === playerId) {
-                return this.units[idx].type === UnitType.DEFENDER;
-            }
-        }
-        return false;
-    }
-}
 
 class Unit {
     constructor(id, playerId, type, count) {
@@ -105,9 +54,9 @@ function initState(room) {
     }
 
     let genMap = generateMap(roomType, gameType);
-
     let cornerMap = {};
     let remainingCornerIndices = [0, 1, 2, 3];
+
     if (roomType === RoomType.TUTORIAL) {
         cornerMap[playerIds[0]] = 2;
         cornerMap[playerIds[1]] = 0;
@@ -119,6 +68,10 @@ function initState(room) {
             remainingCornerIndices.splice(randIndex, 1);
         });
     }
+
+    remainingCornerIndices.forEach(index => {
+        genMap.towers.push(genMap.corners[index]);
+    });
 
     playerIds.forEach(playerId => {
         // Initialize queue
@@ -134,27 +87,23 @@ function initState(room) {
         flags[playerId] = 0;
     });
 
-    remainingCornerIndices.forEach(index => {
-        genMap.towers.push(genMap.corners[index]);
-    });
-
     let squareStates = [...Array(height)].map(y => {
         return [...Array(width)].map(x => {
-            return new SquareState({pos: [y, x], type: SquareType.REGULAR});
+            return new SquareState({type: SquareType.REGULAR});
         });
     });
     Object.entries(playerBases).forEach(([playerId, [y, x]]) => {
         let baseHP = (gameType === GameType.DUEL) ? 5 : 0;
-        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.BASE, baseId: playerId, baseHP: baseHP});
+        squareStates[y][x] = new SquareState({type: SquareType.BASE, baseId: playerId, baseHP: baseHP});
     });
     genMap.towers.forEach(([y, x]) => {
-        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.TOWER});
+        squareStates[y][x] = new SquareState({type: SquareType.TOWER});
     });
     genMap.watchTowers.forEach(([y, x]) => {
-        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.WATCHTOWER});
+        squareStates[y][x] = new SquareState({type: SquareType.WATCHTOWER});
     });
     genMap.rivers.forEach(([y, x]) => {
-        squareStates[y][x] = new SquareState({pos: [y, x], type: SquareType.RIVER});
+        squareStates[y][x] = new SquareState({type: SquareType.RIVER});
     });
 
     if (roomType === RoomType.TUTORIAL) {
@@ -174,8 +123,8 @@ function initState(room) {
                 "playerId": realPlayerId
             }
         ];
-        squareStates[8][8] = new SquareState({pos: [8, 8], type: SquareType.FLAG});
-        squareStates[9][10] = new SquareState({pos: [9, 10], type: SquareType.FLAG});
+        squareStates[8][8] = new SquareState({type: SquareType.FLAG});
+        squareStates[9][10] = new SquareState({type: SquareType.FLAG});
     }
 
     room.playerIds = playerIds;
@@ -192,7 +141,9 @@ function initState(room) {
     room.towers = genMap.towers;
     room.gameWonStatus = null;
     room.frameCounter = 0;
+    
     logger.info(`State initialized for room ${room.id}`);
+    recorder.recordInitial(room);
 }
 
 function maskForPlayer(squares, playerId) {
@@ -233,11 +184,11 @@ function maskForPlayer(squares, playerId) {
             if (visible[y][x]) {
                 return cell;
             } else if (cell.type === SquareType.WATCHTOWER || cell.type === SquareType.TOWER) {
-                return new SquareState({pos: [y, x], type: cell.type, isFog: true});
+                return new SquareState({type: cell.type, isFog: true});
             } else if (cell.type === SquareType.BASE) {
-                return new SquareState({pos: [y, x], type: SquareType.TOWER, isFog: true});
+                return new SquareState({type: SquareType.TOWER, isFog: true});
             } else {
-                return new SquareState({pos: [y, x], type: SquareType.UNKNOWN})
+                return new SquareState({type: SquareType.UNKNOWN})
             };
         })
     ));
@@ -300,7 +251,6 @@ function getState(room, playerId) {
 
     visibleSquares.forEach(row => {
         row.forEach(square => {
-            // The client expects the field in terms of "unit"
             square.unit = square.getUnit();
         });
     });
@@ -417,14 +367,16 @@ function incrementShards(room) {
 
 function fetchMoves(room) {
     let moves = [];
-    room.clients.forEach(client => {
-        Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
-            if (unitQueue.length > 0 && (room.frameCounter % framesPerMove === 0)) {
-                let move = unitQueue.shift();
-                moves.push(move);
-            }
+    if (room.frameCounter % framesPerMove === 0) {
+        room.clients.forEach(client => {
+            Object.entries(room.queues[client.playerId]).forEach(([unitId, unitQueue]) => {
+                if (unitQueue.length > 0) {
+                    let move = unitQueue.shift();
+                    moves.push(move);
+                }
+            });
         });
-    });
+    }
     return moves;
 }
 
@@ -598,11 +550,12 @@ function updateBasesAndCheckWin(room) {
 
 function spawnFlags(room) {
     if (room.frameCounter % framesPerMove === 0) {
+        let squares = room.squareStates;
         room.flagSpawns.forEach(([y, x]) => {
-            let square = room.squareStates[y][x];
+            let square = squares[y][x];
             if (square.type === SquareType.REGULAR && square.currentOwner() === null) {
                 if (Math.random() < flagSpawnProbability) {
-                    square.type = SquareType.FLAG;
+                    squares[y][x].type = SquareType.FLAG;
                 }
             }
         })
@@ -695,6 +648,8 @@ function updateState(room) {
     gameEnded = gameEnded || endGameIfEmpty(room);
     room.fogOfWar = !((room.type === RoomType.TUTORIAL && !room.fogOfWar) || gameEnded);
 
+    recorder.recordUpdate(room);
+
     return gameEnded;
 }
 
@@ -730,10 +685,4 @@ function calculateNewRatings(room) {
     }
 }
 
-module.exports = {
-    initState: initState,
-    getState: getState,
-    updateState: updateState,
-    clearTrimmedAndSpawned: clearTrimmedAndSpawned,
-    calculateNewRatings: calculateNewRatings
-}
+module.exports = {initState, getState, updateState, clearTrimmedAndSpawned, calculateNewRatings}

@@ -243,7 +243,7 @@ function generateMap(roomType, gameType) {
             let hasEnclosed = true;
             tempRivers = [];
             while(hasEnclosed) {
-                logger.info("If you see this a million times, we're stuck in an infinite loop");
+                logger.debug("If you see this a million times, we're stuck in an infinite loop");
                 let tempOcclusionMap = [];
                 tempRivers = [];
                 for (let i=0; i<riverMaps.length; i++) {

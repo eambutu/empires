@@ -2,6 +2,7 @@
 
 # dependencies
 /logs
+/records
 node_modules
 *.pem
 
