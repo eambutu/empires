@@ -395,10 +395,7 @@ class Game extends Component {
 
     getPath(target, source) {
         let isWalkable = function (square) {
-            let unit = null;
-            if (square.units.length > 0) {
-                unit = square.units[0];
-            }
+            let unit = square.unit;
             return square.type !== SquareType.RIVER && !(unit && unit.type === UnitType.DEFENDER && unit.playerId === this.state.playerId);
         }
         let walkGrid = this.state.squares.map(row => row.map(square => ({walkable: isWalkable.bind(this)(square)})));
