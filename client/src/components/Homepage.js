@@ -288,6 +288,7 @@ function HomepageButtons(props) {
             console.log("key press enter");
             e.preventDefault();
             checkOrRegisterUser();
+            document.getElementById("username").blur();
         }
     };
     let common = (
@@ -306,7 +307,7 @@ function HomepageButtons(props) {
                     }}>
                 </div>
             </div>
-            <form onKeyPress={username ? onEnterKeyPress : undefined} action="#">
+            <form onKeyPress={username ? undefined : onEnterKeyPress} action="#">
                 <input disabled={username ? true : undefined} onFocus={() => setFocusUsername(true)} onBlur={() => setFocusUsername(false)} autoComplete="off" type="text" id="username" placeholder="Username" value={username}/> <br/>
             </form>
             <div id={"usernameWarning"} style={{visibility: usernameFocus ? "visible" : "hidden", fontSize: "12px", color: "#ff4136"}}>
