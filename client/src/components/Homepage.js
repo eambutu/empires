@@ -14,6 +14,7 @@ import arrow from "../arrow.svg";
 import redarrow from "../redarrow.svg";
 import redglobe from "../redglobe.svg";
 import globe from "../globe.svg";
+import reddit from "../reddit.png"
 import startsound from "../startsound.wav";
 import redkeyboard from "../redkeyboard.svg"
 import whitekeyboard from "../whitekeyboard.svg"
@@ -240,7 +241,6 @@ class Homepage extends Component {
                 <div id={"leaderboard"} className="pop-up-board center" style={{display: "none"}}>
                     <Leaderboard hideLeaderboard={this.hideLeaderboard} leaderboard={this.state.leaderboard}/>
                 </div>
-
                 <Instructions hideInstructions={this.hideInstructions}/>
                 {this.state.username && <Chat messages={this.state.chat} onChatMessage={this.onChatMessage}/>}
                 <div id={"no-mobile"} className="pop-up-board center no-mobile-notif">
@@ -275,6 +275,8 @@ class Homepage extends Component {
                         {/*</marquee>*/}
                     </div>
                     {<a href={"mailto:contact@squarecraft.io"}>Contact Us!</a>}
+                    <br></br>
+                    {<a href={"http://reddit.com/r/squarecraft"} target="_blank" style={{fontSize: "13px"}}>Subreddit</a>}
                 </div>
             </div>
         );

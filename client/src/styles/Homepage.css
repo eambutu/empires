@@ -203,11 +203,21 @@ a:hover{
     width: 50px;
 }
 
+#reddit {
+    background-repeat: no-repeat;
+    height: 50px;
+    width: 50px;
+}
+
 .keyboard:hover{
     cursor: pointer;
 }
 
 .keyboard-holder {
+    padding: 15px;
+}
+
+.reddit-holder {
     padding: 15px;
 }
 
