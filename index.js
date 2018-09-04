@@ -18,6 +18,7 @@ const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
 const gameDelayInterval = 3000;
 const port = process.env.TEST ? 5555 : 5000;
+const maxChatMessages = 10000;
 
 const GameStatus = {
     QUEUING: "queuing",
@@ -444,14 +445,14 @@ app.ws('/', (ws, req) => {
         ws.on('message', function (msg) {
             let data = JSON.parse(msg);
             if (data.event === 'chat') {
-                if (data.message.length <= MaxMessageLength) {
+                if (data.message.length > 0 && data.message.length <= MaxMessageLength) {
                     // console.log(`User ${user.username} sent new message: "${data.message}"`)
                     let new_message = {
                         username: user.username,
                         message: data.message,
                         timestamp: Date.now()
                     };
-                    chat.push(new_message);
+                    addMessageToChat(new_message);
                     broadcastChat(new_message);
                 }
             }
@@ -512,6 +513,18 @@ app.ws('/room_list', (ws, req) => {
 app.listen(port, () => {
     logger.info(`App listening on port ${port}`);
 });
+
+addMessageToChat = message => {
+    let ix = chat.length - 1;
+    while (ix >= 0 && chat[ix].timestamp > message.timestamp) {
+        ix --;
+    }
+    chat.splice(ix+1, 0, message);
+
+    while (chat.length > maxChatMessages) {
+        chat.shift();
+    }
+}
 
 getPerformOneTurn = targetRoom => {
     return function performOneTurn() {

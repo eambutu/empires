@@ -57,6 +57,10 @@ class Homepage extends Component {
             }
             chat.splice(ix+1, 0, new_message);
 
+            while (chat.length > maxChatMessages) {
+                chat.shift();
+            }
+
             this.setState({
                 chat: chat
             });
