@@ -64,7 +64,9 @@ class Homepage extends Component {
 
         this.scrollChat = () => {
             let objDiv = document.getElementById("message-feed");
-            objDiv.scrollTop = objDiv.scrollHeight;
+            if (objDiv) {
+                objDiv.scrollTop = objDiv.scrollHeight;
+            }
         }
 
         this.hideLeaderboard = () => {
@@ -157,6 +159,8 @@ class Homepage extends Component {
             // console.log(message.which);
             if (message.which === 13) {
                 let message_text = document.getElementById("chat-input").value;
+                console.log(message_text)
+                document.getElementById("chat-input").value = "";
 
                 this.ws.send(JSON.stringify(
                     {
@@ -166,7 +170,7 @@ class Homepage extends Component {
                 ));
                 this.scrollChat();
             }
-        }
+        };
 
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
