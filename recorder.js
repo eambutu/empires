@@ -41,7 +41,7 @@ function hasSquareChanged(square, lastSquare) {
 }
 
 function recordUpdate(room) {
-    if (room.recorded) {
+    if (room.recorded && room.record) {
         let changedSquares = [];
         let lastSquareStates = room.lastSquareStates;
         room.squareStates.forEach((row, y) => {
