@@ -250,15 +250,8 @@ class Homepage extends Component {
                 </div>
 
                 <div id={"feature"}>
-                    Proudly Featured on <br></br>
                     <a target="_blank" href={"https://www.crazygames.com"}>
-                        <h2 id={"gameHeader"}>
-                            <span style={{color: "#4dff3a"}}>C</span>
-                            <span  style={{color: "#ffe53a"}}>R</span>
-                            <span style={{color: "#ffa044"}}>A</span>
-                            <span style={{color: "#ff6c6c"}}>Z</span>
-                            <span style={{color: "#ef68ff"}}>Y</span>
-                            GAMES</h2>
+                        More IO Games
                     </a>
                 </div>
 
