@@ -249,6 +249,19 @@ class Homepage extends Component {
                     <h3>Hi! Thanks for checking out Squarecraft.io. Unfortunately our game only supports desktop right now, but we're working really hard on getting something for mobile users too! In the meantime, check us out on a desktop computer :)</h3>
                 </div>
 
+                <div id={"feature"}>
+                    Proudly Featured on <br></br>
+                    <a target="_blank" href={"https://www.crazygames.com"}>
+                        <h2 id={"gameHeader"}>
+                            <span style={{color: "#4dff3a"}}>C</span>
+                            <span  style={{color: "#ffe53a"}}>R</span>
+                            <span style={{color: "#ffa044"}}>A</span>
+                            <span style={{color: "#ff6c6c"}}>Z</span>
+                            <span style={{color: "#ef68ff"}}>Y</span>
+                            GAMES</h2>
+                    </a>
+                </div>
+
                 <div className="center">
                     <img onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} src={sword} className="App-logo" alt="logo"/>
                     <div onClick={() => {this.setPage(HomePageOption.HOME_PAGE)}} style={{cursor: "pointer"}} className="title">squarecraft.io</div>

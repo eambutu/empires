@@ -228,6 +228,27 @@ a:hover{
     margin: auto;
 }
 
+#gameHeader {
+    color: #fff;
+    font-size: 25px;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 46px;
+    vertical-align: middle;
+    text-shadow: 1px 1px 1px #00476c;
+    float: left;
+    margin: 0;
+}
+
+
+#feature {
+    color: white;
+    font-size: 15px;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
 @media only screen and (min-width: 500px) {
     .no-mobile-notif {
         display: none;
