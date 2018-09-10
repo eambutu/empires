@@ -3,6 +3,8 @@ const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const fs = require('fs');
+const {ungzip} = require('node-gzip');
 
 const app = express();
 const expressWs = require('express-ws')(app);
@@ -183,6 +185,28 @@ app.get('/leaderboard', (req, res) => {
 
 app.get(['/room', '/room/:roomId'], function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
+app.get('/replay/:gameId', function(req, res) {
+    let query = {gameId: req.params.gameId};
+    games.findOne(query, (err1, data1) => {
+        if (err1) {
+            logger.error(err1);
+            res.json({success: false});
+        } else if (data1) {
+            logger.info(`Found game with ID ${req.params.gameId}`);
+            fs.readFile(data1.path, (err2, data2) => {
+                if (err2) {
+                    logger.error(err2);
+                    res.json({success: false});
+                } else if (data2) {
+                    ungzip(data2).then((decompressed) => {
+                        res.json(Object.assign({success: true}, JSON.parse(decompressed)));
+                    });
+                }
+            });
+        }
+    });
 });
 
 function initOrGetRoom (roomId, roomType) {

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const {gzip, ungzip} = require('node-gzip');
+const {gzip} = require('node-gzip');
 
 const logger = require('./winston');
 const {randString, SquareState} = require('./util')
@@ -22,9 +22,9 @@ function recordInitial(room) {
 function hasUnitChanged(unit, lastUnit) {
     if (unit === null && lastUnit === null) {
         return false;
-    } else if (unit) {
+    } else if (unit === null) {
         return true;
-    } else if (lastUnit) {
+    } else if (lastUnit === null) {
         return true;
     } else {
         let changes = ['playerId', 'type', 'count'].filter(attr => (unit[attr] !== lastUnit[attr]));
