@@ -250,7 +250,7 @@ class Homepage extends Component {
                 </div>
 
                 <div id={"feature"}>
-                    <a target="_blank" href={"https://www.crazygames.com"}>
+                    <a target="_blank" href={"https://www.crazygames.com/c/io"}>
                         More IO Games
                     </a>
                 </div>
