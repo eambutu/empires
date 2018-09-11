@@ -33,7 +33,7 @@ class RoomList extends Component {
     }
 
     componentDidMount() {
-        let wsPath = 'ws://' + window.location.hostname + ':5000/room_list';
+        let wsPath = 'ws://' + window.location.host + '/room_list';
         this.setUpWebSocket(wsPath);
         document.body.style.overflow = "scroll";
     }

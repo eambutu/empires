@@ -510,7 +510,7 @@ class Game extends Component {
             default:
                 pathname = window.location.pathname;
         }
-        let wsPath = 'ws://' + window.location.hostname + ':5000' + pathname;
+        let wsPath = 'ws://' + window.location.host + pathname;
         this.setUpWebSocket(wsPath);
     }
 
