@@ -3,6 +3,8 @@ import '../styles/Game.css';
 import Map, {ActionProp} from "./Map";
 import PlayerBoard from "./PlayerBoard";
 
+const {GameType} = require("./config");
+
 let backsize = 25;
 let squaresize = 35;
 
@@ -119,7 +121,9 @@ class Replay extends Component {
                 this.setState({
                     squares: resJson.initial,
                     ticks: resJson.ticks,
-                    playerIds: Object.keys(resJson.result)
+                    playerIds: Object.keys(resJson.result),
+                    shards: resJson.ticks[0].shards,
+                    flags: resJson.ticks[0].flags
                 });
             } else {
                 // Failed to retrieve replay. Do some error shit
@@ -133,19 +137,24 @@ class Replay extends Component {
     }
 
     render() {
-        let {squares, playerStatus, playerId, playerIds, flags} = this.state;
-        console.log(squares);
-        //<PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
+        let {squares, playerIds, flags, shards} = this.state;
+        let playerStatus = {};
+        playerIds.forEach(playerId => {
+            playerStatus[playerId] = {"name": playerId};
+        });
+        // For now, only replays for CTF
+        let gameType = GameType.CTF;
         if (!squares) {
             return <div></div>
         }
         return (
             <div id="game-page">
+                <PlayerBoard gameType={gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus} isReplay={true} shards={shards}/>
                 <Map
                     onReleaseMap={this.onReleaseMap}
                     onDragMap={this.onDragMap}
                     onClickMap={this.onClickMap}
-                    playerId={playerId}
+                    playerId={null}
                     playerIds={playerIds}
                     squares={squares}
                     queue={[]}

@@ -553,7 +553,7 @@ class Game extends Component {
                     let gameInProgress = !['won', 'lost'].includes(playerStatus[playerId]['status']);
                     return (
                         <div id="game-page">
-                            <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus}/>
+                            <PlayerBoard gameType={this.state.gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus} isReplay={false}/>
 
                             <Map
                                 onReleaseMap={this.onReleaseMap}

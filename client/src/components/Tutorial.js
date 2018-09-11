@@ -165,7 +165,7 @@ class Tutorial extends Component {
         if (this.state.tutorialWon | this.props.playerStatus[this.props.playerId]['status'] === "lost" || this.props.playerStatus[this.props.playerId]['status'] === "won") {
             return (
                 <div>
-                    <PlayerBoard gameType={this.props.gameType} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus}/>
+                    <PlayerBoard gameType={this.props.gameType} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus} isReplay={false}/>
                     <Map
                         onReleaseMap={this.props.onReleaseMap}
                         onDragMap={this.props.onDragMap}
@@ -187,7 +187,7 @@ class Tutorial extends Component {
         }
             return (
                 <div>
-                    <PlayerBoard gameType={this.props.gameType} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus}/>
+                    <PlayerBoard gameType={this.props.gameType} playerIds={this.props.playerIds} flags={this.props.flags} playerStatus={this.props.playerStatus} isReplay={false}/>
                     <TutorialBox index={this.state.textIndex} prevBox={this.prevBox} nextBox={this.nextBox} text={tutorialTextMap[this.state.textIndex]}/>
                     <Map
                         onReleaseMap={this.props.onReleaseMap}
