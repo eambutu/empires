@@ -183,7 +183,7 @@ app.get('/leaderboard', (req, res) => {
     res.json(leaderboard);
 });
 
-app.get(['/room', '/room/:roomId'], function (req, res) {
+app.get(['/room', '/room/:roomId', '/replay/:gameId'], function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
