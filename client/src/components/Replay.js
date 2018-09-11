@@ -28,6 +28,7 @@ class Replay extends Component {
             shards: null,
             flags: null,
             ticks: null,
+            reverseDiffs: [],
             tickIdx: 0
         };
     }
@@ -67,20 +68,47 @@ class Replay extends Component {
             } else if (e.key === "ArrowRight") {
                 if (this.state.tickIdx < this.state.ticks.length) {
                     let curTick = this.state.ticks[this.state.tickIdx];
-                    let squaresChanged = this.state.squares;
+                    let newSquares = this.state.squares;
+                    if (this.state.tickIdx >= this.state.reverseDiffs.length) {
+                        let squaresChanged = [];
+                        curTick.squares.forEach((square) => {
+                            squaresChanged.push(Object.assign({y: square.y, x: square.x}, this.state.squares[square.y][square.x]));
+                        });
+                        this.setState({ reverseDiffs: this.state.reverseDiffs.concat([squaresChanged]) });
+                    }
                     curTick.squares.forEach((square) => {
                         if (square.units.length > 0) {
                             square.unit = square.units[0];
                         } else {
                             square.unit = null;
                         }
-                        squaresChanged[square.y][square.x] = square;
+                        newSquares[square.y][square.x] = Object.assign({}, square);
                     });
                     this.setState({
-                        squares: squaresChanged,
+                        squares: newSquares,
                         shards: curTick.shards,
                         flags: curTick.flags,
                         tickIdx: this.state.tickIdx + 1
+                    });
+                }
+            } else if (e.key === "ArrowLeft") {
+                if (this.state.tickIdx > 0) {
+                    let curDiff = this.state.reverseDiffs[this.state.tickIdx - 1];
+                    let curTick = this.state.ticks[this.state.tickIdx];
+                    let newSquares = this.state.squares;
+                    curDiff.forEach((square) => {
+                        if (square.units.length > 0) {
+                            square.unit = square.units[0];
+                        } else {
+                            square.unit = null;
+                        }
+                        newSquares[square.y][square.x] = square;
+                    });
+                    this.setState({
+                        squares: newSquares,
+                        shards: curTick.shards,
+                        flags: curTick.flags,
+                        tickIdx: this.state.tickIdx - 1
                     });
                 }
             }
