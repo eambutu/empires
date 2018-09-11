@@ -14,7 +14,7 @@ export default function PlayerBoard(props) {
             key={index}
             player={playerStatus[playerId]}
             isReplay={isReplay}
-            shardcount={shards[playerId]}
+            shardcount={shards ? shards[playerId] : null}
         />
     ))
     

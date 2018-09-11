@@ -154,7 +154,7 @@ class Homepage extends Component {
                 }
             });
 
-            let wsPath = 'ws://' + window.location.host;
+            let wsPath = 'ws://' + window.location.hostname + ':5000';
             this.setUpWebSocket(wsPath);
         }
     }
