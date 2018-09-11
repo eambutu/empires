@@ -176,17 +176,24 @@ class Replay extends Component {
             return <div></div>
         }
         return (
-            <div id="game-page">
-                <PlayerBoard gameType={gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus} isReplay={true} shards={shards}/>
-                <Map
-                    onReleaseMap={this.onReleaseMap}
-                    onDragMap={this.onDragMap}
-                    onClickMap={this.onClickMap}
-                    playerId={null}
-                    playerIds={playerIds}
-                    squares={squares}
-                    queue={[]}
-                />
+            <div>
+                <div id="game-page">
+                    <PlayerBoard gameType={gameType} playerIds={playerIds} flags={flags} playerStatus={playerStatus} isReplay={true} shards={shards}/>
+                    <Map
+                        onReleaseMap={this.onReleaseMap}
+                        onDragMap={this.onDragMap}
+                        onClickMap={this.onClickMap}
+                        playerId={null}
+                        playerIds={playerIds}
+                        squares={squares}
+                        queue={[]}
+                    />
+                </div>
+                <div className="footer">
+                    <div style={{paddingTop:"10px", fontSize:"18px"}}>
+                        <b>Controls: </b> Use right/left arrow to go forwards/backwards in the replay
+                    </div>
+                </div>
             </div>
         );
     }

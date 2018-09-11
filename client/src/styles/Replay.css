@@ -1,0 +1,8 @@
+.footer{
+    position: absolute;
+    top: 90%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    text-align: center;
+    color: white;
+}
