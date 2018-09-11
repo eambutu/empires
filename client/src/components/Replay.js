@@ -94,7 +94,7 @@ class Replay extends Component {
             } else if (e.key === "ArrowLeft") {
                 if (this.state.tickIdx > 0) {
                     let curDiff = this.state.reverseDiffs[this.state.tickIdx - 1];
-                    let curTick = this.state.ticks[this.state.tickIdx];
+                    let curTick = this.state.ticks[this.state.tickIdx - 1];
                     let newSquares = this.state.squares;
                     curDiff.forEach((square) => {
                         if (square.units.length > 0) {
