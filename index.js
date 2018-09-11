@@ -187,7 +187,7 @@ app.get(['/room', '/room/:roomId'], function (req, res) {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-app.get('/replay/:gameId', function(req, res) {
+app.get('/get_replay/:gameId', function(req, res) {
     let query = {gameId: req.params.gameId};
     games.findOne(query, (err1, data1) => {
         if (err1) {

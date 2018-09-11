@@ -111,8 +111,8 @@ class Replay extends Component {
     }
 
     componentDidMount() {
-        let pathname = window.location.pathname;
-        fetch(pathname, {
+        let splitPath = window.location.pathname.split("/");
+        fetch('/get_replay/' + splitPath[splitPath.length - 1], {
             method: 'GET'
         }).then(res => res.json()).then(resJson => {
             if (resJson.success) {
