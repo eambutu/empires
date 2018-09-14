@@ -455,12 +455,12 @@ class Game extends Component {
 
         this.onReplay = e => {
             this.ws.close();
-            window.location.replace('/replay/' + this.state.gameId);
+            window.location.replace('/replay/' + this.state.gameId.toString());
         };
 
         this.onVeil = e => {
             this.ws.send(JSON.stringify({'event': 'veil'}));
-        }
+        };
 
         this.ws.addEventListener('message', event => {
             let data = JSON.parse(event.data);
@@ -581,7 +581,7 @@ class Game extends Component {
                                          exitClick={this.onExit}
                                          status={playerStatus[playerId]['status']}
                                          canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)}
-                                         gameId={this.onReplay}/>}
+                                         onReplay={this.onReplay}/>}
 
                             <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                         </div>
