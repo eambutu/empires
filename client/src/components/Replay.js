@@ -190,8 +190,9 @@ class Replay extends Component {
                     />
                 </div>
                 <div className="footer">
-                    <div style={{paddingTop:"10px", fontSize:"18px"}}>
-                        <b>Controls: </b> Use right/left arrow to go forwards/backwards in the replay
+                    <div style={{padding:"10px", fontSize:"18px", backgroundColor:"#222222"}}>
+                        <b>Controls: </b> Use right/left arrow to go forwards/backwards in the replay <br></br>
+                        Frame {this.state.tickIdx}/{this.state.ticks.length}
                     </div>
                 </div>
             </div>
