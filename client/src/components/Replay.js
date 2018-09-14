@@ -192,7 +192,8 @@ class Replay extends Component {
                 <div className="footer">
                     <div style={{padding:"10px", fontSize:"18px", backgroundColor:"#222222"}}>
                         <b>Controls: </b> Use right/left arrow to go forwards/backwards in the replay <br></br>
-                        Frame {this.state.tickIdx}/{this.state.ticks.length}
+                        Frame {this.state.tickIdx}/{this.state.ticks.length} <br></br>
+                        <button className={"end-button"} style={{fontSize: "1em", minHeight: "2em"}}onClick={() => {window.location="http://squarecraft.io"}}>Go Home</button>
                     </div>
                 </div>
             </div>
