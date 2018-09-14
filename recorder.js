@@ -2,7 +2,7 @@ const fs = require('fs');
 const {gzip} = require('node-gzip');
 
 const logger = require('./winston');
-const {randString, SquareState} = require('./util')
+const {SquareState} = require('./util')
 const {SquareType} = require('./config');
 
 function copySquareState(square) {
@@ -69,10 +69,10 @@ function finishRecordAndSave(room, collection) {
         let record = room.record;
         record.result = Object.assign({}, room.gameWonStatus);
         
-        let gameId = randString(20);
-        let savePath = writeRecordToFile(record, gameId);
-        writeRecordToDatabase(gameId, room.playerIds, record.startTime, savePath, collection);
+        let savePath = writeRecordToFile(record, room.gameId);
+        writeRecordToDatabase(room.gameId, room.playerIds, record.startTime, savePath, collection);
         delete room.record;
+        delete room.gameId;
     }
 }
 

@@ -1,7 +1,7 @@
 const logger = require('./winston');
 
 const {SquareType, ClientStatus, UnitType, RoomType, Costs, HP, GameType} = require('./config');
-const {SquareState} = require('./util')
+const {randString, SquareState} = require('./util')
 const {generateMap} = require('./map');
 const recorder = require('./recorder');
 
@@ -141,7 +141,9 @@ function initState(room) {
     room.towers = genMap.towers;
     room.gameWonStatus = null;
     room.frameCounter = 0;
-    
+
+    room.gameId = randString(20);
+
     logger.info(`State initialized for room ${room.id}`);
     recorder.recordInitial(room);
 }

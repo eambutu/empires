@@ -84,7 +84,8 @@ class Game extends Component {
             gameType: null,
             forceStartSec: null,
             waitingSec: null,
-            isSplit: false
+            isSplit: false,
+            gameId: 0,
         };
     }
 
@@ -452,6 +453,11 @@ class Game extends Component {
             window.location.replace('/');
         };
 
+        this.onReplay = e => {
+            this.ws.close();
+            window.location.replace('/replay/' + this.state.gameId);
+        };
+
         this.onVeil = e => {
             this.ws.send(JSON.stringify({'event': 'veil'}));
         }
@@ -476,6 +482,7 @@ class Game extends Component {
                     playerIds: data.playerIds,
                     spawnSquare: data.spawn,
                     cursor: [data.spawn[0], data.spawn[1], null],
+                    gameId: data.gameId,
                 });
                 document.addEventListener("keydown", this.keyDownBound);
                 document.addEventListener("keyup", this.keyUpBound);
@@ -573,7 +580,8 @@ class Game extends Component {
                                 <EndGame resetClick={this.onPlayAgain}
                                          exitClick={this.onExit}
                                          status={playerStatus[playerId]['status']}
-                                         canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)} />}
+                                         canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)}
+                                         gameId={this.onReplay}/>}
 
                             <ResourceBoard displayShards={this.state.displayShards} insufficientShards={this.state.insufficientShards}/>
                         </div>

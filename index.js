@@ -789,6 +789,7 @@ function broadcastInit(room) {
     let spawnSquares = room.spawnSquares;
     let playerIds = room.playerIds;
     let [height, width] = room.shape;
+    let gameId = room.gameId;
     room.clients.forEach(ws => {
         if (ws.readyState === ws.OPEN) {
             ws.send(JSON.stringify({
@@ -798,6 +799,7 @@ function broadcastInit(room) {
                 'spawn': spawnSquares[ws.playerId],
                 'width': width,
                 'height': height,
+                'gameId': gameId,
             }));
         }
     });
