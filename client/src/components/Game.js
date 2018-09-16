@@ -617,7 +617,7 @@ class Game extends Component {
                     );
                 case RoomType.CUSTOM:
                     return (
-\                       <Lobby
+                        <Lobby
                             roomType={this.props.roomType}
                             lobbyState={lobbyState}
                             gameType={this.state.gameType}

@@ -7,7 +7,18 @@ class MapSchema {
     }
 }
 
-function isEnclosed(squaresMap) {
+function getValidNeighbors(y, x, squaresMap, towersMap, seen, isTower) {
+    return [[y + 1, x], [y - 1, x], [y, x + 1], [y, x - 1]]
+        .filter(([ny, nx]) => (ny >= 0 && ny < squaresMap.length && nx >= 0 && nx < squaresMap[0].length // check bounds
+            && !squaresMap[ny][nx] // check if can walk on here
+            && (isTower || !towersMap[ny][nx]) // if isTower flag is on, check if it is a tower
+            && (isTower || !seen[ny][nx]) // check if seen before
+        ));
+}
+
+function isEnclosed(squaresMap, towersMap) {
+    // Make sure there are no enclosed towers or squares
+    // And make sure that the only path out of the base doesnt pass through a tower
     let height = squaresMap.length;
     let width = squaresMap[0].length;
     let seen = [];
@@ -20,26 +31,23 @@ function isEnclosed(squaresMap) {
     let processQueue = [[0, 0]];
     while (processQueue.length > 0) {
         let [y, x] = processQueue.pop();
-        if (!seen[y][x]) {
-            seen[y][x] = true;
-            if (y - 1 >= 0 && !squaresMap[y - 1][x] && !seen[y - 1][x]) {
-                processQueue.push([y - 1, x]);
-            }
-            if (y + 1 < height && !squaresMap[y + 1][x] && !seen[y + 1][x]) {
-                processQueue.push([y + 1, x]);
-            }
-            if (x - 1 >= 0 && !squaresMap[y][x - 1] && !seen[y][x - 1]) {
-                processQueue.push([y, x - 1]);
-            }
-            if (x + 1 < width && !squaresMap[y][x + 1] && !seen[y][x + 1]) {
-                processQueue.push([y, x + 1]);
-            }
-        }
+        seen[y][x] = true;
+        const validNeighbors = getValidNeighbors(y, x, squaresMap, towersMap, seen, false);
+        validNeighbors.forEach(([y, x]) => {
+            processQueue.push([y, x]);
+        });
     }
     for (let i=0; i<height; i++) {
         for (let j=0; j<width; j++) {
-            if (!squaresMap[i][j] && !seen[i][j]) {
+            if (!squaresMap[i][j] && !towersMap[i][j] && !seen[i][j]) {
                 return true;
+            }
+            if (towersMap[i][j]) {
+                // check to make sure there arent enclosed towers
+                if (getValidNeighbors(i, j, squaresMap, towersMap, seen, true).length === 0) {
+                    logger.debug("ugh");
+                    return true;
+                }
             }
         }
     }
@@ -230,14 +238,20 @@ function generateMap(roomType, gameType) {
             ];
             forbiddenSquares = forbiddenSquares.concat(corners.concat(spawnChoices.concat(towers.concat(watchTowers.concat(flagSpawns)))));
             let forbiddenSquaresMap = [];
+            let towersMap = [];
             for (let i=0; i<19; i++) {
                 forbiddenSquaresMap[i] = [];
+                towersMap[i] = [];
                 for (let j=0; j<19; j++) {
                     forbiddenSquaresMap[i][j] = false;
+                    towersMap[i][j] = false;
                 }
             }
             forbiddenSquares.forEach(([y, x]) => {
                 forbiddenSquaresMap[y][x] = true;
+            });
+            towers.forEach(([y, x]) => {
+                towersMap[y][x] = true;
             });
 
             let hasEnclosed = true;
@@ -249,9 +263,6 @@ function generateMap(roomType, gameType) {
                 for (let i=0; i<riverMaps.length; i++) {
                     tempOcclusionMap[i] = riverMaps[i].slice();
                 }
-                towers.forEach(([y, x]) => {
-                    tempOcclusionMap[y][x] = true;
-                });
                 for (let i=0; i<rivers.length; i++) {
                     tempRivers[i] = rivers[i].slice();
                 }
@@ -263,7 +274,7 @@ function generateMap(roomType, gameType) {
                         }
                     }
                 }
-                hasEnclosed = isEnclosed(tempOcclusionMap);
+                hasEnclosed = isEnclosed(tempOcclusionMap, towersMap);
             }
         }
     }
