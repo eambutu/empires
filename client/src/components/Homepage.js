@@ -222,7 +222,13 @@ class Homepage extends Component {
 
     render() {
         if (this.state.page === HomePageOption.FFA_PAGE) {
-            return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} roomType={RoomType.FFA} />
+            return (
+                <Game
+                    goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)}
+                    roomType={RoomType.FFA}
+                    chatMessages={this.state.chat}
+                    onChatMessage={this.onChatMessage} />
+            );
         } else if (this.state.page === HomePageOption.TUTORIAL_PAGE) {
             return <Game goToHomeMenu={() => this.setPage(HomePageOption.HOME_PAGE)} roomType={RoomType.TUTORIAL} />
         }

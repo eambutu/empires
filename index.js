@@ -89,7 +89,7 @@ function calculateLeaderboard() {
         ignored.forEach(user => {
             nameToInfo[user.username] = user;
         });
-        
+
         logger.info('Updated leaderboard');
     });
 }
@@ -393,7 +393,7 @@ function onMessage(room, ws) {
             }
             logger.debug(`Client ${ws.user.username} switched state in room ${room.id} to ${ws.ready}`);
             broadcastAllClientStatus(room);
-            
+
             if (ws.ready === ReadyType.READY) {
                 tryStartGame(room);
             }

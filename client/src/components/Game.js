@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import '../styles/Game.css';
+import Chat from './Chat';
 import Map, {ActionProp} from "./Map";
 import EndGame from "./EndGame";
 import PlayerBoard from "./PlayerBoard";
@@ -601,19 +602,22 @@ class Game extends Component {
                     );
                 case RoomType.FFA:
                     return (
-                        <GlobalQueue
-                            roomType={this.props.roomType}
-                            lobbyState={lobbyState}
-                            playerId={playerId}
-                            togglePlayerReady={this.togglePlayerReady}
-                            forceStartSec={forceStartSec}
-                            waitingSec={waitingSec}
-                            statuses={allClientStatus}
-                            goToHomeMenu={this.goToHomeMenuAndClose} />
+                        <div>
+                            <GlobalQueue
+                                roomType={this.props.roomType}
+                                lobbyState={lobbyState}
+                                playerId={playerId}
+                                togglePlayerReady={this.togglePlayerReady}
+                                forceStartSec={forceStartSec}
+                                waitingSec={waitingSec}
+                                statuses={allClientStatus}
+                                goToHomeMenu={this.goToHomeMenuAndClose} />
+                            <Chat messages={this.props.chatMessages} onChatMessage={this.props.onChatMessage} />
+                        </div>
                     );
                 case RoomType.CUSTOM:
                     return (
-                        <Lobby
+\                       <Lobby
                             roomType={this.props.roomType}
                             lobbyState={lobbyState}
                             gameType={this.state.gameType}
