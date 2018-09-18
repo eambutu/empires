@@ -246,6 +246,10 @@ class Homepage extends Component {
 
         return (
             <div>
+                <div className="discord-widget">
+                    <iframe src="https://discordapp.com/widget?id=491638454669803521&theme=dark" height="250" width="250"
+                        allowTransparency="true" frameBorder="0"></iframe>
+                </div>
                 <div id={"leaderboard"} className="pop-up-board center" style={{display: "none"}}>
                     <Leaderboard hideLeaderboard={this.hideLeaderboard} leaderboard={this.state.leaderboard}/>
                 </div>

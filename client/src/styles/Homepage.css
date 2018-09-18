@@ -221,6 +221,11 @@ a:hover{
     padding: 15px;
 }
 
+@media only screen and (max-width: 1000px) {
+    .discord-widget {
+        display: none;
+    }
+}
 
 .no-mobile-notif{
     color: black;
