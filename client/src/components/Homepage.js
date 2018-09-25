@@ -263,6 +263,14 @@ class Homepage extends Component {
                     <a target="_blank" href={"https://www.crazygames.com/c/io"}>
                         More IO Games
                     </a>
+                    <br></br>
+                    <a target="_blank" href={"http://reddit.com/r/squarecraft"}>
+                        Subreddit
+                    </a>
+                    <br></br>
+                    <a href={"mailto:contact@squarecraft.io"}>
+                        Contact Us
+                    </a>
                 </div>
 
                 <div className="center">
@@ -286,15 +294,12 @@ class Homepage extends Component {
                 </div>
                 {arrowicon}
                 <div className="footer">
-                    <div style={{paddingTop:"10px", fontSize:"18px"}}>
+                    <div style={{paddingTop:"10px", fontSize:"25px"}}>
                         {/*<marquee style={{width: "180px"}}behavior="scroll" direction="left">*/}
                         {/*<b>Beta Tournament ends 9/4</b>: $50 Rank 1, $20 Rank 2, $10 Rank 3*/}
-                        <b>Patch Updates: </b> right click to move to location and R-key to split armies now enabled
+                        <b>Patch Updates: </b> right click to auto-move and R-key to split armies now enabled!
                         {/*</marquee>*/}
                     </div>
-                    {<a href={"mailto:contact@squarecraft.io"}>Contact Us!</a>}
-                    <br></br>
-                    {<a href={"http://reddit.com/r/squarecraft"} target="_blank" style={{fontSize: "13px"}}>Subreddit</a>}
                 </div>
             </div>
         );

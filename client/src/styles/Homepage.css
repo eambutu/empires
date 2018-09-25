@@ -133,7 +133,7 @@ a, a:visited, a:hover, a:active {
 }
 
 a:hover{
-    font-size: 23px;
+    font-size: 25px;
 }
 
 .rating-text{
@@ -248,7 +248,7 @@ a:hover{
 
 #feature {
     color: white;
-    font-size: 15px;
+    font-size: 20px;
     position: absolute;
     top: 15px;
     right: 15px;
