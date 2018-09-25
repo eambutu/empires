@@ -579,7 +579,7 @@ class Game extends Component {
 
                             {gameInProgress ? undefined :
                                 <EndGame resetClick={this.onPlayAgain}
-                                         exitClick={this.onExit}
+                                         exitClick={this.goToHomeMenuAndClose}
                                          status={playerStatus[playerId]['status']}
                                          canPlayAgain={!(this.props.roomType === RoomType.TUTORIAL)}
                                          onReplay={this.onReplay}/>}
