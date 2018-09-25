@@ -313,8 +313,6 @@ function onConnect(room, ws, user) {
     if (room.type === RoomType.FFA) {
         let numWaitingClients = room.waitingClients.length;
         if (numWaitingClients > 1) {
-            room.forceStartSec = 30;
-
             if (room.forceStartInterval) {
                 clearInterval(room.forceStartInterval);
             }
@@ -323,14 +321,22 @@ function onConnect(room, ws, user) {
                 makeAllWaitingClientsReady(room);
                 tryStartGame(room);
             } else {
+                room.forceStartSec = 30;
+                broadcastForceStartSec(room);
+
                 room.forceStartInterval = setInterval(() => {
+                    room.forceStartSec -= 1;
                     broadcastForceStartSec(room);
+
                     if (room.forceStartSec === 0) {
                         clearInterval(room.forceStartInterval);
                         makeAllWaitingClientsReady(room);
                         tryStartGame(room);
+                    } else if (room.waitingClients.length <= 1){
+                        clearInterval(room.forceStartInterval);
+                        room.forceStartSec = 0;
+                        broadcastForceStartSec(room);
                     }
-                    room.forceStartSec -= 1;
                 }, 1000);
             }
         }
