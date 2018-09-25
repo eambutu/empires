@@ -491,7 +491,7 @@ class Game extends Component {
                 this.updateGame(data.state);
             } else if (data.event === 'starting') {
                 audio.play();
-                this.setState({lobbyState: LobbyState.STARTING, waitingSec: 3});
+                this.setState({lobbyState: LobbyState.STARTING});
             } else if (data.event === 'full') {
                 this.setState({lobbyState: LobbyState.FULL});
                 setInterval(() => window.location.replace('/room'), 5000);

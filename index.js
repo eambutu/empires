@@ -18,7 +18,7 @@ const recorder = require('./recorder');
 // constants
 const gameTickInterval = 1000 / 8;
 const framesPerTurn = 8;
-const gameDelayInterval = 3000;
+const gameDelaySec = 3;
 const statisticInterval = 60000;
 const port = process.env.TEST ? 5555 : 5000;
 const maxChatMessages = 1000;
@@ -632,31 +632,30 @@ function runGame(room) {
         client.ready = ReadyType.PLAYING;
     });
 
-    let gameDelayInterval = 0;
     if (room.type !== RoomType.TUTORIAL) {
         if (room.forceStartInterval) {
             clearInterval(room.forceStartInterval);
         }
-        room.waitingSec = 2;
-        gameDelayInterval = 3000;
-        room.waitingInterval = setInterval(() => {
-            broadcastWaitingSec(room);
-            if (room.waitingSec === 0) {
-                clearInterval(room.waitingInterval);
-            }
-            room.waitingSec -= 1;
-        }, 1000);
     }
 
     broadcastStarting(room);
     initState(room);
     broadcastInit(room);
-    setTimeout(() => { // delay start of game by gameDelayInterval
-        room.gameInterval = setInterval(
-            getPerformOneTurn(room),
-            gameTickInterval
-        );
-    }, gameDelayInterval);
+
+    room.waitingSec = gameDelaySec;
+    broadcastWaitingSec(room);
+    room.waitingInterval = setInterval(() => { // delay start of game by gameDelaySec
+        room.waitingSec -= 1;
+        broadcastWaitingSec(room);
+
+        if (room.waitingSec === 0) {
+            room.gameInterval = setInterval(
+                getPerformOneTurn(room),
+                gameTickInterval
+            );
+            clearInterval(room.waitingInterval);
+        }
+    }, 1000);
     logger.info(`Started game with players ${JSON.stringify(room.clients.map(ws => ws.user.username), null, 2)}`);
 }
 
