@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import '../styles/RoomList.css';
 import sword from "../sword.svg";
+import arrow from "../arrow.svg";
+import redarrow from "../redarrow.svg";
 
 class RoomList extends Component {
     constructor(props) {
@@ -44,35 +46,36 @@ class RoomList extends Component {
                 <div className={"room-list-title"}>
                     <img onClick={() => {window.location.replace('/')}} src={sword} className="App-logo" alt="logo"/>
                     <div className="title">Lobbies</div>
-                        <div className={"create-lobby"}>
-                            <div className={"join-room-text"}>
-                                Create or join a room: <br/><input type="text" id="room_id"/> <br/>
-                            </div>
-                            <div id={"badRoomText"} style={{visibility: this.state.lastFailedName !== null ? "visible" : "hidden", fontSize: "12px", color: "#ff4136"}}>
-                                Cannot create room with name "{this.state.lastFailedName}"
-                            </div>
-                            <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
+                    <div className={"create-lobby"}>
+                        <div className={"join-room-text"}>
+                            Create or join a room: <br/><input type="text" id="room_id"/> <br/>
                         </div>
-                        <div className={"room-list-table-holder"}>
-                            <table>
-                                <tbody className={"room-list-table"}>
-                                    {Object.values(this.state.data).map(room => (
-                                        <tr key={room['id']} onClick={() => window.location.replace(`/room/${room['id']}`)} className={"room-list-row-container"}>
-                                            <div className={"room-list-row"}>
-                                            <td className={"room-list-element"}>
-                                                {room['id']}
-                                            </td>
-                                            <td className={"room-list-element"}>
-                                                {room['numPlayersIn']} / {room['maxNumPlayers']}
-                                            </td>
-                                            </div>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div id={"badRoomText"} style={{visibility: this.state.lastFailedName !== null ? "visible" : "hidden", fontSize: "12px", color: "#ff4136"}}>
+                            Cannot create room with name "{this.state.lastFailedName}"
                         </div>
+                        <button className="homepage-button" onClick={this.onClickSubmitLobby}>Play</button>
+                    </div>
+                    <div className={"room-list-table-holder"}>
+                        <table>
+                            <tbody className={"room-list-table"}>
+                                {Object.values(this.state.data).map(room => (
+                                    <tr key={room['id']} onClick={() => window.location.replace(`/room/${room['id']}`)} className={"room-list-row-container"}>
+                                        <div className={"room-list-row"}>
+                                        <td className={"room-list-element"}>
+                                            {room['id']}
+                                        </td>
+                                        <td className={"room-list-element"}>
+                                            {room['numPlayersIn']} / {room['maxNumPlayers']}
+                                        </td>
+                                        </div>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-        )
+
+            )
         } else {
             return <div></div>
         }

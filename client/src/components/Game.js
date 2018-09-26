@@ -593,7 +593,7 @@ class Game extends Component {
                 case RoomType.TUTORIAL:
                     return (
                         <div className="center">
-                            <img src={sword} className="App-logo" alt="logo"/>
+                            <img src={sword} className="App-logo-no-click" alt="logo"/>
                             <div className="title">squarecraft.io</div>
                             <div className="App-text">
                                 Tutorial is loading...
