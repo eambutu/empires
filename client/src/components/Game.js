@@ -170,8 +170,10 @@ class Game extends Component {
 
         this.resetCursorToSpawn = e => {
             let [spawnY, spawnX] = this.state.spawnSquare;
+            let unitId = this.state.squares[spawnY][spawnX].unit.id;
+            this.updateUnitIdQueue(unitId);
             this.setState({
-                cursor: [spawnY, spawnX, null]
+                cursor: [spawnY, spawnX, unitId]
             });
         }
 
