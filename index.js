@@ -354,6 +354,7 @@ function onClose(room, ws) {
         ws.status = ClientStatus.DISCONNECTED;
         clearInterval(ws.heartbeatInterval);
         broadcastAllClientStatus(room);
+        tryStartGame(room);
         if (room.type === RoomType.CUSTOM) {
             broadcastRoomList();
         }
